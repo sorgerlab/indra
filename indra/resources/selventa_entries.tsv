@@ -1,0 +1,3764 @@
+SCHEM,A0001,( -)-Ibuprofen,CHEBI:CHEBI:5855
+SCHEM,A0002,(-)-Catechin,CHEBI:CHEBI:33992
+SCHEM,A0003,"(14)C-9,10-dihydroxystearic acid",
+SCHEM,A0004,"(14)C-cis-9,10-epoxystearic acid",
+SCHEM,A0005,"(2E,4E,6Z)-7-(2-alkoxy-3,5-dialkylbenzene)-3-methylocta-2,4,6-trienoic acid",
+SCHEM,A0006,(2R)-2-Hydroxy-3-(phosphonooxy)-propanal,CHEBI:CHEBI:29052
+SCHEM,A0007,"(3,4-Dihydroxyphenylamino)-2-imidazoline",MESH:C011775
+SCHEM,A0008,"(5alpha)-7,8-Didehydro-4,5-epoxy-3-hydroxymorphinan-6-one",
+SCHEM,A0009,"(6-(4-(2-piperidin-1-ylethoxy)phenyl))-3-pyridin-4-ylpyrazolo(1,5-a)pyrimidine",MESH:C516138
+SCHEM,A0010,(R)-3-Hydroxybutyric acid,CHEBI:CHEBI:17066
+SCHEM,A0011,(R)-5-Diphosphomevalonate,CHEBI:CHEBI:15899
+SCHEM,A0012,(R)-5-Phosphomevalonate,CHEBI:CHEBI:17436
+SCHEM,A0013,"(S)-2,3-Epoxysqualene",CHEBI:CHEBI:15441
+SCHEM,A0014,(S)-3-Hydroxy-3-methylglutaryl-CoA,CHEBI:CHEBI:15467
+SCHEM,A0015,(S)-3-Hydroxybutanoyl-CoA,CHEBI:CHEBI:15453
+SCHEM,A0016,(S)-3-Hydroxydodecanoyl-CoA,CHEBI:CHEBI:27668
+SCHEM,A0017,(S)-3-Hydroxyhexadecanoyl-CoA,CHEBI:CHEBI:27402
+SCHEM,A0018,(S)-3-Hydroxytetradecanoyl-CoA,CHEBI:CHEBI:27466
+SCHEM,A0019,(S)-Hydroxydecanoyl-CoA,CHEBI:CHEBI:28325
+SCHEM,A0020,(S)-Hydroxyhexanoyl-CoA,CHEBI:CHEBI:28276
+SCHEM,A0021,(S)-Hydroxyoctanoyl-CoA,CHEBI:CHEBI:28632
+SCHEM,A0022,(S)-Malate,CHEBI:CHEBI:15589
+SCHEM,A0023,"(S,R)-3-(4-hydroxyphenyl)-4,5-dihydro-5-isoxazole acetic acid methyl ester",
+SCHEM,A0024,"(Z,Z,Z)-Icosatri-8,11,14-enoic acid",
+SCHEM,A0025,05141 Cathepsin S inhibitor,
+SCHEM,A0026,"1,10-Bis(carboxymethylthiodecane)",MESH:C062079
+SCHEM,A0027,"1,10-Phenanthroline",CHEBI:CHEBI:44975
+SCHEM,A0028,"1,2,3-Propanetricarboxylic acid, 2-hydroxy-, ion(3-)",
+SCHEM,A0029,"1,2-Bis(2-aminophenoxy)ethane N,N,N',N'-tetraacetic acid acetoxymethyl ester",MESH:C070379
+SCHEM,A0030,"1,2-Bis(2-aminophenoxy)ethane-N,N,N',N'-tetraacetic acid",CHEBI:CHEBI:60888
+SCHEM,A0031,"1,2-Dipalmitoylphosphatidylcholine",CHEBI:CHEBI:18899
+SCHEM,A0032,"1,2-Dithiol-3-thione",CHEBI:CHEBI:50866
+SCHEM,A0033,"1,25-Dihydroxy-previtamin D(3)",MESH:C025169
+SCHEM,A0034,"1,25-Dihydroxyvitamin D",MESH:C097949
+SCHEM,A0035,"1,3-Bisphospho-D-glycerate",CHEBI:CHEBI:16001
+SCHEM,A0036,"1,3-Cyclopentanedicarboxylic acid",
+SCHEM,A0037,"1,3-Dimethylthiourea",MESH:C038983
+SCHEM,A0038,"1,3-Disubstituted Urea",
+SCHEM,A0039,"1,3-diphenyl-2-oxiranyl propanone",
+SCHEM,A0040,"1,4-Benzodiazepine",CHEBI:CHEBI:38431
+SCHEM,A0041,"1,4-Bis(2-(3,5-dichloropyridyloxy))benzene",MESH:C028474
+SCHEM,A0042,"1,5-Dihydro-fad",CHEBI:CHEBI:17877
+SCHEM,A0043,"1,6-Bismaleimidohexane",MESH:C075594
+SCHEM,A0044,"1,7-Dimethylxanthine",CHEBI:CHEBI:25858
+SCHEM,A0045,"1,7-Phenanthroline",CHEBI:CHEBI:36418
+SCHEM,A0046,1-(3-C-Ethynyl-beta-D-ribo-pentofuranosyl)cytosine,
+SCHEM,A0047,1-(5-Isoquinolinesulfonyl)-2-methylpiperazine,CHEBI:CHEBI:43385
+SCHEM,A0048,1-(Carboxymethylthio)tetradecane,MESH:C062078
+SCHEM,A0049,1-Acyl-2-oleoyl-sn-glycero-3-phosphocholine,CHEBI:CHEBI:17848
+SCHEM,A0050,1-Alkyl-2-acetyl-sn-glycero-3-phosphocholine,CHEBI:CHEBI:36707
+SCHEM,A0051,1-Aminomethylphosphonic acid,CHEBI:CHEBI:28812
+SCHEM,A0052,1-Benzylimidazole,MESH:C017062
+SCHEM,A0053,1-Butanol,CHEBI:CHEBI:28885
+SCHEM,A0054,1-Deoxynojirimycin,CHEBI:CHEBI:44369
+SCHEM,A0055,1-Hexadecyl-2-acetyl-glycero-3-phosphocholine,MESH:C037145
+SCHEM,A0056,1-Methyl-3-isobutylxanthine,CHEBI:CHEBI:34795
+SCHEM,A0057,"1-Methyl-4-phenyl-1,2,3,6-tetrahydropyridine",CHEBI:CHEBI:17963
+SCHEM,A0058,1-Methyl-4-phenylpyridinium,CHEBI:CHEBI:641
+SCHEM,A0059,1-Methyl-delta(1)-pyrrolinium,CHEBI:CHEBI:27435
+SCHEM,A0060,1-Methylimidazol-3-ylacetaldehyde,MESH:C038563
+SCHEM,A0061,1-Nitropyrene,CHEBI:CHEBI:34107
+SCHEM,A0062,1-Nitroso-1-(2-hydroxypropyl)-3-(2-chloroethyl)urea,MESH:C059882
+SCHEM,A0063,1-O-Hexadecyl-2-arachidonyl-sn-glycero-3-phosphocholine,MESH:C043051
+SCHEM,A0064,1-Oleoyl-2-acetylglycerol,MESH:C038237
+SCHEM,A0065,1-Organyl-2-lyso-sn-glycero-3-phosphocholine,CHEBI:CHEBI:30909
+SCHEM,A0066,"1-Phosphatidyl-1D-myo-inositol 3,4-bisphosphate",CHEBI:CHEBI:16152
+SCHEM,A0067,1-Phosphatidyl-D-myo-inositol,CHEBI:CHEBI:16749
+SCHEM,A0068,"1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate",CHEBI:CHEBI:18348
+SCHEM,A0069,"1-Propene-1,2,3-tricarboxylic acid, (1Z)-",
+SCHEM,A0070,1-hexanediol,
+SCHEM,A0071,10-Formyltetrahydrofolylpolyglutamate,CHEBI:CHEBI:28010
+SCHEM,A0072,"11,12-Epoxy-5,8,14-eicosatrienoic acid",MESH:C046783
+SCHEM,A0073,"11-Deoxy-16-phenoxy-17,18,19,20-tetranorprostaglandin E1",MESH:C032405
+SCHEM,A0074,11-deoxycorticosterone,CHEBI:CHEBI:16973
+SCHEM,A0075,11-deoxycortisol,CHEBI:CHEBI:28324
+SCHEM,A0076,12-Hpete,CHEBI:CHEBI:15626
+SCHEM,A0077,"12-Hydroxy-5,8,10,14-eicosatetraenoic acid",CHEBI:CHEBI:19138
+SCHEM,A0078,"12-Hydroxy-5,8,14-eicosatrienoic acid",MESH:C067514
+SCHEM,A0079,"12-O-Tetradeca-2,4,6,8-tetranoylphorbol-13-acetate",MESH:C032975
+SCHEM,A0080,"13-Hydroperoxy-9,11-octadecadienoic acid",MESH:C038649
+SCHEM,A0081,"13-Hydroxy-9,11-octadecadienoic acid",MESH:C024348
+SCHEM,A0082,"14,15-Epoxy-5,8,11-eicosatrienoic acid",MESH:C046782
+SCHEM,A0083,"15-Hydroperoxy-5,8,11,13-eicosatetraenoic acid",MESH:C025086
+SCHEM,A0084,"15-Hydroxy-5,8,11,13,17-eicosapentaenoic acid",MESH:C059164
+SCHEM,A0085,"15-Hydroxy-5,8,11,13-eicosatetraenoic acid",MESH:C025984
+SCHEM,A0086,"15-deoxy-D12,14-prostaglandin J2",
+SCHEM,A0087,"17, 21-Dihydroxypregnenolone",MESH:C015823
+SCHEM,A0088,17alpha-hydroxypregnenolone,CHEBI:CHEBI:28750
+SCHEM,A0089,17alpha-hydroxyprogesterone,CHEBI:CHEBI:17252
+SCHEM,A0090,18-Hydroxycorticosterone,CHEBI:CHEBI:16485
+SCHEM,A0091,"18-alpha-Olean-12-en-30-oic acid, 3-beta-hydroxy-11-oxo-",
+SCHEM,A0092,19-Norprogesterone,MESH:C030703
+SCHEM,A0093,19-Oxo-11-deoxycorticosterone acetate,MESH:C040168
+SCHEM,A0094,"1D-myo-Inositol 1,3,4,5-tetrakisphosphate",CHEBI:CHEBI:16783
+SCHEM,A0095,1H-Imidazole-4-acetaldehyde,CHEBI:CHEBI:27398
+SCHEM,A0096,"1H-Pyrazole-1-carboxamide, 3(or 5)-methyl-",
+SCHEM,A0097,"1S,2S trans methylstyrene oxide",
+SCHEM,A0098,"1alpha,24-Dihydroxyvitamin D3",
+SCHEM,A0099,"2',3'-Dideoxycytidine monophosphate",MESH:C101329
+SCHEM,A0100,"2',5'-Dideoxyadenosine",MESH:C021008
+SCHEM,A0101,2'-Deoxy-5'-adenosine monophosphate,CHEBI:CHEBI:17713
+SCHEM,A0102,2'-Deoxyadenosine,CHEBI:CHEBI:17256
+SCHEM,A0103,2'-Deoxyadenosine triphosphate,MESH:C026600
+SCHEM,A0104,2'-Deoxycytidine 5'-triphosphate,CHEBI:CHEBI:16311
+SCHEM,A0105,2'-Deoxyguanosine 5'-phosphate,CHEBI:CHEBI:16192
+SCHEM,A0106,"2,2'-Dipyridyl",CHEBI:CHEBI:30351
+SCHEM,A0107,"2,2,6,6-Tetramethyl-4-piperidinol-N-oxyl",MESH:C001803
+SCHEM,A0108,"2,2-Bis(4-glycidyloxyphenyl)propane",MESH:C019273
+SCHEM,A0109,"2,3,3',4,4'-Pentachlorobiphenyl",MESH:C067940
+SCHEM,A0110,"2,3,7,8-tetrachlorodibenzo-p-dioxin (TCDD)",
+SCHEM,A0111,"2,3-Bis(palmitoyloxy)-2-propyl-1-palmitoylcysteine",MESH:C069172
+SCHEM,A0112,"2,3-Dimethoxy-1,4-naphthoquinone",CHEBI:CHEBI:64215
+SCHEM,A0113,"2,4(1H,3H)-Pyridinedione, 3,3-diethyl-1-(methylpiperazine)-",
+SCHEM,A0114,"2,4,6-Trichlorophenyl 4-nitrophenyl ether",MESH:C010422
+SCHEM,A0115,"2,4-Decadienoyl-coenzyme A",MESH:C040351
+SCHEM,A0116,"2,5-Di-tert-butylhydroquinone",MESH:C019359
+SCHEM,A0117,"2-(2,3-Dicarboxycyclopropyl)glycine",MESH:C082313
+SCHEM,A0118,2-(2-Aminoethyl)thiazole,MESH:C029345
+SCHEM,A0119,2-(4-benzylpiperazin-1-yl)-N-[(2-hydroxy-3-prop- 2-enyl-phenyl)methylideneamino]acetamide,
+SCHEM,A0120,2-(Allylthio)pyrazine,MESH:C104935
+SCHEM,A0121,2-(Ethylthio)ethanol,
+SCHEM,A0122,2-(alpha-Hydroxyethyl)thiamine diphosphate,CHEBI:CHEBI:978
+SCHEM,A0123,2-Acetylaminofluorene,CHEBI:CHEBI:17356
+SCHEM,A0124,2-Acylglycerol,CHEBI:CHEBI:17389
+SCHEM,A0125,"2-Amino-1-methyl-6-phenylimidazo(4,5-b)pyridine",MESH:C049584
+SCHEM,A0126,"2-Amino-4,5-diphenyloxazole",MESH:C027022
+SCHEM,A0127,"2-Aminobicyclo(2,2,1)heptane-2-carboxylic acid",MESH:C006504
+SCHEM,A0128,2-Aminoisobutyric acid,CHEBI:CHEBI:27971
+SCHEM,A0129,2-Arachidonoylglycerol,CHEBI:CHEBI:52392
+SCHEM,A0130,2-Benzoquinone,CHEBI:CHEBI:17253
+SCHEM,A0131,"2-Butenedioic acid (E)-, ion(2-)",
+SCHEM,A0132,2-Chloroethyl ethyl sulfide,MESH:C031278
+SCHEM,A0133,2-Chloroethylene oxide,MESH:C015061
+SCHEM,A0134,2-Deoxy-D-ribose 1-phosphate,CHEBI:CHEBI:28542
+SCHEM,A0135,2-Ethylhexanoic acid,MESH:C040668
+SCHEM,A0136,2-Formyl-5-(hydroxymethyl)pyrrole-1-norleucine,CHEBI:CHEBI:604731
+SCHEM,A0137,2-Hydroxybutyric acid,CHEBI:CHEBI:1148
+SCHEM,A0138,2-Hydroxyoctanoic acid,
+SCHEM,A0139,2-Methoxyestradiol,CHEBI:CHEBI:28955
+SCHEM,A0140,2-Methylcitric acid,CHEBI:CHEBI:30835
+SCHEM,A0141,2-Nitrotoluene,CHEBI:CHEBI:33098
+SCHEM,A0142,"2-Nonenal, 4-hydroxy-",
+SCHEM,A0143,2-Oxoarginine,
+SCHEM,A0144,2-Oxoglutarate,CHEBI:CHEBI:16810
+SCHEM,A0145,"2-Phenyl-4,4,5,5-tetramethylimidazoline-1-oxyl-3-oxide",MESH:C079391
+SCHEM,A0146,2-Phenylbutyric acid,MESH:C039714
+SCHEM,A0147,2-Phospho-D-glycerate,CHEBI:CHEBI:58289
+SCHEM,A0148,2-Phosphoglycolate,CHEBI:CHEBI:19763
+SCHEM,A0149,2-dimethylthioethanol,
+SCHEM,A0150,2-hydroxy-3-methylacyl CoA,
+SCHEM,A0151,2-hydroxyethyl sulfide,
+SCHEM,A0152,2-methyl Branched chain fatty acid,
+SCHEM,A0153,2-methyl fatty aldehyde,
+SCHEM,A0154,2-methylthioethylamine,
+SCHEM,A0155,2-tert-Butylhydroquinone,MESH:C018855
+SCHEM,A0156,2-trans-Dodecenoyl-CoA,CHEBI:CHEBI:15471
+SCHEM,A0157,20-Hydroxycholesterol,CHEBI:CHEBI:1296
+SCHEM,A0158,"20alpha,22beta dihydroxycholesterol",
+SCHEM,A0159,22(R)-Hydroxycholesterol,
+SCHEM,A0160,22-Hydroxycholesterol,MESH:C003585
+SCHEM,A0161,22beta-Hydroxycholesterol,CHEBI:CHEBI:67237
+SCHEM,A0162,"24,25-Epoxycholesterol",MESH:C028358
+SCHEM,A0163,24-Hydroxycholesterol,CHEBI:CHEBI:50515
+SCHEM,A0164,25-Hydroxycholesterol,CHEBI:CHEBI:42977
+SCHEM,A0165,27-Hydroxycholesterol,CHEBI:CHEBI:17703
+SCHEM,A0166,27-hydroxylated 7-ketocholesterol,
+SCHEM,A0167,"2H-1-Benzopyran-3,5,7-triol, 2-(3,4-dihydroxyphenyl)-3,4-dihydro-, (2R-cis)- (9CI)",
+SCHEM,A0168,"3',3'',5',5''-Tetrabromophenolphthalein",MESH:C018156
+SCHEM,A0169,"3',5'-Cyclic dAMP",CHEBI:CHEBI:28074
+SCHEM,A0170,3'-methoxy-4'-nitroflavone,MESH:C091768
+SCHEM,A0171,"3,3'-Diindolylmethane",CHEBI:CHEBI:50182
+SCHEM,A0172,"3,3-Dimethylallyl pyrophosphate",CHEBI:CHEBI:16057
+SCHEM,A0173,"3,4,3',4'-Tetrachlorobiphenyl",CHEBI:CHEBI:1367
+SCHEM,A0174,"3,4-Dihydroxymandelaldehyde",CHEBI:CHEBI:27852
+SCHEM,A0175,"3,4-Dihydroxymandelic acid",CHEBI:CHEBI:27637
+SCHEM,A0176,"3,4-Dihydroxyphenylacetaldehyde",CHEBI:CHEBI:27978
+SCHEM,A0177,"3,4-Dihydroxyphenylacetic acid",CHEBI:CHEBI:41941
+SCHEM,A0178,"3,4-methylenedioxy-benzyl-amino-6-methoxyquinazoline",
+SCHEM,A0179,"3,5,9-Trioxo-4-phosphaheptacosan-1-aminium, 7-(acetyloxy)-4-hydroxy-N,N,N-trimethyl-, hydroxide, inner salt, 4-oxide, (R)-",
+SCHEM,A0180,"3,5-Dihydroxyphenylglycine",MESH:C079215
+SCHEM,A0181,"3,6-diaziridinyl-1,4-benzoquinone",CHEBI:CHEBI:19363
+SCHEM,A0182,"3,9-Bis((ethylthio)methyl)-K-252a",MESH:C106592
+SCHEM,A0183,3-(1-Deoxyribofuranosyl)benzamide,MESH:C076145
+SCHEM,A0184,3-(4-methylphenylsulfonyl)-2-propenenitrile,MESH:C434003
+SCHEM,A0185,"3-(Cyclopentyloxy)-N-(3,5-dichloro-4-pyridyl)-4-methoxybenzamide",MESH:C087566
+SCHEM,A0186,3-Aminobenzamide,CHEBI:CHEBI:64042
+SCHEM,A0187,3-Aminobenzoic acid,CHEBI:CHEBI:42682
+SCHEM,A0188,3-Aminopropionaldehyde,CHEBI:CHEBI:18090
+SCHEM,A0189,3-Carboxy-1-hydroxypropyl-ThPP,CHEBI:CHEBI:1463
+SCHEM,A0190,3-Chloropropionyl-coenzyme A,MESH:C046467
+SCHEM,A0191,3-Chlorotyrosine,CHEBI:CHEBI:53678
+SCHEM,A0192,3-Deazaadenosine,MESH:C018258
+SCHEM,A0193,3-Deoxy-2-octulosonic acid(2)-lipid IV(A),MESH:C088602
+SCHEM,A0194,3-Deoxyglucosone,CHEBI:CHEBI:60777
+SCHEM,A0195,3-Glucosido-chenodeoxycholic acid,MESH:C105602
+SCHEM,A0196,3-Hydroxy-5-cholestenoic acid,MESH:C029435
+SCHEM,A0197,"3-Hydroxy-N6,N6,N6-trimethyl-L-lysine",CHEBI:CHEBI:15786
+SCHEM,A0198,3-Hydroxyacyl-CoA,CHEBI:CHEBI:65260
+SCHEM,A0199,3-Hydroxybutyric acid,CHEBI:CHEBI:20067
+SCHEM,A0200,3-Hydroxydecanoyl-coenzyme A,CHEBI:CHEBI:28325
+SCHEM,A0201,3-Hydroxyflavone,CHEBI:CHEBI:5078
+SCHEM,A0202,3-Hydroxyisobutyric acid,CHEBI:CHEBI:18064
+SCHEM,A0203,3-Hydroxykynurenamine,CHEBI:CHEBI:27421
+SCHEM,A0204,3-Hydroxyoctanoic acid,CHEBI:CHEBI:37098
+SCHEM,A0205,3-Hydroxyproline,CHEBI:CHEBI:64368
+SCHEM,A0206,3-Ketoacyl CoA,
+SCHEM,A0207,3-Ketohexanoyl-coenzyme A,CHEBI:CHEBI:27648
+SCHEM,A0208,3-Methoxy-4-hydroxyphenylacetaldehyde,CHEBI:CHEBI:28111
+SCHEM,A0209,3-Methoxy-4-hydroxyphenylglycolaldehyde,CHEBI:CHEBI:27932
+SCHEM,A0210,3-Methoxytyramine,MESH:C001746
+SCHEM,A0211,3-Methyladenine,CHEBI:CHEBI:38635
+SCHEM,A0212,3-Methylcholanthrene-1-one,MESH:C052727
+SCHEM,A0213,3-Methyleneindolenine,CHEBI:CHEBI:63905
+SCHEM,A0214,3-Methylhistidine,CHEBI:CHEBI:70959
+SCHEM,A0215,3-Morpholinosydnonimine,
+SCHEM,A0216,3-Nitropropionic acid,CHEBI:CHEBI:16348
+SCHEM,A0217,3-Nitrotyrosine,CHEBI:CHEBI:44454
+SCHEM,A0218,3-Oxocholan-24-oic acid,CHEBI:CHEBI:17639
+SCHEM,A0219,3-Oxodecanoyl-CoA,CHEBI:CHEBI:28528
+SCHEM,A0220,3-Oxododecanoyl-CoA,CHEBI:CHEBI:27868
+SCHEM,A0221,3-Oxooctanoyl-CoA,CHEBI:CHEBI:28264
+SCHEM,A0222,3-Oxopalmitoyl-CoA,CHEBI:CHEBI:15491
+SCHEM,A0223,3-Oxotetradecanoyl-CoA,CHEBI:CHEBI:28726
+SCHEM,A0224,3-Phospho-D-glycerate,CHEBI:CHEBI:58272
+SCHEM,A0225,3-Phospho-D-glyceroyl phosphate,CHEBI:CHEBI:16001
+SCHEM,A0226,3-Phosphoglycerate,CHEBI:CHEBI:17050
+SCHEM,A0227,3-Ureidoisobutyrate,CHEBI:CHEBI:74414
+SCHEM,A0228,"3-[3-butylsulfanyl-1-[(4-chlorophenyl)methyl]-5-propan-2-ylindol-2-yl]- 2,2-dimethylpropanoic acid",
+SCHEM,A0229,3-keto-4-hexenoyl-CoA,
+SCHEM,A0230,3-ketosphinganine,CHEBI:CHEBI:46966
+SCHEM,A0231,3-methyl Branched chain fatty acid,
+SCHEM,A0232,3-methylacyl CoA,
+SCHEM,A0233,3-methylindole,CHEBI:CHEBI:9171
+SCHEM,A0234,3-trans-decenoyl-CoA,CHEBI:CHEBI:29126
+SCHEM,A0235,"3H-1,2-Dithiole-3-thione, 5-(1,1-dimethylethyl)-",
+SCHEM,A0236,"4'-Benzyloxy-3'-methoxy-7,8-benzoflavone",MESH:C047095
+SCHEM,A0237,"4,17beta-Dihydroxy-4-androstene-3-one",
+SCHEM,A0238,"4,4-dimethylcholesta-8(9),14,24-trien-3beta-ol",CHEBI:CHEBI:17813
+SCHEM,A0239,"4,4-dimethylcholesta-8(9),24-dien-3beta-ol",CHEBI:CHEBI:18364
+SCHEM,A0240,"4,4prime dihydroxy 3,3prime,5,5prime tetramethylbiphenyl",
+SCHEM,A0241,"4,5-Dimethoxy-2-nitrobenzyl-8-bromo-camp",MESH:C099977
+SCHEM,A0242,"4,6-Dihydroxyquinoline",CHEBI:CHEBI:28799
+SCHEM,A0243,"4,6-Ethylidene glucose streptozotocin",MESH:C060308
+SCHEM,A0244,"4,8-Dihydroxyquinoline",CHEBI:CHEBI:28883
+SCHEM,A0245,4-(2-Aminoethyl)benzenesulfonylfluoride,MESH:C002010
+SCHEM,A0246,4-(Methylnitrosamino)-1-(3-pyridyl)-1-butanone,CHEBI:CHEBI:32692
+SCHEM,A0247,4-(Methylnitrosamino)-4-(3-pyridyl)butanal,MESH:C047760
+SCHEM,A0248,"4-Amino-1,8-naphthalimide",CHEBI:CHEBI:40071
+SCHEM,A0249,4-Aminobiphenyl,CHEBI:CHEBI:1784
+SCHEM,A0250,4-Aminobutyraldehyde,CHEBI:CHEBI:17769
+SCHEM,A0251,4-Aminophenylmercuriacetate,MESH:C010024
+SCHEM,A0252,"4-Aminopyrazolo(3,4-d)pyrimidine",MESH:C004420
+SCHEM,A0253,"4-Androstene-3, 17-dione",
+SCHEM,A0254,4-Biphenylamine,CHEBI:CHEBI:1784
+SCHEM,A0255,4-Bromophenacyl bromide,MESH:C006821
+SCHEM,A0256,4-Coumaric acid,CHEBI:CHEBI:36090
+SCHEM,A0257,4-Decenoyl-coenzyme A,MESH:C018500
+SCHEM,A0258,4-Hydroxy-2-nonenal,CHEBI:CHEBI:32585
+SCHEM,A0259,4-Hydroxycyclophosphamide,CHEBI:CHEBI:1864
+SCHEM,A0260,4-Hydroxyestradiol-17beta,CHEBI:CHEBI:62845
+SCHEM,A0261,4-Hydroxymercuribenzoate,MESH:C030601
+SCHEM,A0262,4-Hydroxyphenylacetaldehyde,CHEBI:CHEBI:15621
+SCHEM,A0263,4-Hydroxytamoxifen,CHEBI:CHEBI:44616
+SCHEM,A0264,4-Methylaminobutanal,
+SCHEM,A0265,4-Methylnicotinamide,MESH:C063648
+SCHEM,A0266,4-Nitrobenzylthioinosine,MESH:C001789
+SCHEM,A0267,4-Nitroquinoline-1-oxide,CHEBI:CHEBI:16907
+SCHEM,A0268,4-O-Methyl-12-O-tetradecanoylphorbol 13-acetate,MESH:C020922
+SCHEM,A0269,4-Phenylazophenylmaleimide,MESH:C086886
+SCHEM,A0270,4-Phenylbutyric acid,CHEBI:CHEBI:41500
+SCHEM,A0271,4-Trimethylammoniobutanal,CHEBI:CHEBI:18020
+SCHEM,A0272,4-Trimethylammoniobutanoate,CHEBI:CHEBI:1941
+SCHEM,A0273,4-amidinoindan-1-one2prime-aminohydrazone,
+SCHEM,A0274,"4-carboxycholesta-8(9),24-dien-3beta-ol",
+SCHEM,A0275,4-hydroxydebrisoquine,MESH:C012359
+SCHEM,A0276,4-hydroxyphenytoin,CHEBI:CHEBI:63804
+SCHEM,A0277,4-hydroxytolbutamide,CHEBI:CHEBI:63799
+SCHEM,A0278,"4-methyl,4-carboxycholesta-8(9),24-dien-3beta-ol",
+SCHEM,A0279,"4-methylcholesta-8(9),24-dien-3-one",
+SCHEM,A0280,"4-methylcholesta-8(9),24-dien-3beta-ol",
+SCHEM,A0281,5'-Amino-5'-deoxyadenosine,MESH:C057928
+SCHEM,A0282,5'-Guanylic acid,CHEBI:CHEBI:17345
+SCHEM,A0283,5'-Methylthioadenosine,CHEBI:CHEBI:17509
+SCHEM,A0284,"5,10-Methylenetetrahydrofolate",CHEBI:CHEBI:12071
+SCHEM,A0285,"5,10-Methylenetetrahydrofolate polyglutamate",CHEBI:CHEBI:61443
+SCHEM,A0286,"5,10-methenyltetrahydrofolate polyglutamate",CHEBI:CHEBI:65050
+SCHEM,A0287,"5,6,7,8-Tetrahydrobiopterin",CHEBI:CHEBI:15372
+SCHEM,A0288,"5,6-Dichloro-1-beta-D-ribofuranosylbenzimidazole-3',5'-monophosphorothioate",MESH:C071644
+SCHEM,A0289,"5,6-Dihydrothymine",CHEBI:CHEBI:27468
+SCHEM,A0290,"5,6-dichloro-1-beta-D-ribofuranosyl benzimidazole 3prime,5prime-cyclic monophosphate",
+SCHEM,A0291,"5,8,11,14-Eicosatetraynoic acid",MESH:D015117
+SCHEM,A0292,5-Aminoimidazole-4-carboxamide-1-ribofuranosyl triphosphate,MESH:C098395
+SCHEM,A0293,5-Aminopentanal,
+SCHEM,A0294,5-Aza-2'-deoxycytidine-5'-monophosphate,MESH:C041519
+SCHEM,A0295,5-Azacytosine,CHEBI:CHEBI:72474
+SCHEM,A0296,5-Benzyloxy-2-thiocyanatomethyl-4-pyranone,MESH:C105766
+SCHEM,A0297,5-Carboxamidotryptamine,CHEBI:CHEBI:48292
+SCHEM,A0298,5-Fluoromethylornithine,MESH:C057405
+SCHEM,A0299,5-HETE,CHEBI:CHEBI:60943
+SCHEM,A0300,"5-Heptenoic acid, 7-((1S,2R,4R,5S)-3-((1E,3S)-3-hydroxy-1-octenyl)-6-thiabicyclo(3.1.1)hept-2-yl)-, (5Z)-",
+SCHEM,A0301,"5-Hydroxy-6,8,11,14-eicosatetraenoic acid",MESH:C022022
+SCHEM,A0302,5-Hydroxyindoleacetaldehyde,CHEBI:CHEBI:50157
+SCHEM,A0303,5-Hydroxykynuramine,MESH:C001402
+SCHEM,A0304,5-L-gamma-glutamyl amino acid,
+SCHEM,A0305,5-Methylnicotinamide,MESH:C024785
+SCHEM,A0306,5-Methyltetrahydrofolate,CHEBI:CHEBI:20612
+SCHEM,A0307,"5-alpha-Androstane-3-alpha,17-beta-diol",
+SCHEM,A0308,5-beta-cholestanoic acid,
+SCHEM,A0309,5-fluorouracil,CHEBI:CHEBI:46345
+SCHEM,A0310,5-hydroxyomeprazole,
+SCHEM,A0311,5-methyltetrahydrofolate polyglutamate,
+SCHEM,A0312,"6,9-Dioxa-3,12-diazatetradecanedioic acid, 3,12-bis(carboxymethyl)-, disodium salt",
+SCHEM,A0313,6-(Bromomethylene)tetrahydro-3-(1-naphthaleneyl)-2H-pyran-2-one,MESH:C068314
+SCHEM,A0314,6-Aminonicotinamide,CHEBI:CHEBI:74514
+SCHEM,A0315,6-Diazo-5-oxo-L-norleucine,MESH:D003980
+SCHEM,A0316,6-Hydroxychlorzoxazone,MESH:C039289
+SCHEM,A0317,6-Hydroxydopa,CHEBI:CHEBI:20725
+SCHEM,A0318,6-Ketoprostaglandin F1alpha,CHEBI:CHEBI:28158
+SCHEM,A0319,6-Mercaptopurine,CHEBI:CHEBI:50667
+SCHEM,A0320,"6-Methyl-1,3,8-trichlorodibenzofuran",MESH:C054923
+SCHEM,A0321,6-Phosphonoglucono-delta-lactone,CHEBI:CHEBI:16938
+SCHEM,A0322,6-bromoindirubin-3'-oxime,MESH:C483321
+SCHEM,A0323,"6-formylindolo[3,2-b]carbazole",
+SCHEM,A0324,6-hydroxypaclitaxel,CHEBI:CHEBI:63859
+SCHEM,A0325,6beta-Hydroxytestosterone,CHEBI:CHEBI:34477
+SCHEM,A0326,"7,12-Dihydroxymethylbenz(a)anthracene",MESH:C046810
+SCHEM,A0327,"7,14-Diazadibenzo(a,h)pyrene",MESH:C019169
+SCHEM,A0328,"7,25-Dihydroxycholesterol",MESH:C057657
+SCHEM,A0329,7-(3-(3-Hydroxy-4-(4'-iodophenoxy)-1-butenyl)-7-oxabicyclo(2.2.1)heptan-2-yl)-5-heptenoic acid,MESH:C061750
+SCHEM,A0330,7-Dehydrocholesterol,CHEBI:CHEBI:17759
+SCHEM,A0331,7-Ketocholesterol,CHEBI:CHEBI:64294
+SCHEM,A0332,7-hydroxyperoxy-cholesterol,
+SCHEM,A0333,"8,11,14,17-Eicosatetraenoic",
+SCHEM,A0334,"8-((4-Chlorophenyl)thio)cyclic-3',5'-amp",MESH:C015929
+SCHEM,A0335,8-(4-chloro-phenylthio)-2'-O-methyladenosine-3'-5'-cyclic monophosphate,MESH:C473217
+SCHEM,A0336,"8-4-Chlorophenylthioguanosine-3prime,5prime-cyclic monophosphorothioate",
+SCHEM,A0337,8-Bromo cyclic adenosine monophosphate,CHEBI:CHEBI:64211
+SCHEM,A0338,"8-Bromo-beta-phenyl-1,N(2)-ethenoguanosine 3',5'-cyclic monophosphorothioate",MESH:C098740
+SCHEM,A0339,8-Bromocyclic GMP,CHEBI:CHEBI:64108
+SCHEM,A0340,8-Hydroxy-2-(di-n-propylamino)tetralin,CHEBI:CHEBI:73364
+SCHEM,A0341,8-Hydroxydeoxyguanosine 5'-monophosphate,CHEBI:CHEBI:63223
+SCHEM,A0342,8-Hydroxyguanine,CHEBI:CHEBI:52617
+SCHEM,A0343,8-Isoprostane,CHEBI:CHEBI:33023
+SCHEM,A0344,8-Methyl-IQX,
+SCHEM,A0345,"8-Oxo-7,8-dihydrodeoxyguanine",MESH:C078307
+SCHEM,A0346,8-Oxo-7-hydrodeoxyguanosine,CHEBI:CHEBI:40304
+SCHEM,A0347,8-Oxodeoxyguanosine triphosphate,CHEBI:CHEBI:63220
+SCHEM,A0348,8-Oxoguanosine 2'-phosphate,MESH:C039543
+SCHEM,A0349,8-iso-Prostaglandin F2,
+SCHEM,A0350,8-methoxymethyl-3-isobutyl-1-methylxanthine,MESH:C119531
+SCHEM,A0351,"8-oxo-7,8-dihydro-2'-deoxyguanosine",CHEBI:CHEBI:40304
+SCHEM,A0352,8S-hydroxyeicosatetraenoic acid,
+SCHEM,A0353,"9,10-Dimethyl-1,2-benzanthracene",CHEBI:CHEBI:254496
+SCHEM,A0354,"9,10-Epoxystearic acid",MESH:C013519
+SCHEM,A0355,"9,11-Linoleic acid",MESH:C046938
+SCHEM,A0356,"9,12-Octadecadienoic acid (Z,Z)-, ion(1-)",
+SCHEM,A0357,"9,13-Retinoic acid",MESH:C105492
+SCHEM,A0358,"9-Deoxy-9,10-didehydro-12,13-didehydro-13,14-dihydroprostaglandin D2",CHEBI:CHEBI:28130
+SCHEM,A0359,"9-Deoxy-delta-9,12-prostaglandin D2",
+SCHEM,A0360,9-Deoxy-delta-9-prostaglandin D2,CHEBI:CHEBI:27485
+SCHEM,A0361,9-Ethyladenine,MESH:C001172
+SCHEM,A0362,"9-Hydroxy-10,12-octadecadienoic acid",MESH:C024347
+SCHEM,A0363,"9-Octadecenoic acid (Z)-, ion(1-)",
+SCHEM,A0364,"9-cis,11-trans-Octadecadienoate",CHEBI:CHEBI:17539
+SCHEM,A0365,9-cis-Retinal,MESH:C031390
+SCHEM,A0366,9-hydroxyoctadecadienoic acid,
+SCHEM,A0367,"A-Norpregn-20-yne-2,17-diol, 2-ethynyl-, (2-beta,5-alpha,17-alpha)- (9CI)",
+SCHEM,A0368,A291077,
+SCHEM,A0369,A304000,MESH:C557211
+SCHEM,A0370,ABT-263,
+SCHEM,A0371,ACER1,
+SCHEM,A0372,ADAM10 inhibitor,
+SCHEM,A0373,ADP,CHEBI:CHEBI:16761
+SCHEM,A0374,ADP-D-ribosyl-acceptor,
+SCHEM,A0375,AG 879,MESH:C081020
+SCHEM,A0376,AG-490,
+SCHEM,A0377,AGN 194204,MESH:C430898
+SCHEM,A0378,AH 6809,
+SCHEM,A0379,ALT-711,
+SCHEM,A0380,AMP,CHEBI:CHEBI:16027
+SCHEM,A0381,AMPK inhibitor,
+SCHEM,A0382,APPC,CHEBI:CHEBI:61718
+SCHEM,A0383,APT,MESH:C071989
+SCHEM,A0384,ATM inhibitor,
+SCHEM,A0385,ATP,CHEBI:CHEBI:15422
+SCHEM,A0386,AZ703,
+SCHEM,A0387,AZD0530,
+SCHEM,A0388,Abciximab,MESH:C085843
+SCHEM,A0389,Ac-DEVD-CHO,CHEBI:CHEBI:59385
+SCHEM,A0390,Acadesine,MESH:C011651
+SCHEM,A0391,Acarbose,CHEBI:CHEBI:2376
+SCHEM,A0392,Aceneuramic acid,CHEBI:CHEBI:17012
+SCHEM,A0393,Acetaldehyde,CHEBI:CHEBI:15343
+SCHEM,A0394,Acetaminophen,CHEBI:CHEBI:46195
+SCHEM,A0395,Acetaminophen (TN TYLENOL),
+SCHEM,A0396,Acetanilide,CHEBI:CHEBI:28884
+SCHEM,A0397,Acetazolamide,CHEBI:CHEBI:27690
+SCHEM,A0398,Acetic acid,CHEBI:CHEBI:15366
+SCHEM,A0399,"Acetic acid, 2-(o-(((4-isopropyl-2-methyl-5-oxo-1-phenyl-3-pyrazolin-3-yl)methyl)carbamoyl)phenyl)-",
+SCHEM,A0400,"Acetic acid, ion(1-)",CHEBI:CHEBI:30089
+SCHEM,A0401,Acetoacetic acid,CHEBI:CHEBI:15344
+SCHEM,A0402,Acetoacetyl coa,MESH:C010667
+SCHEM,A0403,Acetovanillone,CHEBI:CHEBI:2781
+SCHEM,A0404,Acetyl coenzyme A,CHEBI:CHEBI:15351
+SCHEM,A0405,Acetyl-CoA,CHEBI:CHEBI:15351
+SCHEM,A0406,Acetylcarnitine,MESH:D000108
+SCHEM,A0407,Acetylcholine,CHEBI:CHEBI:15355
+SCHEM,A0408,Acetylcysteine,CHEBI:CHEBI:22198
+SCHEM,A0409,Acetylglucosamine,CHEBI:CHEBI:28009
+SCHEM,A0410,Acetylhydrazine,CHEBI:CHEBI:2422
+SCHEM,A0411,Acetylleucyl-leucyl-norleucinal,CHEBI:CHEBI:2423
+SCHEM,A0412,Acetylmuramyl-alanyl-isoglutamine,CHEBI:CHEBI:59414
+SCHEM,A0413,Acivicin,CHEBI:CHEBI:74545
+SCHEM,A0414,Acrolein,CHEBI:CHEBI:15368
+SCHEM,A0415,Actarit,
+SCHEM,A0416,Actinomycin,CHEBI:CHEBI:15369
+SCHEM,A0417,Actinomycin D1,MESH:C033233
+SCHEM,A0418,Activin,MESH:D028341
+SCHEM,A0419,Activin receptor,MESH:D029404
+SCHEM,A0420,Acyclovir,CHEBI:CHEBI:2453
+SCHEM,A0421,Acyl-CoA,CHEBI:CHEBI:17984
+SCHEM,A0422,Acyl-CoA synthase,
+SCHEM,A0423,Adenine,CHEBI:CHEBI:16708
+SCHEM,A0424,Adenosine,CHEBI:CHEBI:16335
+SCHEM,A0425,Adenosine 3'-phosphate-5'-phosphate,MESH:C010840
+SCHEM,A0426,"Adenosine 5'-(tetrahydrogen triphosphate), magnesium salt",
+SCHEM,A0427,Adenosine 5'-O-(3-thiotriphosphate),CHEBI:CHEBI:27575
+SCHEM,A0428,Adenosine dialdehyde,MESH:C027579
+SCHEM,A0429,Adenosine diphosphate,MESH:D000244
+SCHEM,A0430,Adenosine diphosphate ribose,CHEBI:CHEBI:16960
+SCHEM,A0431,Adenosine phosphate,CHEBI:CHEBI:22256
+SCHEM,A0432,Adenosine triphosphate,CHEBI:CHEBI:15422
+SCHEM,A0433,Adenosine-5'-(N-ethylcarboxamide),CHEBI:CHEBI:73284
+SCHEM,A0434,Adrenomedullin,MESH:D053607
+SCHEM,A0435,"Adriamycin 14-octanoate, hydrochloride",
+SCHEM,A0436,Advanced Glycation End Product,MESH:D017127
+SCHEM,A0437,Aflatoxin B1,CHEBI:CHEBI:2504
+SCHEM,A0438,"Aflatoxin exo-8,9-oxide",
+SCHEM,A0439,Agm 1470,
+SCHEM,A0440,Agmatine,CHEBI:CHEBI:17431
+SCHEM,A0441,Aica ribonucleotide,MESH:C031143
+SCHEM,A0442,Ajoene,MESH:C048980
+SCHEM,A0443,Alanine,CHEBI:CHEBI:16449
+SCHEM,A0444,"Alanine, 3-(2-aminoethoxy)-, L-",
+SCHEM,A0445,Albumins,MESH:D000418
+SCHEM,A0446,Albuterol,CHEBI:CHEBI:2549
+SCHEM,A0447,Alcohol,CHEBI:CHEBI:30879
+SCHEM,A0448,"Aldehydes, C9-11",
+SCHEM,A0449,Aldosterone,CHEBI:CHEBI:27584
+SCHEM,A0450,Alendronate sodium,CHEBI:CHEBI:2566
+SCHEM,A0451,Aliskiren,CHEBI:CHEBI:601027
+SCHEM,A0452,Alitretinoin,CHEBI:CHEBI:50648
+SCHEM,A0453,Allergens,MESH:D000485
+SCHEM,A0454,Allicin,CHEBI:CHEBI:28411
+SCHEM,A0455,Allopurinol,CHEBI:CHEBI:40279
+SCHEM,A0456,Alloxan,CHEBI:CHEBI:76451
+SCHEM,A0457,Allyl sulfide,MESH:C038491
+SCHEM,A0458,Allylamine,MESH:D000499
+SCHEM,A0459,Alprostadil,CHEBI:CHEBI:15544
+SCHEM,A0460,Alum,CHEBI:CHEBI:74768
+SCHEM,A0461,Aluminum,CHEBI:CHEBI:28984
+SCHEM,A0462,Am 580,CHEBI:CHEBI:64210
+SCHEM,A0463,Amantadine,CHEBI:CHEBI:2618
+SCHEM,A0464,Amide,CHEBI:CHEBI:32988
+SCHEM,A0465,Amiloride,CHEBI:CHEBI:2639
+SCHEM,A0466,Aminoacetone,CHEBI:CHEBI:17906
+SCHEM,A0467,Aminoglutethimide,CHEBI:CHEBI:2654
+SCHEM,A0468,Aminohippuric acid,CHEBI:CHEBI:104011
+SCHEM,A0469,Aminorex,MESH:D000635
+SCHEM,A0470,"Aminotransferase, alanine",MESH:D000410
+SCHEM,A0471,"Aminotransferase, aspartate",MESH:D001219
+SCHEM,A0472,Amiodarone,CHEBI:CHEBI:2663
+SCHEM,A0473,Amitrole,CHEBI:CHEBI:40036
+SCHEM,A0474,Ammonia,CHEBI:CHEBI:16134
+SCHEM,A0475,Ammonium chloride,CHEBI:CHEBI:31206
+SCHEM,A0476,Amphetamine,CHEBI:CHEBI:2679
+SCHEM,A0477,Amphiregulin,MESH:D066258
+SCHEM,A0478,Amphotericin B-deoxycholate,MESH:C059765
+SCHEM,A0479,Amrinone,MESH:D000676
+SCHEM,A0480,Amygdalin,CHEBI:CHEBI:27613
+SCHEM,A0481,Amylin,MESH:D058228
+SCHEM,A0482,Amyloid beta-protein (17-42),MESH:C086839
+SCHEM,A0483,"Anabasine, 1-nitroso-",
+SCHEM,A0484,Anandamide,CHEBI:CHEBI:2700
+SCHEM,A0485,Anastrozole,CHEBI:CHEBI:2704
+SCHEM,A0486,Anatoxin-A(S),MESH:C509785
+SCHEM,A0487,Androgen,CHEBI:CHEBI:50113
+SCHEM,A0488,"Androstan-3-one, 17-hydroxy-, (5-beta,17-beta)- (9CI)",
+SCHEM,A0489,Androstenedione,CHEBI:CHEBI:16422
+SCHEM,A0490,Androstenol,CHEBI:CHEBI:40933
+SCHEM,A0491,Androsterone,CHEBI:CHEBI:16032
+SCHEM,A0492,Angiogenin,MESH:C046366
+SCHEM,A0493,Angiostatin,MESH:D043168
+SCHEM,A0494,Angiotensin,CHEBI:CHEBI:48433
+SCHEM,A0495,Angiotensin I,MESH:D000803
+SCHEM,A0496,Angiotensin II (1-7),CHEBI:CHEBI:55438
+SCHEM,A0497,Angiotensin III,MESH:D000805
+SCHEM,A0498,Angiotensin ii,CHEBI:CHEBI:48432
+SCHEM,A0499,Angiotensinogen,MESH:D000808
+SCHEM,A0500,Anisomycin,CHEBI:CHEBI:338412
+SCHEM,A0501,Anthracycline,CHEBI:CHEBI:48120
+SCHEM,A0502,Anthranilic acid,CHEBI:CHEBI:30754
+SCHEM,A0503,Anthrax,
+SCHEM,A0504,Anti-EGFR mAb Clone 225,
+SCHEM,A0505,Antigens,CHEBI:CHEBI:59132
+SCHEM,A0506,Antimycin A,CHEBI:CHEBI:22584
+SCHEM,A0507,Antimycin A1,CHEBI:CHEBI:22584
+SCHEM,A0508,Apafant,
+SCHEM,A0509,Apamin,MESH:D001030
+SCHEM,A0510,Aphidicolin,CHEBI:CHEBI:2766
+SCHEM,A0511,Apigenin,CHEBI:CHEBI:18388
+SCHEM,A0512,Aprotinin,MESH:D007611
+SCHEM,A0513,Arachidic acid,CHEBI:CHEBI:28822
+SCHEM,A0514,Arachidonic acid,CHEBI:CHEBI:15843
+SCHEM,A0515,Arachidonic acid 5-hydroperoxide,MESH:C025348
+SCHEM,A0516,Arachidonyl-3-ketoacyl-CoA,
+SCHEM,A0517,Arachidonyl-coenzyme A,CHEBI:CHEBI:15514
+SCHEM,A0518,Arecoline,CHEBI:CHEBI:2814
+SCHEM,A0519,Argatroban,CHEBI:CHEBI:48720
+SCHEM,A0520,Arginase,MESH:D001119
+SCHEM,A0521,Arginine,CHEBI:CHEBI:29016
+SCHEM,A0522,Argininic acid,MESH:C000225
+SCHEM,A0523,Argininosuccinic acid,MESH:D001125
+SCHEM,A0524,Arginyl-glycyl-aspartyl-serine,MESH:C046617
+SCHEM,A0525,Aroclor 1242,MESH:C027423
+SCHEM,A0526,Arsenic,CHEBI:CHEBI:27563
+SCHEM,A0527,Arsenic oxide,CHEBI:CHEBI:50527
+SCHEM,A0528,Arsenic trioxide,CHEBI:CHEBI:30621
+SCHEM,A0529,Arsenite,CHEBI:CHEBI:29866
+SCHEM,A0530,Artemisinin,CHEBI:CHEBI:223316
+SCHEM,A0531,Arzoxifene,
+SCHEM,A0532,Asbestos,CHEBI:CHEBI:46661
+SCHEM,A0533,Ascomycin,
+SCHEM,A0534,Ascorbic acid,CHEBI:CHEBI:22652
+SCHEM,A0535,Asparagine,CHEBI:CHEBI:22653
+SCHEM,A0536,Aspartic acid D-form,CHEBI:CHEBI:17364
+SCHEM,A0537,Aspergillus fumigatus Ag extract,
+SCHEM,A0538,Aspirin,CHEBI:CHEBI:15365
+SCHEM,A0539,Astaxanthine,CHEBI:CHEBI:40968
+SCHEM,A0540,Astressin,MESH:C104416
+SCHEM,A0541,Atazanavir,CHEBI:CHEBI:37924
+SCHEM,A0542,Atenolol,CHEBI:CHEBI:2904
+SCHEM,A0543,Atorvastatin,CHEBI:CHEBI:39548
+SCHEM,A0544,Atrial natriuretic factor,MESH:D009320
+SCHEM,A0545,Atropine,CHEBI:CHEBI:16684
+SCHEM,A0546,Aurintricarboxylic acid,MESH:D001312
+SCHEM,A0547,Aurothioglucose,MESH:D006051
+SCHEM,A0548,Azacitidine,CHEBI:CHEBI:2038
+SCHEM,A0549,Azaserine,CHEBI:CHEBI:74846
+SCHEM,A0550,"Azastreptonigrin, isopropylidene- (7CI)",
+SCHEM,A0551,Azathioprine,CHEBI:CHEBI:2948
+SCHEM,A0552,Azetidine,CHEBI:CHEBI:30968
+SCHEM,A0553,Azetidyl-2-carboxylic acid,CHEBI:CHEBI:6198
+SCHEM,A0554,Azide,CHEBI:CHEBI:40910
+SCHEM,A0555,Azithromycin,CHEBI:CHEBI:2955
+SCHEM,A0556,Aztreonam,CHEBI:CHEBI:161680
+SCHEM,A0557,BAY 11-7085,MESH:C416282
+SCHEM,A0558,BAY 43-9006,
+SCHEM,A0559,BEZ235,CHEBI:CHEBI:71952
+SCHEM,A0560,BIP,
+SCHEM,A0561,BM-17.0744,
+SCHEM,A0562,BMS-690514,MESH:C552150
+SCHEM,A0563,BN 50730,MESH:C066686
+SCHEM,A0564,BN 52205,MESH:C072522
+SCHEM,A0565,BQ 123,
+SCHEM,A0566,BQ 485,MESH:C083116
+SCHEM,A0567,BQ-788,MESH:C086539
+SCHEM,A0568,BVT.2733,
+SCHEM,A0569,BXT 51072,MESH:C114695
+SCHEM,A0570,Bacitracin,CHEBI:CHEBI:28669
+SCHEM,A0571,Bafilomycin A,MESH:C057620
+SCHEM,A0572,Bafilomycin A1,CHEBI:CHEBI:22689
+SCHEM,A0573,Baicalein,CHEBI:CHEBI:2979
+SCHEM,A0574,Baicalin,CHEBI:CHEBI:2981
+SCHEM,A0575,Barium,CHEBI:CHEBI:37136
+SCHEM,A0576,Batimastat,MESH:C080985
+SCHEM,A0577,Bay X 1005,
+SCHEM,A0578,Bay-K-8644,
+SCHEM,A0579,Beclomethasone,CHEBI:CHEBI:3001
+SCHEM,A0580,Benafentrine,
+SCHEM,A0581,Benfotiamine,CHEBI:CHEBI:41039
+SCHEM,A0582,Benomyl,CHEBI:CHEBI:3015
+SCHEM,A0583,"Benz(a)anthracene, dimethyl-",
+SCHEM,A0584,Benzbromarone,CHEBI:CHEBI:3023
+SCHEM,A0585,Benzene,CHEBI:CHEBI:16716
+SCHEM,A0586,Benzene oxide,MESH:C023372
+SCHEM,A0587,Benzo(a)perylene,
+SCHEM,A0588,Benzo(a)pyrene,CHEBI:CHEBI:29865
+SCHEM,A0589,Benzo(a)pyrene diolepoxide I,CHEBI:CHEBI:30614
+SCHEM,A0590,Benzobarbital,MESH:C002915
+SCHEM,A0591,"Benzoic acid, 2-hydroxy-, ion(1-) (9CI)",
+SCHEM,A0592,Benzopyrene,MESH:D001580
+SCHEM,A0593,Benzoquinone,CHEBI:CHEBI:39439
+SCHEM,A0594,Benzoyl peroxide,MESH:D001585
+SCHEM,A0595,Benzyloxycarbonylleucyl-leucyl-leucine aldehyde,CHEBI:CHEBI:75142
+SCHEM,A0596,Beraprost,MESH:C048081
+SCHEM,A0597,Berberine,CHEBI:CHEBI:16118
+SCHEM,A0598,Betaine,CHEBI:CHEBI:17750
+SCHEM,A0599,Betamethasone,CHEBI:CHEBI:3077
+SCHEM,A0600,Betamethasone valerate,CHEBI:CHEBI:31277
+SCHEM,A0601,Bevacizumab,MESH:C469428
+SCHEM,A0602,Bexarotene,CHEBI:CHEBI:50859
+SCHEM,A0603,Bezafibrate,CHEBI:CHEBI:47612
+SCHEM,A0604,Bicalutamide,CHEBI:CHEBI:3090
+SCHEM,A0605,Bicuculline,CHEBI:CHEBI:3092
+SCHEM,A0606,Biglycan,MESH:D058578
+SCHEM,A0607,Bile acid-derived 2-trans-enoyl CoA,
+SCHEM,A0608,Bile acid-derived 3-ketoacyl CoA,
+SCHEM,A0609,Bile acid-derived D-3-hydroxyacyl CoA,
+SCHEM,A0610,Bile acid-derived acyl CoA,
+SCHEM,A0611,Bile acid-derived acyl CoA (-C2),
+SCHEM,A0612,Bile salt,CHEBI:CHEBI:22868
+SCHEM,A0613,Bilirubin,CHEBI:CHEBI:16990
+SCHEM,A0614,Biliverdine,CHEBI:CHEBI:17033
+SCHEM,A0615,Biotin,CHEBI:CHEBI:15956
+SCHEM,A0616,Bis(4-nitrophenyl)phosphate,MESH:C002887
+SCHEM,A0617,Bisindolylmaleimide,MESH:C088060
+SCHEM,A0618,Bisphenol A,CHEBI:CHEBI:33216
+SCHEM,A0619,Bivalirudin,CHEBI:CHEBI:59173
+SCHEM,A0620,Black currant oil,MESH:C084865
+SCHEM,A0621,Bleomycin,CHEBI:CHEBI:22907
+SCHEM,A0622,Bombesin,MESH:D001839
+SCHEM,A0623,Bongkrekic acid,MESH:D001865
+SCHEM,A0624,Bortezomib,CHEBI:CHEBI:52717
+SCHEM,A0625,Bosentan,CHEBI:CHEBI:51450
+SCHEM,A0626,Botrocetin,MESH:C030961
+SCHEM,A0627,Bradykinin,CHEBI:CHEBI:3165
+SCHEM,A0628,Branched chain fatty acid,CHEBI:CHEBI:35819
+SCHEM,A0629,Brefeldin A,CHEBI:CHEBI:48080
+SCHEM,A0630,Brl 37344,MESH:C057368
+SCHEM,A0631,Bromelains,MESH:D001963
+SCHEM,A0632,Bromocriptine,CHEBI:CHEBI:3181
+SCHEM,A0633,Bropirimine,MESH:C033560
+SCHEM,A0634,Bryostatin 1,MESH:C046785
+SCHEM,A0635,Bucladesine,CHEBI:CHEBI:50095
+SCHEM,A0636,Budesonide,CHEBI:CHEBI:3207
+SCHEM,A0637,Bumetanide,CHEBI:CHEBI:3213
+SCHEM,A0638,Bungarotoxin,MESH:D002038
+SCHEM,A0639,Bupivacaine,CHEBI:CHEBI:3215
+SCHEM,A0640,"Butanedioic acid, hydroxy-, ion(2)-",
+SCHEM,A0641,"Butanedioic acid, ion(2-)",CHEBI:CHEBI:30031
+SCHEM,A0642,Butanoyl-CoA,CHEBI:CHEBI:22954
+SCHEM,A0643,Butaprost,MESH:C048491
+SCHEM,A0644,Buthionine sulfoximine,CHEBI:CHEBI:28714
+SCHEM,A0645,Butylated hydroxyanisole,CHEBI:CHEBI:76359
+SCHEM,A0646,Butylated hydroxytoluene,CHEBI:CHEBI:34247
+SCHEM,A0647,Butyric acid,CHEBI:CHEBI:30772
+SCHEM,A0648,Butyrolactone I,MESH:C082868
+SCHEM,A0649,C-Reactive protein,MESH:D002097
+SCHEM,A0650,C75,
+SCHEM,A0651,CD40L,MESH:D023201
+SCHEM,A0652,CD437,
+SCHEM,A0653,CDK inhibitor,
+SCHEM,A0654,CGP 53716,MESH:C092972
+SCHEM,A0655,CI-1018,
+SCHEM,A0656,"CL316,243",
+SCHEM,A0657,CO2,CHEBI:CHEBI:16526
+SCHEM,A0658,COP,
+SCHEM,A0659,COX2 inhibitor,MESH:D052246
+SCHEM,A0660,CP-24879,
+SCHEM,A0661,CPG-oligonucleotide,MESH:C408982
+SCHEM,A0662,CRA-024781,
+SCHEM,A0663,CV 3988,MESH:C037913
+SCHEM,A0664,Cadaverine,CHEBI:CHEBI:18127
+SCHEM,A0665,Cadmium,CHEBI:CHEBI:22977
+SCHEM,A0666,Cadmium chloride,CHEBI:CHEBI:35456
+SCHEM,A0667,Caffeic acid phenethyl ester,CHEBI:CHEBI:8062
+SCHEM,A0668,Caffeine,CHEBI:CHEBI:27732
+SCHEM,A0669,Calcidiol,CHEBI:CHEBI:17933
+SCHEM,A0670,Calcifediol anhydrous,CHEBI:CHEBI:17933
+SCHEM,A0671,Calcimycin,MESH:D000001
+SCHEM,A0672,Calcipotriene,CHEBI:CHEBI:50749
+SCHEM,A0673,Calcitonin,CHEBI:CHEBI:3306
+SCHEM,A0674,Calcitriol,CHEBI:CHEBI:17823
+SCHEM,A0675,Calcitroic acid,CHEBI:CHEBI:47828
+SCHEM,A0676,Calcium,CHEBI:CHEBI:29108
+SCHEM,A0677,Calcium chloride,CHEBI:CHEBI:3312
+SCHEM,A0678,Calcium ionophore A23187,
+SCHEM,A0679,Calpain,MESH:D002154
+SCHEM,A0680,Calpeptin,MESH:C071482
+SCHEM,A0681,Calphostin C,MESH:C058819
+SCHEM,A0682,Calyculin A,MESH:C059041
+SCHEM,A0683,Camptothecin,CHEBI:CHEBI:27656
+SCHEM,A0684,Canaline,MESH:C001926
+SCHEM,A0685,Candesartan,CHEBI:CHEBI:3347
+SCHEM,A0686,Candoxatril,CHEBI:CHEBI:3353
+SCHEM,A0687,Canertinib dihydrochloride,MESH:C072383
+SCHEM,A0688,Cannabinolic acid,MESH:C045780
+SCHEM,A0689,Cantharidin,CHEBI:CHEBI:64213
+SCHEM,A0690,Capecitabine,CHEBI:CHEBI:31348
+SCHEM,A0691,Caproic acid,CHEBI:CHEBI:30776
+SCHEM,A0692,Capsaicin,CHEBI:CHEBI:3374
+SCHEM,A0693,Captopril,CHEBI:CHEBI:3380
+SCHEM,A0694,Carbachol,CHEBI:CHEBI:3385
+SCHEM,A0695,Carbamazepine,CHEBI:CHEBI:3387
+SCHEM,A0696,"Carbamic acid, ion(1-)",CHEBI:CHEBI:13941
+SCHEM,A0697,Carbenoxolone,MESH:D002229
+SCHEM,A0698,Carbenoxolone sodium,
+SCHEM,A0699,Carbocysteine-lysine,MESH:C034932
+SCHEM,A0700,Carbofuran,CHEBI:CHEBI:34611
+SCHEM,A0701,Carbon Dioxide,CHEBI:CHEBI:16526
+SCHEM,A0702,Carbon black,
+SCHEM,A0703,Carbon monoxide,CHEBI:CHEBI:17245
+SCHEM,A0704,Carbon tetrachloride,CHEBI:CHEBI:27385
+SCHEM,A0705,"Carbonate, hydrogen",MESH:D001639
+SCHEM,A0706,Carbonyl cyanide m-chlorophenyl hydrazone,CHEBI:CHEBI:3259
+SCHEM,A0707,Carbonyl cyanide p-trifluoromethoxyphenylhydrazone,CHEBI:CHEBI:75458
+SCHEM,A0708,Carboplatin,CHEBI:CHEBI:31355
+SCHEM,A0709,Carboprostacyclin,MESH:C026678
+SCHEM,A0710,Carboxyhemoglobin,MESH:D002263
+SCHEM,A0711,Cardenolide,CHEBI:CHEBI:71620
+SCHEM,A0712,Cardiolipin,CHEBI:CHEBI:28494
+SCHEM,A0713,Cardiotoxin,MESH:D054715
+SCHEM,A0714,Cariporide,MESH:C093373
+SCHEM,A0715,Carmustine,CHEBI:CHEBI:3423
+SCHEM,A0716,Carnitine,CHEBI:CHEBI:17126
+SCHEM,A0717,Carnosol,MESH:C068623
+SCHEM,A0718,Carrageenan,CHEBI:CHEBI:3435
+SCHEM,A0719,Casein,MESH:D002364
+SCHEM,A0720,Caspase 1 inhibitor,
+SCHEM,A0721,Caspase 2 inhibitor,
+SCHEM,A0722,Caspase 3 activator,
+SCHEM,A0723,Caspase 3 inhibitor,
+SCHEM,A0724,Caspase 7 inhibitor,
+SCHEM,A0725,Caspase inhibitor,MESH:D061945
+SCHEM,A0726,Castanospermine,CHEBI:CHEBI:27860
+SCHEM,A0727,Catalase,MESH:D002374
+SCHEM,A0728,Catechol,CHEBI:CHEBI:18135
+SCHEM,A0729,Cci 779,
+SCHEM,A0730,Cd 437,MESH:C099555
+SCHEM,A0731,Cdc25 protein,
+SCHEM,A0732,Cecekin vitrum,MESH:C006934
+SCHEM,A0733,Celecoxib,CHEBI:CHEBI:41423
+SCHEM,A0734,Celiprolol,MESH:D017272
+SCHEM,A0735,Cell-derived microparticle,
+SCHEM,A0736,Cephaloridine,CHEBI:CHEBI:3537
+SCHEM,A0737,Ceramide,CHEBI:CHEBI:17761
+SCHEM,A0738,Ceramide 1-phosphate,CHEBI:CHEBI:16197
+SCHEM,A0739,Cerium chloride,CHEBI:CHEBI:35458
+SCHEM,A0740,Cerivastatin,CHEBI:CHEBI:3558
+SCHEM,A0741,Cerulein 7,MESH:C053183
+SCHEM,A0742,Cerulenin,CHEBI:CHEBI:171741
+SCHEM,A0743,Ceruletide,CHEBI:CHEBI:59219
+SCHEM,A0744,Cesium,CHEBI:CHEBI:30514
+SCHEM,A0745,Cetuximab,MESH:C411189
+SCHEM,A0746,Cgs 15943,
+SCHEM,A0747,Cgs 21680,CHEBI:CHEBI:73283
+SCHEM,A0748,Charybdotoxin,MESH:D018999
+SCHEM,A0749,Chelerythrine,MESH:C016299
+SCHEM,A0750,Chemotactic tetrapeptide,MESH:C058574
+SCHEM,A0751,Chenodeoxycholate,CHEBI:CHEBI:36234
+SCHEM,A0752,Chenodiol,CHEBI:CHEBI:16755
+SCHEM,A0753,Chitin,CHEBI:CHEBI:17029
+SCHEM,A0754,Chloramphenicol,CHEBI:CHEBI:17698
+SCHEM,A0755,Chlordecone,CHEBI:CHEBI:16548
+SCHEM,A0756,Chloride,CHEBI:CHEBI:17996
+SCHEM,A0757,Chloride(1-),CHEBI:CHEBI:17996
+SCHEM,A0758,Chlorinated dioxins,
+SCHEM,A0759,Chloroethyl nitrosoureas,
+SCHEM,A0760,Chloroquine,CHEBI:CHEBI:3638
+SCHEM,A0761,Chlorothiazide,CHEBI:CHEBI:3640
+SCHEM,A0762,Chlorpheniramine,CHEBI:CHEBI:52010
+SCHEM,A0763,Chlorpheniramine maleate,
+SCHEM,A0764,Chlorpromazine,CHEBI:CHEBI:3647
+SCHEM,A0765,Chlorpyrifos,CHEBI:CHEBI:34631
+SCHEM,A0766,Cholecalciferol,CHEBI:CHEBI:28940
+SCHEM,A0767,Cholera toxin,MESH:D002772
+SCHEM,A0768,"Cholest-5-en-3beta,7alpha-diol",
+SCHEM,A0769,"Cholest-6-en-3-beta-ol, 5-alpha-hydroperoxide",
+SCHEM,A0770,"Cholesta-5,7,24-trien-3beta-ol",CHEBI:CHEBI:27910
+SCHEM,A0771,"Cholesta-7,24-dien-3-ol",CHEBI:CHEBI:16290
+SCHEM,A0772,Cholesterol,CHEBI:CHEBI:16113
+SCHEM,A0773,Cholesterol 7-hydroperoxide,MESH:C041011
+SCHEM,A0774,Cholesterol ester,CHEBI:CHEBI:17002
+SCHEM,A0775,Cholestyramine,MESH:D002792
+SCHEM,A0776,Cholic acid,CHEBI:CHEBI:16359
+SCHEM,A0777,Choline,CHEBI:CHEBI:15354
+SCHEM,A0778,Choline alfoscerate,CHEBI:CHEBI:55397
+SCHEM,A0779,Chondroitin,CHEBI:CHEBI:16137
+SCHEM,A0780,Chondroitin 6-sulfate,CHEBI:CHEBI:18296
+SCHEM,A0781,Chondroitin sulfate A,CHEBI:CHEBI:18250
+SCHEM,A0782,Chondroitin sulfate D,MESH:C065068
+SCHEM,A0783,Chondroitin sulfates,CHEBI:CHEBI:37397
+SCHEM,A0784,Chromium,CHEBI:CHEBI:28073
+SCHEM,A0785,Chromium hexavalent ion,CHEBI:CHEBI:33007
+SCHEM,A0786,Chrysarobin,CHEBI:CHEBI:3686
+SCHEM,A0787,Chrysin,CHEBI:CHEBI:75095
+SCHEM,A0788,Chylomicron Remnant,MESH:D053298
+SCHEM,A0789,Chymostatin,MESH:C002101
+SCHEM,A0790,Ciglitazone,CHEBI:CHEBI:64227
+SCHEM,A0791,Cilazapril,MESH:D017315
+SCHEM,A0792,Cilomilast,MESH:C433247
+SCHEM,A0793,Cilostamide,MESH:C021294
+SCHEM,A0794,Cilostazol,CHEBI:CHEBI:31401
+SCHEM,A0795,Cimetidine,CHEBI:CHEBI:3699
+SCHEM,A0796,Cinnamaldehyde,CHEBI:CHEBI:16731
+SCHEM,A0797,"Cinnamaldehyde, o-hydroxy-",
+SCHEM,A0798,Ciprofibrate,CHEBI:CHEBI:50867
+SCHEM,A0799,Ciprofloxacin,CHEBI:CHEBI:100241
+SCHEM,A0800,Cisplatin,CHEBI:CHEBI:27899
+SCHEM,A0801,Citrate,CHEBI:CHEBI:16947
+SCHEM,A0802,Citric acid,CHEBI:CHEBI:30769
+SCHEM,A0803,Citrulline,CHEBI:CHEBI:18211
+SCHEM,A0804,Cl-,CHEBI:CHEBI:17996
+SCHEM,A0805,Clarithromycin,CHEBI:CHEBI:3732
+SCHEM,A0806,Clenbuterol,CHEBI:CHEBI:174690
+SCHEM,A0807,Clofibrate,CHEBI:CHEBI:3750
+SCHEM,A0808,Clofibric acid,CHEBI:CHEBI:34648
+SCHEM,A0809,Clofilium,MESH:C022799
+SCHEM,A0810,Clomipramine,CHEBI:CHEBI:47780
+SCHEM,A0811,Clonidine,CHEBI:CHEBI:46631
+SCHEM,A0812,Clorgiline,CHEBI:CHEBI:3763
+SCHEM,A0813,Clozapine,CHEBI:CHEBI:3766
+SCHEM,A0814,CoA-SH,CHEBI:CHEBI:15346
+SCHEM,A0815,Coagulation Factor XIIa,MESH:D015956
+SCHEM,A0816,Coal dust,
+SCHEM,A0817,Cobalt,CHEBI:CHEBI:27638
+SCHEM,A0818,Cobalt chloride,CHEBI:CHEBI:35696
+SCHEM,A0819,Cobaltous chloride,CHEBI:CHEBI:35696
+SCHEM,A0820,Cocaine,CHEBI:CHEBI:27958
+SCHEM,A0821,Cocarboxylase,CHEBI:CHEBI:18290
+SCHEM,A0822,"Cocoa, ext.",
+SCHEM,A0823,Coenzyme A,CHEBI:CHEBI:15346
+SCHEM,A0824,Colchicine,CHEBI:CHEBI:23359
+SCHEM,A0825,Colforsin,CHEBI:CHEBI:42471
+SCHEM,A0826,"Collagen I, alpha chain (98-110)",MESH:C045653
+SCHEM,A0827,Collagenase,MESH:D017364
+SCHEM,A0828,Comfrey extract,
+SCHEM,A0829,Complement 4a,MESH:D015934
+SCHEM,A0830,Complement 4b,MESH:D015935
+SCHEM,A0831,Complement 5a,MESH:D015936
+SCHEM,A0832,Compound 401,
+SCHEM,A0833,Concanavalin A,MESH:D003208
+SCHEM,A0834,Convulxin,MESH:C028890
+SCHEM,A0835,Copper,CHEBI:CHEBI:29036
+SCHEM,A0836,Corticosteroids,CHEBI:CHEBI:50858
+SCHEM,A0837,Corticosterone,CHEBI:CHEBI:16827
+SCHEM,A0838,Corticotropin,CHEBI:CHEBI:3892
+SCHEM,A0839,Corticotropin-releasing hormone,CHEBI:CHEBI:65311
+SCHEM,A0840,Cortisol,CHEBI:CHEBI:17650
+SCHEM,A0841,Cortisone,CHEBI:CHEBI:16962
+SCHEM,A0842,Cortodoxone,CHEBI:CHEBI:28324
+SCHEM,A0843,Cotinine,CHEBI:CHEBI:68641
+SCHEM,A0844,Coumarin,CHEBI:CHEBI:28794
+SCHEM,A0845,Coumestrol,CHEBI:CHEBI:3908
+SCHEM,A0846,Creatine,CHEBI:CHEBI:16919
+SCHEM,A0847,Creatinine,CHEBI:CHEBI:16737
+SCHEM,A0848,Crm197,MESH:C028581
+SCHEM,A0849,Cromakalim,MESH:D019806
+SCHEM,A0850,Cromolyn,CHEBI:CHEBI:128458
+SCHEM,A0851,Crotonoyl-CoA,CHEBI:CHEBI:15473
+SCHEM,A0852,Cupric chloride anhydrous,CHEBI:CHEBI:49553
+SCHEM,A0853,Curcumin,CHEBI:CHEBI:3962
+SCHEM,A0854,Cyanide,CHEBI:CHEBI:17514
+SCHEM,A0855,Cyanoginosin LR,CHEBI:CHEBI:6925
+SCHEM,A0856,Cyclase adenylate,
+SCHEM,A0857,Cyclic ADP-ribose,CHEBI:CHEBI:31445
+SCHEM,A0858,Cyclic GMP,CHEBI:CHEBI:16356
+SCHEM,A0859,Cyclin D1,MESH:D019938
+SCHEM,A0860,Cyclodextrin,CHEBI:CHEBI:23456
+SCHEM,A0861,Cycloheximide,CHEBI:CHEBI:27641
+SCHEM,A0862,Cyclohexylamine,CHEBI:CHEBI:15773
+SCHEM,A0863,Cycloleucine,MESH:D003515
+SCHEM,A0864,Cyclolinteinone,MESH:C407092
+SCHEM,A0865,Cyclopamine,MESH:C000541
+SCHEM,A0866,Cyclophosphamide,CHEBI:CHEBI:4027
+SCHEM,A0867,Cyclopiazonic acid,CHEBI:CHEBI:38615
+SCHEM,A0868,Cycloserine,CHEBI:CHEBI:40009
+SCHEM,A0869,Cyclosporin,MESH:D016572
+SCHEM,A0870,"Cyclosporin A, 4-(2-butenyl)-4,4,N-trimethylthreonine(1)-",MESH:C089102
+SCHEM,A0871,Cyclosporin H,MESH:C050025
+SCHEM,A0872,Cyclosporine,CHEBI:CHEBI:4031
+SCHEM,A0873,Cyclothiazide,CHEBI:CHEBI:31448
+SCHEM,A0874,Cyfluthrin,CHEBI:CHEBI:4034
+SCHEM,A0875,Cyproterone acetate,CHEBI:CHEBI:50743
+SCHEM,A0876,Cystamine,MESH:D003538
+SCHEM,A0877,Cysteamine,CHEBI:CHEBI:17141
+SCHEM,A0878,Cysteine,CHEBI:CHEBI:15356
+SCHEM,A0879,Cytarabine,CHEBI:CHEBI:28680
+SCHEM,A0880,Cytidine monophosphate,MESH:D003568
+SCHEM,A0881,Cytidine triphosphate,CHEBI:CHEBI:17677
+SCHEM,A0882,Cytochalasin B,CHEBI:CHEBI:23527
+SCHEM,A0883,Cytochalasin D,CHEBI:CHEBI:529996
+SCHEM,A0884,Cytochalasin H,MESH:C034891
+SCHEM,A0885,Cytochrome C,CHEBI:CHEBI:18070
+SCHEM,A0886,Cytochrome P 450 monooxygenase,MESH:D003577
+SCHEM,A0887,Cytochrome P-450,CHEBI:CHEBI:38559
+SCHEM,A0888,Cytochrome b,CHEBI:CHEBI:38551
+SCHEM,A0889,Cytochrome b558,MESH:C036888
+SCHEM,A0890,Cytolipin H,MESH:C009744
+SCHEM,A0891,Cytosine,CHEBI:CHEBI:16040
+SCHEM,A0892,Cytotoxic necrotizing factor type 1,MESH:C060296
+SCHEM,A0893,D 609,
+SCHEM,A0894,D-Fructose,CHEBI:CHEBI:15824
+SCHEM,A0895,"D-Fructose 1,6-bisphosphate",CHEBI:CHEBI:16905
+SCHEM,A0896,"D-Fructose 2,6-bisphosphate",CHEBI:CHEBI:28602
+SCHEM,A0897,D-Fructose 6-phosphate,CHEBI:CHEBI:15946
+SCHEM,A0898,D-Galactose,CHEBI:CHEBI:12936
+SCHEM,A0899,"D-Glucose, anhydrous",
+SCHEM,A0900,D-Glyceraldehyde 3-phosphate,CHEBI:CHEBI:29052
+SCHEM,A0901,D-Lactic acid,CHEBI:CHEBI:42111
+SCHEM,A0902,D-Ribose 1-phosphate,CHEBI:CHEBI:35425
+SCHEM,A0903,D-Tagatose,CHEBI:CHEBI:16443
+SCHEM,A0904,D-Xylulose 5-phosphate,CHEBI:CHEBI:16332
+SCHEM,A0905,"D-arabino-Hexopyranose, 2-deoxy-",
+SCHEM,A0906,DAPM,CHEBI:CHEBI:32506
+SCHEM,A0907,DC101,
+SCHEM,A0908,DDT,CHEBI:CHEBI:16130
+SCHEM,A0909,DEM,
+SCHEM,A0910,DIDS,CHEBI:CHEBI:4286
+SCHEM,A0911,DMPPO,CHEBI:CHEBI:63412
+SCHEM,A0912,DNA-PK inhibitor,
+SCHEM,A0913,Dactinomycin,CHEBI:CHEBI:27666
+SCHEM,A0914,Daidzein,CHEBI:CHEBI:28197
+SCHEM,A0915,Damage Associated Molecular Patterns,
+SCHEM,A0916,Dantrolene,CHEBI:CHEBI:4317
+SCHEM,A0917,Daunorubicin,CHEBI:CHEBI:41977
+SCHEM,A0918,Debrisoquine,CHEBI:CHEBI:34665
+SCHEM,A0919,Decanoyl-coenzyme A,CHEBI:CHEBI:28493
+SCHEM,A0920,Decitabine,CHEBI:CHEBI:50131
+SCHEM,A0921,Defensins,MESH:D023082
+SCHEM,A0922,Deferoxamine,CHEBI:CHEBI:4356
+SCHEM,A0923,Deferoxamine mesylate,CHEBI:CHEBI:31460
+SCHEM,A0924,Deflazacort,MESH:C021988
+SCHEM,A0925,Deguelin,MESH:C107676
+SCHEM,A0926,Dehydroepiandrosterone,CHEBI:CHEBI:28689
+SCHEM,A0927,Dehydroepiandrosterone sulfate,CHEBI:CHEBI:16814
+SCHEM,A0928,"Dehydrogenase, glucose 6-phosphate",
+SCHEM,A0929,Deltamethrin,CHEBI:CHEBI:4388
+SCHEM,A0930,Denbufylline,MESH:C043898
+SCHEM,A0931,Deoxycholic acid,CHEBI:CHEBI:28834
+SCHEM,A0932,Deoxycytidine,CHEBI:CHEBI:15698
+SCHEM,A0933,Deoxycytidine monophosphate,CHEBI:CHEBI:15918
+SCHEM,A0934,Deoxyglucose,CHEBI:CHEBI:23623
+SCHEM,A0935,Deoxyguanosine,CHEBI:CHEBI:17172
+SCHEM,A0936,Deoxyguanosine triphosphate,CHEBI:CHEBI:16497
+SCHEM,A0937,Deoxyinosine,CHEBI:CHEBI:28997
+SCHEM,A0938,Deoxymannojirimycin,
+SCHEM,A0939,Deoxypyridinoline,MESH:C036020
+SCHEM,A0940,Deoxyuridine,CHEBI:CHEBI:16450
+SCHEM,A0941,Deoxyuridine triphosphate,CHEBI:CHEBI:17625
+SCHEM,A0942,Depsipeptide,CHEBI:CHEBI:23643
+SCHEM,A0943,Dequalinium,MESH:D003868
+SCHEM,A0944,Dermatan,CHEBI:CHEBI:4439
+SCHEM,A0945,Dermatan sulfate,CHEBI:CHEBI:18376
+SCHEM,A0946,Desferrioxamine B-succinyl-phenylalanine(1)-octreotide,MESH:C082116
+SCHEM,A0947,Desipramine,CHEBI:CHEBI:47781
+SCHEM,A0948,Desmosine,CHEBI:CHEBI:37628
+SCHEM,A0949,Desmosterol,CHEBI:CHEBI:17737
+SCHEM,A0950,Desoxycorticosterone,CHEBI:CHEBI:16973
+SCHEM,A0951,Desoxycorticosterone acetate,MESH:D064791
+SCHEM,A0952,Dexamethasone,CHEBI:CHEBI:41879
+SCHEM,A0953,Dextran 40,CHEBI:CHEBI:52071
+SCHEM,A0954,Dextrorphan,CHEBI:CHEBI:29133
+SCHEM,A0955,Dextrose,CHEBI:CHEBI:17634
+SCHEM,A0956,Diacerein,MESH:C025292
+SCHEM,A0957,Diacylglycerol,CHEBI:CHEBI:18035
+SCHEM,A0958,Diallyl trisulfide,MESH:C042577
+SCHEM,A0959,Diamide,CHEBI:CHEBI:48958
+SCHEM,A0960,Diazepam,CHEBI:CHEBI:49575
+SCHEM,A0961,Diazinon,CHEBI:CHEBI:34682
+SCHEM,A0962,Diazoxide,CHEBI:CHEBI:4495
+SCHEM,A0963,Dibenzoylmethane,CHEBI:CHEBI:75417
+SCHEM,A0964,"Dibutyryl cyclic-3',5'-cytidine monophosphate",MESH:C053441
+SCHEM,A0965,Dichlororibofuranosylbenzimidazole,MESH:D004004
+SCHEM,A0966,Diclofenac,CHEBI:CHEBI:47381
+SCHEM,A0967,Dicumarol,CHEBI:CHEBI:4513
+SCHEM,A0968,Diepoxyeicosadienoate,
+SCHEM,A0969,Diepoxyoctadecanoate,
+SCHEM,A0970,Diesel exhaust,
+SCHEM,A0971,Diesel exhaust extract,
+SCHEM,A0972,Diesel exhaust particles,
+SCHEM,A0973,Dietary Cholesterol,MESH:D002791
+SCHEM,A0974,Dietary Lipid,
+SCHEM,A0975,Diethyl maleate,CHEBI:CHEBI:68508
+SCHEM,A0976,Diethyl pyrocarbonate,CHEBI:CHEBI:59051
+SCHEM,A0977,Diethyl sulfide,CHEBI:CHEBI:27710
+SCHEM,A0978,Diethylene glycol,CHEBI:CHEBI:46807
+SCHEM,A0979,Diethylhexyl phthalate,CHEBI:CHEBI:17747
+SCHEM,A0980,Diethylnitrosamine,CHEBI:CHEBI:34873
+SCHEM,A0981,Diethylstilbestrol,CHEBI:CHEBI:41922
+SCHEM,A0982,Diglycidyl ether,
+SCHEM,A0983,Digoxin,CHEBI:CHEBI:4551
+SCHEM,A0984,Dihydro-beta-erythroidine,MESH:D004079
+SCHEM,A0985,Dihydrocapsaicin,CHEBI:CHEBI:46932
+SCHEM,A0986,Dihydrofolate,CHEBI:CHEBI:67014
+SCHEM,A0987,Dihydrolipoamide,CHEBI:CHEBI:17694
+SCHEM,A0988,Dihydrosphingosine 1-phosphate,CHEBI:CHEBI:16893
+SCHEM,A0989,Dihydrouracil,CHEBI:CHEBI:15901
+SCHEM,A0990,Dihydroxyacetone phosphate,CHEBI:CHEBI:16108
+SCHEM,A0991,Dihydroxyeicosatrienoate,
+SCHEM,A0992,Dihydroxyphenylethylene glycol,CHEBI:CHEBI:1387
+SCHEM,A0993,Dimaprit,MESH:D017259
+SCHEM,A0994,Dimethyl n-propyl sulfide,
+SCHEM,A0995,Dimethyl succinate,MESH:C056451
+SCHEM,A0996,Dimethyl sulfide,CHEBI:CHEBI:17437
+SCHEM,A0997,Dimethyl sulfoxide,CHEBI:CHEBI:28262
+SCHEM,A0998,Dimethylformamide,CHEBI:CHEBI:17741
+SCHEM,A0999,Dimethylglycine,CHEBI:CHEBI:17724
+SCHEM,A1000,Dimethylnitrosamine,CHEBI:CHEBI:35807
+SCHEM,A1001,Dimethyltelluride,CHEBI:CHEBI:4613
+SCHEM,A1002,Dinitrochlorobenzene,CHEBI:CHEBI:34718
+SCHEM,A1003,Dinitrosyl iron complex,MESH:C073661
+SCHEM,A1004,Dinoprost,CHEBI:CHEBI:15553
+SCHEM,A1005,Dinoprostone,CHEBI:CHEBI:15551
+SCHEM,A1006,Diosgenin,CHEBI:CHEBI:4629
+SCHEM,A1007,Diphenhydramine,CHEBI:CHEBI:4636
+SCHEM,A1008,"Diphenylamine-2,2'-dicarboxylic acid",
+SCHEM,A1009,Diphenyleneiodonium,MESH:C007517
+SCHEM,A1010,Diphenylguanidine,MESH:C027773
+SCHEM,A1011,Diphenyliodonium,MESH:C031291
+SCHEM,A1012,Diphosphate,CHEBI:CHEBI:18361
+SCHEM,A1013,Dipyridamole,CHEBI:CHEBI:4653
+SCHEM,A1014,Diquat,CHEBI:CHEBI:64163
+SCHEM,A1015,Discodermolide,MESH:C071229
+SCHEM,A1016,Discoidal-HDL,
+SCHEM,A1017,Disulfiram,CHEBI:CHEBI:4659
+SCHEM,A1018,Dithiothreitol,CHEBI:CHEBI:18320
+SCHEM,A1019,Dizocilpine,
+SCHEM,A1020,Dizocilpine maleate,MESH:D016291
+SCHEM,A1021,Dobutamine,CHEBI:CHEBI:4670
+SCHEM,A1022,Docebenone,CHEBI:CHEBI:2340
+SCHEM,A1023,Docetaxel,CHEBI:CHEBI:4672
+SCHEM,A1024,Docosahexaenoic acid,CHEBI:CHEBI:36005
+SCHEM,A1025,Dolichol,CHEBI:CHEBI:16091
+SCHEM,A1026,Dopamine,CHEBI:CHEBI:18243
+SCHEM,A1027,Dopamine quinone,MESH:C104705
+SCHEM,A1028,Dorzolamide,CHEBI:CHEBI:4702
+SCHEM,A1029,Doxazosin,CHEBI:CHEBI:4708
+SCHEM,A1030,Doxorubicin,CHEBI:CHEBI:28748
+SCHEM,A1031,Doxycycline,CHEBI:CHEBI:50845
+SCHEM,A1032,Droloxifene,MESH:C038345
+SCHEM,A1033,Dronabinol,CHEBI:CHEBI:66964
+SCHEM,A1034,Dutasteride,CHEBI:CHEBI:521033
+SCHEM,A1035,Dynactin,MESH:C072084
+SCHEM,A1036,Dynorphins,MESH:D004399
+SCHEM,A1037,E 64,CHEBI:CHEBI:30270
+SCHEM,A1038,EB 1089,
+SCHEM,A1039,EGFR inhibitor,CHEBI:CHEBI:74440
+SCHEM,A1040,EPTC,MESH:C036251
+SCHEM,A1041,EUK 134,
+SCHEM,A1042,Ebselen,MESH:C042986
+SCHEM,A1043,Echistatin,MESH:C057986
+SCHEM,A1044,Eckol,CHEBI:CHEBI:65819
+SCHEM,A1045,Ecteinascidin 743,
+SCHEM,A1046,Edetic acid,CHEBI:CHEBI:42191
+SCHEM,A1047,Efaroxan,MESH:C062597
+SCHEM,A1048,Eflornithine,CHEBI:CHEBI:41948
+SCHEM,A1049,Efrapeptin,MESH:C012953
+SCHEM,A1050,Eicosanoid,CHEBI:CHEBI:23899
+SCHEM,A1051,Eicosapentaenoic acid,CHEBI:CHEBI:36006
+SCHEM,A1052,Eicosapentaenoyl-3-ketoacyl-CoA,
+SCHEM,A1053,Eicosapentaenoyl-CoA,
+SCHEM,A1054,"Eicosatetraenoic acid, 12-hydroxy-",
+SCHEM,A1055,"Eicosatetraenoic acid, 15-hydroxy-",
+SCHEM,A1056,Eicosatetraynoic acid,
+SCHEM,A1057,Eicosatrienoic Acid,CHEBI:CHEBI:36036
+SCHEM,A1058,Elastase,MESH:D010196
+SCHEM,A1059,Elastin,MESH:D004549
+SCHEM,A1060,"Elastin, hydrolyzed",
+SCHEM,A1061,Ellipticine,MESH:C034192
+SCHEM,A1062,Emetine,CHEBI:CHEBI:4781
+SCHEM,A1063,Emodin,CHEBI:CHEBI:42223
+SCHEM,A1064,Enalapril,CHEBI:CHEBI:4784
+SCHEM,A1065,Enalaprilat,CHEBI:CHEBI:4786
+SCHEM,A1066,Endostatin,MESH:D043169
+SCHEM,A1067,Endothelin,MESH:D016232
+SCHEM,A1068,Endothelin-1,MESH:D019332
+SCHEM,A1069,Endotoxin,MESH:D004731
+SCHEM,A1070,"Enkephalin, ala(2)-mephe(4)-gly(5)-",MESH:D020875
+SCHEM,A1071,Entacapone,CHEBI:CHEBI:4798
+SCHEM,A1072,Enterotoxin,MESH:D004768
+SCHEM,A1073,"Enterotoxin B, staphylococcal",MESH:C031818
+SCHEM,A1074,Enzastaurin Hydrochloride,
+SCHEM,A1075,Eosine I bluish,MESH:D010697
+SCHEM,A1076,Epalrestat,MESH:C038131
+SCHEM,A1077,Epicatechin gallate,MESH:C062669
+SCHEM,A1078,Epigallocatechin gallate,MESH:C045651
+SCHEM,A1079,Epinephrine,CHEBI:CHEBI:28918
+SCHEM,A1080,Epirubicin,CHEBI:CHEBI:47898
+SCHEM,A1081,Epoprostenol,CHEBI:CHEBI:15552
+SCHEM,A1082,Epoxomicin,CHEBI:CHEBI:42265
+SCHEM,A1083,Epoxyeicosatrienoate,
+SCHEM,A1084,Epstein-Barr Virus,
+SCHEM,A1085,Eptifibatide,CHEBI:CHEBI:291902
+SCHEM,A1086,Equilin sulfate,MESH:C037875
+SCHEM,A1087,Erdosteine,MESH:C048498
+SCHEM,A1088,Ergocalciferol,CHEBI:CHEBI:28934
+SCHEM,A1089,Ergosterol,CHEBI:CHEBI:16933
+SCHEM,A1090,Erlotinib,CHEBI:CHEBI:114785
+SCHEM,A1091,Erythromycin,CHEBI:CHEBI:48923
+SCHEM,A1092,Erythropoietin,MESH:D004921
+SCHEM,A1093,Escherichia coli lipopolysaccharide,
+SCHEM,A1094,Esterified Pseudolaric acid B,
+SCHEM,A1095,"Estra-1,3,5(10)-trien-17-one, 3,16-dihydroxy-, (16alpha)-",
+SCHEM,A1096,Estradiol,CHEBI:CHEBI:23965
+SCHEM,A1097,Estradiol benzoate,MESH:C074283
+SCHEM,A1098,Estradiol dipropionate,MESH:C023482
+SCHEM,A1099,Estradiol sulfate,MESH:C031555
+SCHEM,A1100,Estradiol-17beta,CHEBI:CHEBI:16469
+SCHEM,A1101,Estradiol-17beta-glucuronide,CHEBI:CHEBI:791
+SCHEM,A1102,Estriol,CHEBI:CHEBI:27974
+SCHEM,A1103,Estrogens,CHEBI:CHEBI:50114
+SCHEM,A1104,Estrone,CHEBI:CHEBI:17263
+SCHEM,A1105,Estrone 3-sulfate,CHEBI:CHEBI:17474
+SCHEM,A1106,Estrone estrone hydrogen sulfate,
+SCHEM,A1107,Ethacrynic acid,CHEBI:CHEBI:4876
+SCHEM,A1108,Ethane,CHEBI:CHEBI:42266
+SCHEM,A1109,Ethanol,CHEBI:CHEBI:16236
+SCHEM,A1110,Ethinyl estradiol,CHEBI:CHEBI:4903
+SCHEM,A1111,Ethoxyquin,MESH:D005015
+SCHEM,A1112,Ethyl 4-isothiocyanatobutanoate,MESH:C082832
+SCHEM,A1113,Ethyl pyruvate,MESH:C046522
+SCHEM,A1114,Ethyl vinyl sulfide,MESH:C098991
+SCHEM,A1115,Ethyl-2-hydroxyamino-5-nitro-3-hexeneamide,
+SCHEM,A1116,Ethylene,CHEBI:CHEBI:18153
+SCHEM,A1117,Ethylene glycol,CHEBI:CHEBI:30742
+SCHEM,A1118,Ethylene oxide,CHEBI:CHEBI:27561
+SCHEM,A1119,Ethylisopropylamiloride,MESH:C039614
+SCHEM,A1120,Ethylmaleimide,CHEBI:CHEBI:44485
+SCHEM,A1121,Ethylnitrosourea,MESH:D005038
+SCHEM,A1122,Ethylphenylpropiolate,MESH:C015202
+SCHEM,A1123,Etidronate Disodium,
+SCHEM,A1124,Etodolac,CHEBI:CHEBI:4909
+SCHEM,A1125,Etomoxir,MESH:C054207
+SCHEM,A1126,Etoposide,CHEBI:CHEBI:4911
+SCHEM,A1127,Etoricoxib,CHEBI:CHEBI:6339
+SCHEM,A1128,Etretinate,CHEBI:CHEBI:4913
+SCHEM,A1129,Eugenol,CHEBI:CHEBI:4917
+SCHEM,A1130,Everolimus,CHEBI:CHEBI:68478
+SCHEM,A1131,Exemestane,CHEBI:CHEBI:4953
+SCHEM,A1132,Exendin-4,CHEBI:CHEBI:64073
+SCHEM,A1133,Exisulind,CHEBI:CHEBI:64212
+SCHEM,A1134,Exotoxin-A,
+SCHEM,A1135,Extract of grape leaf,
+SCHEM,A1136,F 11782,
+SCHEM,A1137,F2 isoprostane,MESH:D028441
+SCHEM,A1138,FG 9041,MESH:C056723
+SCHEM,A1139,FK 706,MESH:C109799
+SCHEM,A1140,FK 838,MESH:C102861
+SCHEM,A1141,FMLP,CHEBI:CHEBI:53490
+SCHEM,A1142,FMN,CHEBI:CHEBI:17621
+SCHEM,A1143,FR 901228,
+SCHEM,A1144,FSH,
+SCHEM,A1145,Factor X,MESH:D005170
+SCHEM,A1146,Factor XIII,MESH:D005176
+SCHEM,A1147,Factor iia,MESH:C025337
+SCHEM,A1148,Fadrozole,MESH:D017316
+SCHEM,A1149,Famotidine,CHEBI:CHEBI:4975
+SCHEM,A1150,Farnesol,CHEBI:CHEBI:28600
+SCHEM,A1151,Farnesyl pyrophosphate,CHEBI:CHEBI:17407
+SCHEM,A1152,Fatty acids,CHEBI:CHEBI:35366
+SCHEM,A1153,"Fatty acids, castor-oil, caustic-oxidized, distn. residues, compdswith amides from C18-unsatd. fatty acid dimers and polyhexamethylenepolyamines",
+SCHEM,A1154,"Fatty acids, dehydrated castor-oil, polymers with isophthalic acid,Me methacrylate, phthalic anhydride, styrene, tall-oil fatty acids and trimethylolethane",
+SCHEM,A1155,"Fatty acids, olive-oil, oleyl esters",
+SCHEM,A1156,Fatty acyl CoA,CHEBI:CHEBI:37554
+SCHEM,A1157,Fenclonine,MESH:D010134
+SCHEM,A1158,Fenfluramine,CHEBI:CHEBI:5000
+SCHEM,A1159,Fenofibrate,CHEBI:CHEBI:5001
+SCHEM,A1160,Fenofibrate ester,
+SCHEM,A1161,Fenofibric acid,MESH:C006012
+SCHEM,A1162,Fenoldopam,CHEBI:CHEBI:5002
+SCHEM,A1163,Fenoldopam mesylate,
+SCHEM,A1164,Fenretinide,CHEBI:CHEBI:42588
+SCHEM,A1165,Ferric ammonium citrate,CHEBI:CHEBI:31604
+SCHEM,A1166,Ferric sulfate,CHEBI:CHEBI:53438
+SCHEM,A1167,Ferric-N-(3-phenylglutaryl)desferrioxamine B,MESH:C069592
+SCHEM,A1168,Ferritin,MESH:D005293
+SCHEM,A1169,Fetuins,MESH:D060748
+SCHEM,A1170,Fibrin,MESH:D005337
+SCHEM,A1171,Fibrinogen,MESH:D005340
+SCHEM,A1172,Fibrinolysin (human),
+SCHEM,A1173,Fibrinopeptide A,MESH:D005344
+SCHEM,A1174,Fibrinopeptide B,MESH:D005345
+SCHEM,A1175,Fibroblast growth factor,MESH:D005346
+SCHEM,A1176,Fibronectin (human protein moiety reduced),
+SCHEM,A1177,Fibronectins,MESH:D005353
+SCHEM,A1178,Filipin,MESH:D005372
+SCHEM,A1179,Finasteride,CHEBI:CHEBI:5062
+SCHEM,A1180,Fisetin,CHEBI:CHEBI:42567
+SCHEM,A1181,Flagellin,MESH:D005408
+SCHEM,A1182,Flavin adenin dinucleotide,
+SCHEM,A1183,Flavonoid,CHEBI:CHEBI:47916
+SCHEM,A1184,Flavopiridol,MESH:C077990
+SCHEM,A1185,Flavoprotein,CHEBI:CHEBI:5086
+SCHEM,A1186,Floxuridine,CHEBI:CHEBI:60761
+SCHEM,A1187,Flt4 protein,MESH:D040321
+SCHEM,A1188,Fluasterone,MESH:C106219
+SCHEM,A1189,Fluconazole,CHEBI:CHEBI:46081
+SCHEM,A1190,Fludarabine,MESH:C024352
+SCHEM,A1191,Fluocinolone acetonide,MESH:D005446
+SCHEM,A1192,Fluoride,CHEBI:CHEBI:17051
+SCHEM,A1193,Fluorouracil,CHEBI:CHEBI:46345
+SCHEM,A1194,Fluoxetine,CHEBI:CHEBI:5118
+SCHEM,A1195,Flurbiprofen,CHEBI:CHEBI:5130
+SCHEM,A1196,Flurithromycin,MESH:C045925
+SCHEM,A1197,Flutamide,CHEBI:CHEBI:5132
+SCHEM,A1198,Fluticasone,CHEBI:CHEBI:5134
+SCHEM,A1199,Fluticasone propionate,CHEBI:CHEBI:31441
+SCHEM,A1200,Fluvastatin,CHEBI:CHEBI:38562
+SCHEM,A1201,Folic acid,CHEBI:CHEBI:27470
+SCHEM,A1202,Formaldehyde,CHEBI:CHEBI:16842
+SCHEM,A1203,Formate,CHEBI:CHEBI:15740
+SCHEM,A1204,Formestane,CHEBI:CHEBI:75172
+SCHEM,A1205,"Formic acid, ion(1-)",CHEBI:CHEBI:15740
+SCHEM,A1206,Formoterol,CHEBI:CHEBI:5147
+SCHEM,A1207,Formycin B,CHEBI:CHEBI:42654
+SCHEM,A1208,Formyl-L-methionyl peptide,
+SCHEM,A1209,Formyl-coenzyme A,CHEBI:CHEBI:15522
+SCHEM,A1210,Freund's adjuvant,MESH:D005620
+SCHEM,A1211,Fructosamine,CHEBI:CHEBI:24103
+SCHEM,A1212,Fructose,CHEBI:CHEBI:28757
+SCHEM,A1213,"Fructose 2,6-diphosphate",MESH:C027652
+SCHEM,A1214,Fructose-1-phosphate,MESH:C032284
+SCHEM,A1215,Fructose-6-phosphate,CHEBI:CHEBI:15946
+SCHEM,A1216,Fty 720,
+SCHEM,A1217,Fucoidan,MESH:C007789
+SCHEM,A1218,Fucose,CHEBI:CHEBI:33984
+SCHEM,A1219,Fulvestrant,CHEBI:CHEBI:31638
+SCHEM,A1220,Fumagillin,CHEBI:CHEBI:48635
+SCHEM,A1221,Fumonisin B1,CHEBI:CHEBI:38221
+SCHEM,A1222,Furosemide,CHEBI:CHEBI:47426
+SCHEM,A1223,G1254023X,
+SCHEM,A1224,GDP,CHEBI:CHEBI:17552
+SCHEM,A1225,GDPmannose,CHEBI:CHEBI:15820
+SCHEM,A1226,GF 109203X,
+SCHEM,A1227,GF248,
+SCHEM,A1228,GGTI 298,MESH:C102521
+SCHEM,A1229,GLUT4 storage vesicle,
+SCHEM,A1230,GM3,CHEBI:CHEBI:15681
+SCHEM,A1231,GP 1-515,MESH:C087698
+SCHEM,A1232,GR 79236,
+SCHEM,A1233,GSK3 inhibitor,
+SCHEM,A1234,GSK4716,
+SCHEM,A1235,GTP,CHEBI:CHEBI:15996
+SCHEM,A1236,GW 2433,MESH:C110636
+SCHEM,A1237,GW0742,MESH:C479979
+SCHEM,A1238,GW2331,MESH:C105715
+SCHEM,A1239,GW3965,MESH:C473027
+SCHEM,A1240,GW4064,MESH:C412815
+SCHEM,A1241,GW501516,CHEBI:CHEBI:73726
+SCHEM,A1242,GW7845,MESH:C401311
+SCHEM,A1243,Gabapentin,CHEBI:CHEBI:42797
+SCHEM,A1244,Gadolinium,CHEBI:CHEBI:33375
+SCHEM,A1245,Galactosamine,CHEBI:CHEBI:24156
+SCHEM,A1246,Galactosamine 1-phosphate,MESH:C079528
+SCHEM,A1247,Galactose,CHEBI:CHEBI:28260
+SCHEM,A1248,Galactose-1-phosphate,CHEBI:CHEBI:17973
+SCHEM,A1249,Galactosylceramide,CHEBI:CHEBI:36498
+SCHEM,A1250,Galacturonic acid,CHEBI:CHEBI:33830
+SCHEM,A1251,Galangin,CHEBI:CHEBI:5262
+SCHEM,A1252,Gallium nitrate,MESH:C027235
+SCHEM,A1253,Gamma-aminobutyric acid,CHEBI:CHEBI:16865
+SCHEM,A1254,Gamolenic acid,CHEBI:CHEBI:28661
+SCHEM,A1255,Ganciclovir,CHEBI:CHEBI:465284
+SCHEM,A1256,Ganglioside,CHEBI:CHEBI:28892
+SCHEM,A1257,"Ganglioside, GD3",MESH:C026226
+SCHEM,A1258,Garcinol,MESH:C054597
+SCHEM,A1259,Gastrin,CHEBI:CHEBI:75436
+SCHEM,A1260,Gefitinib,CHEBI:CHEBI:49668
+SCHEM,A1261,Gelatin,MESH:D005780
+SCHEM,A1262,Geldanamycin,CHEBI:CHEBI:5292
+SCHEM,A1263,Gemcitabine,CHEBI:CHEBI:175901
+SCHEM,A1264,Gemfibrozil,CHEBI:CHEBI:5296
+SCHEM,A1265,Genistein,CHEBI:CHEBI:28088
+SCHEM,A1266,Gentamicin,CHEBI:CHEBI:17833
+SCHEM,A1267,Geraniol,CHEBI:CHEBI:17447
+SCHEM,A1268,Geranyl diphosphate,CHEBI:CHEBI:17211
+SCHEM,A1269,Geranylgeraniol,CHEBI:CHEBI:24229
+SCHEM,A1270,Geranylgeranyl pyrophosphate,CHEBI:CHEBI:48861
+SCHEM,A1271,Geranylgeranylacetone,MESH:C031049
+SCHEM,A1272,Geranylgeranylcysteine,MESH:C065977
+SCHEM,A1273,Gestodene,MESH:C033273
+SCHEM,A1274,Ginkgolide B,MESH:C045856
+SCHEM,A1275,Ginsenoside,CHEBI:CHEBI:74978
+SCHEM,A1276,Glatiramer acetate,MESH:C089995
+SCHEM,A1277,Glaucine,MESH:C005004
+SCHEM,A1278,Gliadin,MESH:D005903
+SCHEM,A1279,Gliotoxin,CHEBI:CHEBI:5385
+SCHEM,A1280,"Globulins, blood plasma",
+SCHEM,A1281,"Globulins, gamma-",
+SCHEM,A1282,Glucagon,CHEBI:CHEBI:5391
+SCHEM,A1283,Glucagon-like peptide 1,MESH:D052216
+SCHEM,A1284,Glucan,CHEBI:CHEBI:37163
+SCHEM,A1285,Glucocorticoid,CHEBI:CHEBI:24261
+SCHEM,A1286,Glucosamine,CHEBI:CHEBI:5417
+SCHEM,A1287,Glucosamine 6-phosphate,CHEBI:CHEBI:15873
+SCHEM,A1288,"Glucose-1,6-bisphosphate",MESH:C016473
+SCHEM,A1289,Glucose-6-phosphate,MESH:D019298
+SCHEM,A1290,Glucuronic acid,CHEBI:CHEBI:24298
+SCHEM,A1291,Glut4 vesicle fusion,
+SCHEM,A1292,Glutamine,CHEBI:CHEBI:28300
+SCHEM,A1293,Glutaric acid,CHEBI:CHEBI:17859
+SCHEM,A1294,Glutathione,CHEBI:CHEBI:16856
+SCHEM,A1295,Glutathione diethyl ester,MESH:C083627
+SCHEM,A1296,Glyburide,CHEBI:CHEBI:5441
+SCHEM,A1297,Glycated Low Density Lipoprotein,
+SCHEM,A1298,Glyceraldehyde,CHEBI:CHEBI:5445
+SCHEM,A1299,Glyceraldehyde 3-phosphate,CHEBI:CHEBI:17138
+SCHEM,A1300,"Glycerate 1,3-biphosphate",MESH:C015891
+SCHEM,A1301,Glyceride,CHEBI:CHEBI:47778
+SCHEM,A1302,Glycerin,CHEBI:CHEBI:17754
+SCHEM,A1303,Glycerol,CHEBI:CHEBI:17754
+SCHEM,A1304,Glycerol-3-phosphate,CHEBI:CHEBI:15978
+SCHEM,A1305,"Glycerophosphoinositol 4,5-bisphosphate",MESH:C091533
+SCHEM,A1306,Glycerophosphoric acid,CHEBI:CHEBI:15978
+SCHEM,A1307,Glyceryl monooleate,MESH:C005953
+SCHEM,A1308,Glycine,CHEBI:CHEBI:15428
+SCHEM,A1309,Glycochenodeoxycholic acid,CHEBI:CHEBI:36274
+SCHEM,A1310,Glycocholic acid,CHEBI:CHEBI:17687
+SCHEM,A1311,Glycocyamine,CHEBI:CHEBI:16344
+SCHEM,A1312,Glycodeoxycholate,CHEBI:CHEBI:27471
+SCHEM,A1313,Glycogen,CHEBI:CHEBI:28087
+SCHEM,A1314,Glycosaminoglycan,CHEBI:CHEBI:18085
+SCHEM,A1315,Glycylsarcosine,MESH:C004194
+SCHEM,A1316,Glycyrrhizin,CHEBI:CHEBI:15939
+SCHEM,A1317,Go 6976,CHEBI:CHEBI:51913
+SCHEM,A1318,Gold,CHEBI:CHEBI:49482
+SCHEM,A1319,"Gonadotropin, chorionic",MESH:D006063
+SCHEM,A1320,"Gonadotropin, serum",
+SCHEM,A1321,Goserelin,MESH:D017273
+SCHEM,A1322,Gts 21,
+SCHEM,A1323,Guanidine,CHEBI:CHEBI:42820
+SCHEM,A1324,"Guanidine, monohydrochloride",
+SCHEM,A1325,Guanine,CHEBI:CHEBI:16235
+SCHEM,A1326,Guanine-nucleotide-releasing factor,MESH:D020662
+SCHEM,A1327,Guanosine,CHEBI:CHEBI:16750
+SCHEM,A1328,"Guanosine 3',5'-bis(diphosphate)",CHEBI:CHEBI:17633
+SCHEM,A1329,Guanosine diphosphate,CHEBI:CHEBI:17552
+SCHEM,A1330,Guanosine triphosphate,CHEBI:CHEBI:15996
+SCHEM,A1331,"Guanosine-3',5'-cyclic phosphorothioate",MESH:C017352
+SCHEM,A1332,Gulonic acid,CHEBI:CHEBI:24462
+SCHEM,A1333,Gyki 52466,MESH:C061950
+SCHEM,A1334,H 89,
+SCHEM,A1335,H+,
+SCHEM,A1336,H2O,CHEBI:CHEBI:15377
+SCHEM,A1337,HDL2,
+SCHEM,A1338,HDL3,
+SCHEM,A1339,HIV-1,
+SCHEM,A1340,HK654,
+SCHEM,A1341,HPV-16,
+SCHEM,A1342,Halide,CHEBI:CHEBI:37578
+SCHEM,A1343,Halofuginone,MESH:C010176
+SCHEM,A1344,Haloperidol,CHEBI:CHEBI:5613
+SCHEM,A1345,Halothane,CHEBI:CHEBI:5615
+SCHEM,A1346,Harringtonine,MESH:C062500
+SCHEM,A1347,Helenalin,MESH:C001329
+SCHEM,A1348,Helicobacter pylori infection,
+SCHEM,A1349,Hematin,CHEBI:CHEBI:36161
+SCHEM,A1350,Heme,CHEBI:CHEBI:30413
+SCHEM,A1351,Heme arginate,MESH:C048849
+SCHEM,A1352,Hemin,CHEBI:CHEBI:50385
+SCHEM,A1353,Hemoglobin,CHEBI:CHEBI:35143
+SCHEM,A1354,Hemoglobin A,MESH:D006441
+SCHEM,A1355,"Hemolysins O, Streptococcus group A",
+SCHEM,A1356,Hemosiderin,MESH:D006485
+SCHEM,A1357,Heparin,CHEBI:CHEBI:28304
+SCHEM,A1358,Heparitin sulfate,CHEBI:CHEBI:28815
+SCHEM,A1359,Hepatocyte growth factor,MESH:D017228
+SCHEM,A1360,Hepatopoietin,MESH:D017228
+SCHEM,A1361,"Heptanamide, 7-((aminoiminomethyl)amino)-N-((1S)-2-((4-((3-aminopropyl)amino)butyl)amino)-1-hydroxy-2-oxoethyl)-",
+SCHEM,A1362,Heptanol,MESH:D019850
+SCHEM,A1363,Herbimycin,CHEBI:CHEBI:5674
+SCHEM,A1364,Heregulin beta1,MESH:C087230
+SCHEM,A1365,Herpes simplex virus type 1 protein UL9,MESH:C064565
+SCHEM,A1366,Hesperetin,CHEBI:CHEBI:28230
+SCHEM,A1367,Hexadecanal,CHEBI:CHEBI:17600
+SCHEM,A1368,Hexamethonium,MESH:D018738
+SCHEM,A1369,Hexamethonium bromide,
+SCHEM,A1370,Hexamethylene bisacetamide,MESH:C014026
+SCHEM,A1371,Hexamethylene glycol,MESH:C027765
+SCHEM,A1372,Hexanoyl-coenzyme A,CHEBI:CHEBI:27540
+SCHEM,A1373,Hg2+,CHEBI:CHEBI:16793
+SCHEM,A1374,Higenamine,CHEBI:CHEBI:18418
+SCHEM,A1375,High Density Lipoprotein,MESH:D008075
+SCHEM,A1376,Hippuric acid,CHEBI:CHEBI:18089
+SCHEM,A1377,Hirudin,MESH:D006629
+SCHEM,A1378,Hispidin,CHEBI:CHEBI:36332
+SCHEM,A1379,Histamine,CHEBI:CHEBI:18295
+SCHEM,A1380,Histidine,CHEBI:CHEBI:27570
+SCHEM,A1381,Histone Deacetylase Inhibitor,CHEBI:CHEBI:61115
+SCHEM,A1382,Hla-drb1,MESH:D059811
+SCHEM,A1383,Homocysteic acid,MESH:C007956
+SCHEM,A1384,Homocysteine,CHEBI:CHEBI:17230
+SCHEM,A1385,Homocysteine thiolactone,CHEBI:CHEBI:60315
+SCHEM,A1386,Homoharringtonine,CHEBI:CHEBI:71019
+SCHEM,A1387,Humic acids,
+SCHEM,A1388,Hyaluronic acid,CHEBI:CHEBI:16336
+SCHEM,A1389,Hyaluronidase,MESH:D006821
+SCHEM,A1390,Hydracrylic acid,CHEBI:CHEBI:33404
+SCHEM,A1391,Hydralazine,CHEBI:CHEBI:5775
+SCHEM,A1392,Hydrazine,CHEBI:CHEBI:15571
+SCHEM,A1393,Hydrochloric acid,CHEBI:CHEBI:17883
+SCHEM,A1394,Hydrocortisone,CHEBI:CHEBI:17650
+SCHEM,A1395,Hydrogen,CHEBI:CHEBI:18276
+SCHEM,A1396,Hydrogen bromide,CHEBI:CHEBI:47266
+SCHEM,A1397,Hydrogen peroxide,CHEBI:CHEBI:16240
+SCHEM,A1398,Hydrogen sulfide,CHEBI:CHEBI:16136
+SCHEM,A1399,Hydroquinone,CHEBI:CHEBI:17594
+SCHEM,A1400,Hydroxide ion,CHEBI:CHEBI:16234
+SCHEM,A1401,Hydroxocobalamin,CHEBI:CHEBI:27786
+SCHEM,A1402,Hydroxybutyrate,MESH:D006885
+SCHEM,A1403,Hydroxycitric acid,MESH:C007999
+SCHEM,A1404,Hydroxycoumarin,CHEBI:CHEBI:37912
+SCHEM,A1405,Hydroxyflutamide,MESH:C014290
+SCHEM,A1406,Hydroxyl radical,CHEBI:CHEBI:29191
+SCHEM,A1407,"Hydroxylamine, N,N-di-tert-butyl-, hydrochloride",
+SCHEM,A1408,Hydroxymethylbilane,CHEBI:CHEBI:16645
+SCHEM,A1409,Hydroxyprogesterone,CHEBI:CHEBI:17252
+SCHEM,A1410,Hydroxyproline,CHEBI:CHEBI:24741
+SCHEM,A1411,Hydroxyurea,CHEBI:CHEBI:44423
+SCHEM,A1412,Hyperforin,CHEBI:CHEBI:5834
+SCHEM,A1413,Hypochlorous acid,CHEBI:CHEBI:24757
+SCHEM,A1414,Hypoxanthine,CHEBI:CHEBI:17368
+SCHEM,A1415,IBMQ,
+SCHEM,A1416,IC542,
+SCHEM,A1417,IC87114,MESH:C477872
+SCHEM,A1418,ICG-001,MESH:C492448
+SCHEM,A1419,ICI D1694,
+SCHEM,A1420,IDN-6556,
+SCHEM,A1421,IKK2 inhibitor,
+SCHEM,A1422,INCB3619,MESH:C513090
+SCHEM,A1423,INCB4298,
+SCHEM,A1424,INCB8765,
+SCHEM,A1425,IP 10,
+SCHEM,A1426,IQ,
+SCHEM,A1427,Iberiotoxin,MESH:C064719
+SCHEM,A1428,Ibrolipim,
+SCHEM,A1429,Icatibant,CHEBI:CHEBI:68556
+SCHEM,A1430,Ici 118551,CHEBI:CHEBI:73289
+SCHEM,A1431,Ici 153110,MESH:C064747
+SCHEM,A1432,Ici 164384,MESH:C051781
+SCHEM,A1433,Icosapent,CHEBI:CHEBI:28364
+SCHEM,A1434,IgE,MESH:D007073
+SCHEM,A1435,Illudin S,MESH:C008105
+SCHEM,A1436,Ilomastat,MESH:C119203
+SCHEM,A1437,Iloprost,CHEBI:CHEBI:63916
+SCHEM,A1438,Imatinib,CHEBI:CHEBI:45783
+SCHEM,A1439,Imatinib mesylate,CHEBI:CHEBI:31690
+SCHEM,A1440,Imidaprilat,MESH:C078006
+SCHEM,A1441,Imipramine,CHEBI:CHEBI:47499
+SCHEM,A1442,Imiquimod,CHEBI:CHEBI:36704
+SCHEM,A1443,Immucillin-H,CHEBI:CHEBI:43362
+SCHEM,A1444,Immunoglobulin A,MESH:D007070
+SCHEM,A1445,Immunoglobulin G (285-292),MESH:C089625
+SCHEM,A1446,Immunoglobulins,MESH:D007136
+SCHEM,A1447,"Immunoglobulins, G",
+SCHEM,A1448,Impact,
+SCHEM,A1449,Importin,
+SCHEM,A1450,"Indeno(1,2,3-cd)pyrene",MESH:C041508
+SCHEM,A1451,Indigo,
+SCHEM,A1452,Indinavir,CHEBI:CHEBI:44032
+SCHEM,A1453,Indirubin,MESH:C027185
+SCHEM,A1454,Indole-3-carbinol,CHEBI:CHEBI:24814
+SCHEM,A1455,Indoleacetaldehyde,CHEBI:CHEBI:24823
+SCHEM,A1456,Indolidan,MESH:C050325
+SCHEM,A1457,Indomethacin,CHEBI:CHEBI:49662
+SCHEM,A1458,Infliximab,MESH:C108577
+SCHEM,A1459,Inhibin,MESH:D007265
+SCHEM,A1460,Inogatran,MESH:C099871
+SCHEM,A1461,Inosine,CHEBI:CHEBI:17596
+SCHEM,A1462,Inosine monophosphate,CHEBI:CHEBI:17202
+SCHEM,A1463,Inositol,CHEBI:CHEBI:24848
+SCHEM,A1464,"Inositol 1,4,5-triphosphorothioate",MESH:C054737
+SCHEM,A1465,"Inositol 1,4,5-trisphosphate",CHEBI:CHEBI:16595
+SCHEM,A1466,"Inositol 1,4-bis(phosphate)",MESH:C044259
+SCHEM,A1467,Inositol 2-monophosphate,CHEBI:CHEBI:62383
+SCHEM,A1468,"Inositol 3,4-bisphosphate",CHEBI:CHEBI:28858
+SCHEM,A1469,"Inositol 4,5-bisphosphate",MESH:C066454
+SCHEM,A1470,Inositol hexasulfate,MESH:C013063
+SCHEM,A1471,Inositol pentaphosphate,MESH:C013571
+SCHEM,A1472,"Inositol-1,3,4,5-tetrakisphosphate",MESH:C081655
+SCHEM,A1473,"Inositol-1,4,5,6-tetrakisphosphate",MESH:C081651
+SCHEM,A1474,"Inositol-3,4,5,6-tetrakisphosphate",MESH:C081652
+SCHEM,A1475,Insulin,CHEBI:CHEBI:5931
+SCHEM,A1476,Insulin-like growth factor I,MESH:D007334
+SCHEM,A1477,Interferon,MESH:D007372
+SCHEM,A1478,Interferon alfa-2a,MESH:C554043
+SCHEM,A1479,"Interferon gamma, cys(-3), tyr(-2), cys(-1)-",MESH:C052220
+SCHEM,A1480,Interferon-alpha,MESH:D016898
+SCHEM,A1481,Interleukin 1,MESH:D007375
+SCHEM,A1482,Interleukin-12,MESH:D018664
+SCHEM,A1483,Interleukin-2,MESH:D007376
+SCHEM,A1484,Intermediate Density Lipoprotein,MESH:D053419
+SCHEM,A1485,Involucrin,MESH:C032253
+SCHEM,A1486,Iodine,CHEBI:CHEBI:24859
+SCHEM,A1487,Iodoacetamide,MESH:D007460
+SCHEM,A1488,Iodocyanopindolol,CHEBI:CHEBI:73370
+SCHEM,A1489,Iodotyrosine,CHEBI:CHEBI:24865
+SCHEM,A1490,Ionomycin,CHEBI:CHEBI:63954
+SCHEM,A1491,Irbesartan,CHEBI:CHEBI:5959
+SCHEM,A1492,Irinotecan,MESH:C051890
+SCHEM,A1493,Iron,CHEBI:CHEBI:18248
+SCHEM,A1494,"Iron, ion (Fe3+)",
+SCHEM,A1495,"Iron, ion(Fe 2+)",
+SCHEM,A1496,Isethionic acid,CHEBI:CHEBI:1157
+SCHEM,A1497,Isis 5132,MESH:C099587
+SCHEM,A1498,Isocaproic aldehyde,
+SCHEM,A1499,Isocitric acid,CHEBI:CHEBI:30887
+SCHEM,A1500,Isoflavone,CHEBI:CHEBI:18220
+SCHEM,A1501,Isoflurane,CHEBI:CHEBI:6015
+SCHEM,A1502,Isoflurophate,CHEBI:CHEBI:17941
+SCHEM,A1503,Isoleucine,CHEBI:CHEBI:24898
+SCHEM,A1504,Isomazole,
+SCHEM,A1505,Isopentenyl pyrophosphate,CHEBI:CHEBI:16584
+SCHEM,A1506,Isopropyl alcohol,CHEBI:CHEBI:17824
+SCHEM,A1507,Isopropyl sulfide,
+SCHEM,A1508,Isoproterenol,CHEBI:CHEBI:64317
+SCHEM,A1509,Isosorbide dinitrate,CHEBI:CHEBI:6061
+SCHEM,A1510,Isotretinoin,CHEBI:CHEBI:6067
+SCHEM,A1511,Itavastatin,MESH:C108475
+SCHEM,A1512,JNK inhibitor,
+SCHEM,A1513,JP 8 jet fuel,
+SCHEM,A1514,KN 62,MESH:C063302
+SCHEM,A1515,KN 93,MESH:C072105
+SCHEM,A1516,KT 5720,MESH:C057416
+SCHEM,A1517,KU-55933,
+SCHEM,A1518,KU0058948,MESH:C506932
+SCHEM,A1519,Kainic acid,CHEBI:CHEBI:31746
+SCHEM,A1520,Kallidin,MESH:D007609
+SCHEM,A1521,Kaolin,MESH:D007616
+SCHEM,A1522,Kempferol,CHEBI:CHEBI:28499
+SCHEM,A1523,Keratan sulfate,CHEBI:CHEBI:60924
+SCHEM,A1524,Keratin,MESH:D007633
+SCHEM,A1525,Ketamine,CHEBI:CHEBI:6121
+SCHEM,A1526,Ketanserin,CHEBI:CHEBI:6123
+SCHEM,A1527,Ketone Body,CHEBI:CHEBI:73693
+SCHEM,A1528,Ketotifen,MESH:D007665
+SCHEM,A1529,Kifunensine,MESH:C065629
+SCHEM,A1530,Kininogen,MESH:D007704
+SCHEM,A1531,Kip1 protein,
+SCHEM,A1532,"Klebsiella pneumoniae, lysate",
+SCHEM,A1533,Kojic acid,CHEBI:CHEBI:43572
+SCHEM,A1534,Kynurenine,CHEBI:CHEBI:28683
+SCHEM,A1535,L 651582,
+SCHEM,A1536,L 659989,MESH:C054893
+SCHEM,A1537,L 663536,MESH:C060893
+SCHEM,A1538,L-3-Amino-isobutanoate,CHEBI:CHEBI:18188
+SCHEM,A1539,L-Arabinose,CHEBI:CHEBI:30849
+SCHEM,A1540,L-Arginine,CHEBI:CHEBI:16467
+SCHEM,A1541,L-Asparagine,CHEBI:CHEBI:17196
+SCHEM,A1542,L-Aspartate,CHEBI:CHEBI:17053
+SCHEM,A1543,L-Aspartic acid,CHEBI:CHEBI:17053
+SCHEM,A1544,"L-Aspartic acid, monosodium salt",
+SCHEM,A1545,L-Citrulline,CHEBI:CHEBI:16349
+SCHEM,A1546,L-Cysteine,CHEBI:CHEBI:17561
+SCHEM,A1547,"L-Cystine, N,N'-bis((5-chloro-3,4-dihydro-3-methyl-1-oxo-1H-2-benzopyran-7-yl)carbonyl)-",
+SCHEM,A1548,L-Glutamate,CHEBI:CHEBI:16015
+SCHEM,A1549,L-Glutamic acid,CHEBI:CHEBI:16015
+SCHEM,A1550,"L-Glutamic acid, ion(1-)",CHEBI:CHEBI:29985
+SCHEM,A1551,L-Glutamine,CHEBI:CHEBI:18050
+SCHEM,A1552,L-Lactic acid,CHEBI:CHEBI:422
+SCHEM,A1553,L-Metanephrine,
+SCHEM,A1554,L-Normetanephrine,
+SCHEM,A1555,L-Sulforaphane,CHEBI:CHEBI:47808
+SCHEM,A1556,L-glutamine-p-nitroaniline,
+SCHEM,A1557,L-glutaminyl-2-napthylamide,
+SCHEM,A1558,L-glutaminyl-4-methylcourmarinylamide,
+SCHEM,A1559,L-serine,CHEBI:CHEBI:17115
+SCHEM,A1560,L165041,
+SCHEM,A1561,L826141,
+SCHEM,A1562,LASS3,
+SCHEM,A1563,LDL aggregates,
+SCHEM,A1564,LDL(-),
+SCHEM,A1565,LG 268,MESH:C423914
+SCHEM,A1566,LH,
+SCHEM,A1567,LH-RH,MESH:D007987
+SCHEM,A1568,LY 223982,MESH:C065916
+SCHEM,A1569,LY 255283,MESH:C063823
+SCHEM,A1570,LY 294002,CHEBI:CHEBI:65329
+SCHEM,A1571,LY293111,MESH:C094099
+SCHEM,A1572,LY465608,MESH:C453901
+SCHEM,A1573,Lacidipine,MESH:C060285
+SCHEM,A1574,Lactacystin,CHEBI:CHEBI:52722
+SCHEM,A1575,Lactate dehydrogenase,MESH:D007770
+SCHEM,A1576,Lactic acid,CHEBI:CHEBI:28358
+SCHEM,A1577,Lactose,CHEBI:CHEBI:17716
+SCHEM,A1578,Lactotriaosylceramide,MESH:C025575
+SCHEM,A1579,Lamellipodiae,
+SCHEM,A1580,Lanosterol,CHEBI:CHEBI:16521
+SCHEM,A1581,Lapatinib,CHEBI:CHEBI:49603
+SCHEM,A1582,Latrunculin B,CHEBI:CHEBI:49703
+SCHEM,A1583,Lauric acid,CHEBI:CHEBI:30805
+SCHEM,A1584,Lauroyl-coenzyme A,CHEBI:CHEBI:15521
+SCHEM,A1585,Lazabemide,MESH:C059303
+SCHEM,A1586,Lead,CHEBI:CHEBI:25016
+SCHEM,A1587,Lecithin,CHEBI:CHEBI:61995
+SCHEM,A1588,Lectin,MESH:D037102
+SCHEM,A1589,Leflunomide,CHEBI:CHEBI:6402
+SCHEM,A1590,Lentinan,MESH:D007912
+SCHEM,A1591,Leptin,MESH:D020738
+SCHEM,A1592,Leptomycin B,CHEBI:CHEBI:52646
+SCHEM,A1593,Letrozole,CHEBI:CHEBI:6413
+SCHEM,A1594,Leucine,CHEBI:CHEBI:25017
+SCHEM,A1595,Leucovorin,CHEBI:CHEBI:15640
+SCHEM,A1596,Leukotriene,CHEBI:CHEBI:25029
+SCHEM,A1597,Leukotriene A4,CHEBI:CHEBI:15651
+SCHEM,A1598,Leukotriene B4,CHEBI:CHEBI:15647
+SCHEM,A1599,Leukotriene C4,CHEBI:CHEBI:16978
+SCHEM,A1600,Leukotriene D4,CHEBI:CHEBI:28666
+SCHEM,A1601,Leukotriene E4,CHEBI:CHEBI:15650
+SCHEM,A1602,Leupeptin,MESH:C032854
+SCHEM,A1603,Leuprolide,CHEBI:CHEBI:6427
+SCHEM,A1604,Levetiracetam,CHEBI:CHEBI:6437
+SCHEM,A1605,Levisoprenaline,CHEBI:CHEBI:6257
+SCHEM,A1606,Levocarnitine,CHEBI:CHEBI:16347
+SCHEM,A1607,Levodopa,CHEBI:CHEBI:15765
+SCHEM,A1608,Levothyroxine,CHEBI:CHEBI:18332
+SCHEM,A1609,Lexacalcitol,
+SCHEM,A1610,Lexipafant,MESH:C103289
+SCHEM,A1611,Liarozole,MESH:C061121
+SCHEM,A1612,Licoisoflavone A,CHEBI:CHEBI:28620
+SCHEM,A1613,Linoleic acid,CHEBI:CHEBI:17351
+SCHEM,A1614,Linoleic acid hydroperoxide,MESH:C008285
+SCHEM,A1615,Linolenic acid,CHEBI:CHEBI:25048
+SCHEM,A1616,Linoleoyl-coenzyme A,MESH:C026562
+SCHEM,A1617,Linoleoylcarnitine,MESH:C037735
+SCHEM,A1618,Liothyronine,CHEBI:CHEBI:18258
+SCHEM,A1619,Lipid hydroperoxide,CHEBI:CHEBI:61051
+SCHEM,A1620,Lipids,CHEBI:CHEBI:18059
+SCHEM,A1621,Lipoamide,CHEBI:CHEBI:17460
+SCHEM,A1622,Lipopolysaccharide,CHEBI:CHEBI:16412
+SCHEM,A1623,"Lipopolysaccharide, from A. fumigatus",
+SCHEM,A1624,Lipoprotein Particle,
+SCHEM,A1625,Lipoteichoic acid,CHEBI:CHEBI:28640
+SCHEM,A1626,Lipoxin,CHEBI:CHEBI:6497
+SCHEM,A1627,Lipoxin A4,CHEBI:CHEBI:6498
+SCHEM,A1628,Liraglutide,CHEBI:CHEBI:71193
+SCHEM,A1629,Lisofylline,MESH:C025189
+SCHEM,A1630,Lithium,CHEBI:CHEBI:30145
+SCHEM,A1631,Lithium chloride,CHEBI:CHEBI:48607
+SCHEM,A1632,Lithium chloride (6LiCl),
+SCHEM,A1633,Lithocholic acid,CHEBI:CHEBI:16325
+SCHEM,A1634,Liver-specific transcription factor LF-B1,MESH:D051538
+SCHEM,A1635,Lixazinone,MESH:C049443
+SCHEM,A1636,Lonafarnib,MESH:C115354
+SCHEM,A1637,Long-chain 2-trans-enoyl CoA,
+SCHEM,A1638,Long-chain 3-ketoacyl CoA,
+SCHEM,A1639,Long-chain L-3-hydroxyacyl CoA,
+SCHEM,A1640,Long-chain acyl CoA,MESH:D000214
+SCHEM,A1641,Long-chain aldehyde,
+SCHEM,A1642,Long-chain dicarboxylic 2-trans-enoyl CoA,
+SCHEM,A1643,Long-chain dicarboxylic 3-ketoacyl CoA,
+SCHEM,A1644,Long-chain dicarboxylic L-3-hydroxyacyl CoA,
+SCHEM,A1645,Long-chain dicarboxylic fatty acid,
+SCHEM,A1646,Long-chain dicarboxylic fatty acyl CoA,
+SCHEM,A1647,Long-chain fatty acid,CHEBI:CHEBI:15904
+SCHEM,A1648,Long-chain fatty acyl CoA,
+SCHEM,A1649,Long-chain fatty acyl CoA (-C2),
+SCHEM,A1650,Long-chain thioester,
+SCHEM,A1651,Lonidamine,CHEBI:CHEBI:50138
+SCHEM,A1652,Loperamide,CHEBI:CHEBI:6532
+SCHEM,A1653,Losartan,CHEBI:CHEBI:6541
+SCHEM,A1654,Losartan potassium,
+SCHEM,A1655,Lovastatin,CHEBI:CHEBI:40303
+SCHEM,A1656,Low Density Lipoprotein,MESH:D008077
+SCHEM,A1657,Loxapine,CHEBI:CHEBI:50841
+SCHEM,A1658,Loxoribine,MESH:C068562
+SCHEM,A1659,Lumiliximab,MESH:C509683
+SCHEM,A1660,Luteinizing hormone (human),
+SCHEM,A1661,Luteolin,CHEBI:CHEBI:15864
+SCHEM,A1662,"Lyase, heparin",MESH:D019763
+SCHEM,A1663,Lycopene,CHEBI:CHEBI:15948
+SCHEM,A1664,Lysine,CHEBI:CHEBI:25094
+SCHEM,A1665,Lysophosphatidylcholines,CHEBI:CHEBI:60479
+SCHEM,A1666,"Lysophosphatidylethanolamines, C16-18",
+SCHEM,A1667,Lysophosphatidylserine,CHEBI:CHEBI:68510
+SCHEM,A1668,Lysophospholipid,CHEBI:CHEBI:16961
+SCHEM,A1669,Lysozyme chloride,
+SCHEM,A1670,MAK,
+SCHEM,A1671,MEK inhibitor,CHEBI:CHEBI:75997
+SCHEM,A1672,MEN 10755,
+SCHEM,A1673,MG115,
+SCHEM,A1674,MJ 33,
+SCHEM,A1675,ML 7,MESH:C070571
+SCHEM,A1676,ML 9,MESH:C056218
+SCHEM,A1677,ML120B,
+SCHEM,A1678,MME,MESH:C020415
+SCHEM,A1679,Magnesium,CHEBI:CHEBI:25107
+SCHEM,A1680,Maitotoxin,MESH:C020394
+SCHEM,A1681,Malathion,CHEBI:CHEBI:6651
+SCHEM,A1682,Malic acid,CHEBI:CHEBI:6650
+SCHEM,A1683,Malondialdehyde,CHEBI:CHEBI:566274
+SCHEM,A1684,Malonyl coenzyme A,CHEBI:CHEBI:15531
+SCHEM,A1685,Maltose,CHEBI:CHEBI:17306
+SCHEM,A1686,Manganese,CHEBI:CHEBI:18291
+SCHEM,A1687,Manidipine,MESH:C054218
+SCHEM,A1688,Mannitol,CHEBI:CHEBI:29864
+SCHEM,A1689,Mannose,CHEBI:CHEBI:37684
+SCHEM,A1690,Mannosyl-oligosaccharide Glc3Man9GlcNAc2,
+SCHEM,A1691,Manumycin,MESH:C054474
+SCHEM,A1692,Mapatumumab,MESH:C507357
+SCHEM,A1693,Marimastat,CHEBI:CHEBI:50662
+SCHEM,A1694,Mastoparan,MESH:C037500
+SCHEM,A1695,Mdm2 protein,MESH:D051736
+SCHEM,A1696,Mecamylamine,MESH:D008464
+SCHEM,A1697,Medium High Density Lipoprotein,
+SCHEM,A1698,Medium-chain 2-trans-enoyl CoA,
+SCHEM,A1699,Medium-chain 3-ketoacyl CoA,
+SCHEM,A1700,Medium-chain L-3-hydroxyacyl CoA,
+SCHEM,A1701,Medium-chain fatty acid,CHEBI:CHEBI:59554
+SCHEM,A1702,Medium-chain fatty acyl CoA,
+SCHEM,A1703,Medium-chain fatty acyl CoA (-C2),
+SCHEM,A1704,Medroxyprogesterone,CHEBI:CHEBI:6715
+SCHEM,A1705,Medroxyprogesterone acetate,CHEBI:CHEBI:6716
+SCHEM,A1706,Megestrol acetate,CHEBI:CHEBI:6723
+SCHEM,A1707,Melagatran,CHEBI:CHEBI:43966
+SCHEM,A1708,Melanins,MESH:D008543
+SCHEM,A1709,Melatonin,CHEBI:CHEBI:16796
+SCHEM,A1710,Melittin,MESH:D008555
+SCHEM,A1711,Meloxicam,CHEBI:CHEBI:6741
+SCHEM,A1712,Memantine,CHEBI:CHEBI:64312
+SCHEM,A1713,Menadione,CHEBI:CHEBI:28869
+SCHEM,A1714,Mercaptoethanol,CHEBI:CHEBI:41218
+SCHEM,A1715,Mercuric chloride,CHEBI:CHEBI:31823
+SCHEM,A1716,Mercury,CHEBI:CHEBI:25195
+SCHEM,A1717,Mersalyl,MESH:D008634
+SCHEM,A1718,Metallothionein,MESH:D008668
+SCHEM,A1719,Metformin,CHEBI:CHEBI:6801
+SCHEM,A1720,Methamphetamine,CHEBI:CHEBI:6809
+SCHEM,A1721,Methanesulfonate,CHEBI:CHEBI:25224
+SCHEM,A1722,Methionine,CHEBI:CHEBI:16811
+SCHEM,A1723,Methionine sulfoxide,CHEBI:CHEBI:49033
+SCHEM,A1724,Methionine sulfoximine,CHEBI:CHEBI:47833
+SCHEM,A1725,Methionine-R-sulfoxide,
+SCHEM,A1726,Methotrexate,CHEBI:CHEBI:44185
+SCHEM,A1727,Methoxysuccinyl-alanyl-alanyl-prolyl-valine chloromethyl ketone,MESH:C026704
+SCHEM,A1728,"Methyl 2-(1H-indole-3-carbonyl)-1,3-thiazole-4-carboxylate",
+SCHEM,A1729,"Methyl 9,10-12,3-diepoxystearate",MESH:C039254
+SCHEM,A1730,Methyl N5-(imino(nitroamino)methyl)-L-ornithine monohydrochloride,
+SCHEM,A1731,Methyl alcohol,CHEBI:CHEBI:17790
+SCHEM,A1732,Methyl methanesulfonate,CHEBI:CHEBI:25255
+SCHEM,A1733,Methyl n-propyl sulfide,
+SCHEM,A1734,Methyl palmitate,CHEBI:CHEBI:69187
+SCHEM,A1735,Methyl-branched carboxylic 2-trans-enoyl CoA,
+SCHEM,A1736,Methyl-branched carboxylic 3-ketoacyl CoA,
+SCHEM,A1737,Methyl-branched carboxylic D-3-hydroxyacyl CoA,
+SCHEM,A1738,Methyl-branched carboxylic fatty acid,
+SCHEM,A1739,Methyl-branched carboxylic fatty acyl CoA,
+SCHEM,A1740,Methylallyl aconitine,
+SCHEM,A1741,Methylamine,CHEBI:CHEBI:16830
+SCHEM,A1742,Methylchlor,MESH:C002158
+SCHEM,A1743,Methylcholanthrene,CHEBI:CHEBI:34342
+SCHEM,A1744,Methyldopa anhydrous,CHEBI:CHEBI:61058
+SCHEM,A1745,Methyleugenol,CHEBI:CHEBI:4918
+SCHEM,A1746,Methyllycaconitine,MESH:C054634
+SCHEM,A1747,Methylmercury II,CHEBI:CHEBI:49747
+SCHEM,A1748,Methylnaltrexone,MESH:C032257
+SCHEM,A1749,Methylnitronitrosoguanidine,CHEBI:CHEBI:21759
+SCHEM,A1750,Methylnitrosourea,CHEBI:CHEBI:50102
+SCHEM,A1751,Methylphenazonium methosulfate,CHEBI:CHEBI:8055
+SCHEM,A1752,Methylphenidate,CHEBI:CHEBI:6887
+SCHEM,A1753,Methylprednisolone,CHEBI:CHEBI:6888
+SCHEM,A1754,Methylselenic acid,MESH:C008493
+SCHEM,A1755,Methyltestosterone,CHEBI:CHEBI:27436
+SCHEM,A1756,Methylthioethanol,CHEBI:CHEBI:63861
+SCHEM,A1757,Metiprenaline,MESH:C008401
+SCHEM,A1758,Metribolone,CHEBI:CHEBI:379896
+SCHEM,A1759,Metronidazole,CHEBI:CHEBI:6909
+SCHEM,A1760,Metyrapone,CHEBI:CHEBI:44241
+SCHEM,A1761,Mevalonate,CHEBI:CHEBI:25350
+SCHEM,A1762,Mevalonic acid,CHEBI:CHEBI:25351
+SCHEM,A1763,Mevastatin,MESH:C012258
+SCHEM,A1764,Mezerein,MESH:C011309
+SCHEM,A1765,Miconazole,CHEBI:CHEBI:6923
+SCHEM,A1766,Mifepristone,CHEBI:CHEBI:50692
+SCHEM,A1767,Milrinone,CHEBI:CHEBI:50693
+SCHEM,A1768,Minocycline,CHEBI:CHEBI:50694
+SCHEM,A1769,Minoxidil,CHEBI:CHEBI:6942
+SCHEM,A1770,Misoprostol,CHEBI:CHEBI:63610
+SCHEM,A1771,Mithramycin A,MESH:C066851
+SCHEM,A1772,Mitomycin,CHEBI:CHEBI:25357
+SCHEM,A1773,"Mitomycin C, 7-N-(p-aminophenyl)-",
+SCHEM,A1774,Mitoxantrone,CHEBI:CHEBI:50729
+SCHEM,A1775,Mizoribine,
+SCHEM,A1776,Mocimycin (trivial name),
+SCHEM,A1777,Moclobemide,MESH:D020912
+SCHEM,A1778,Molybdate,CHEBI:CHEBI:36264
+SCHEM,A1779,Molybdenum,CHEBI:CHEBI:28685
+SCHEM,A1780,Molybdenum cofactor,CHEBI:CHEBI:21437
+SCHEM,A1781,Mono(2-ethylhexyl) terephthalate,
+SCHEM,A1782,Mono-(2-ethylhexyl)phthalate,CHEBI:CHEBI:17243
+SCHEM,A1783,Mono-benzyl phthalate,MESH:C103325
+SCHEM,A1784,Monoacylglycerol,CHEBI:CHEBI:17408
+SCHEM,A1785,Monocrotaline,CHEBI:CHEBI:6980
+SCHEM,A1786,Monohydroxyeicosatetraenoate,
+SCHEM,A1787,Monorden,CHEBI:CHEBI:556075
+SCHEM,A1788,Montelukast,CHEBI:CHEBI:50730
+SCHEM,A1789,Morin,CHEBI:CHEBI:75092
+SCHEM,A1790,Morphine,CHEBI:CHEBI:17303
+SCHEM,A1791,Motexafin gadolinium,CHEBI:CHEBI:50161
+SCHEM,A1792,Motorcycle exhaust particles,
+SCHEM,A1793,Moxonidine,MESH:C043482
+SCHEM,A1794,"Msh, 4-nle-7-phe-alpha-",MESH:C027756
+SCHEM,A1795,Mucopolysaccharide,CHEBI:CHEBI:37395
+SCHEM,A1796,Muricholic acid,MESH:C004821
+SCHEM,A1797,Muromonab-CD3,MESH:D016853
+SCHEM,A1798,"Mycobacterium tuberculosis, ext.",
+SCHEM,A1799,Mycophenolic acid,CHEBI:CHEBI:168396
+SCHEM,A1800,Myosin Heavy Chain,MESH:D018995
+SCHEM,A1801,Myosin light chain,MESH:D018994
+SCHEM,A1802,Myricetin,CHEBI:CHEBI:18152
+SCHEM,A1803,Myristic acid,CHEBI:CHEBI:28875
+SCHEM,A1804,Myxothiazol,CHEBI:CHEBI:25461
+SCHEM,A1805,N'-Nitrosonornicotine,MESH:C008655
+SCHEM,A1806,N(6)-Benzoyl-cyclic amp,MESH:C050086
+SCHEM,A1807,N(6)-Cyclopentyladenosine,MESH:C048599
+SCHEM,A1808,"N,N'-Dimethylarginine",CHEBI:CHEBI:25682
+SCHEM,A1809,"N,N,N',N'-Tetrakis(2-pyridylmethyl)ethylenediamine",MESH:C044387
+SCHEM,A1810,"N,N-Dimethylarginine",CHEBI:CHEBI:17929
+SCHEM,A1811,"N,N-Dimethylsphingosine",MESH:C061800
+SCHEM,A1812,N-(3-Aminopropyl)cyclohexylamine,MESH:C081181
+SCHEM,A1813,N-2-bromocinnamylamino-ethyl-5-isoquinolinesulphonamide,
+SCHEM,A1814,N-Acetyl-D-galactosaminyl-(N-acetylneuraminyl)-D-galactosyl-D-,
+SCHEM,A1815,N-Acetyl-D-glucosamine 6-phosphate,CHEBI:CHEBI:15784
+SCHEM,A1816,N-Acetyl-Leu-Leu-Nle-CHO,
+SCHEM,A1817,N-Acetylasparagine,MESH:C026988
+SCHEM,A1818,N-Acetylaspartate,MESH:C000179
+SCHEM,A1819,N-Acetylbenzoquinoneimine,
+SCHEM,A1820,"N-Acetylgalactosamine 4,6-bisulfate",MESH:C030330
+SCHEM,A1821,N-Acetylgalactosamine 4-sulfate,MESH:C046735
+SCHEM,A1822,N-Acetylgalactosaminyl-1-4-N-acetylglucosamine,MESH:C093701
+SCHEM,A1823,"N-Acetylglucosaminono-1,5-lactone O-(phenylcarbamoyl)oxime",MESH:C068836
+SCHEM,A1824,N-Acetylglutamate,
+SCHEM,A1825,N-Acetylmannosamine,CHEBI:CHEBI:62164
+SCHEM,A1826,N-Acetylputrescine,CHEBI:CHEBI:17768
+SCHEM,A1827,N-Carbamoyl-beta-alanine,CHEBI:CHEBI:18261
+SCHEM,A1828,N-Formyl-methionyl-leucyl-phenylalanyl-phenylalanine,MESH:C055978
+SCHEM,A1829,N-Formylmethionine leucyl-phenylalanine,CHEBI:CHEBI:53490
+SCHEM,A1830,N-Hydroxy-4-aminobiphenyl,CHEBI:CHEBI:16580
+SCHEM,A1831,N-Methylaspartate,CHEBI:CHEBI:31882
+SCHEM,A1832,N-Methylhistamine,CHEBI:CHEBI:29009
+SCHEM,A1833,N-Methylnicotinamide,CHEBI:CHEBI:64399
+SCHEM,A1834,N-Methylputrescine,CHEBI:CHEBI:17166
+SCHEM,A1835,N-Nitrosonornicotine,MESH:C008655
+SCHEM,A1836,N-acetyl-d-galactosamine,CHEBI:CHEBI:28037
+SCHEM,A1837,N-acetylsphingosine,CHEBI:CHEBI:46979
+SCHEM,A1838,N-demethylated loperaminde,
+SCHEM,A1839,N-methylquinine,
+SCHEM,A1840,"N-n-butyl-1,3-diaminopropane",
+SCHEM,A1841,N1-Acetylspermidine,CHEBI:CHEBI:17927
+SCHEM,A1842,N1-Acetylspermine,CHEBI:CHEBI:17312
+SCHEM,A1843,N4-Acetylaminobutanal,CHEBI:CHEBI:7386
+SCHEM,A1844,"N6,N6,N6-Trimethyl-L-lysine",CHEBI:CHEBI:17311
+SCHEM,A1845,NAADP,CHEBI:CHEBI:76072
+SCHEM,A1846,NAD,CHEBI:CHEBI:13389
+SCHEM,A1847,NAD+,CHEBI:CHEBI:15846
+SCHEM,A1848,NADH,CHEBI:CHEBI:16908
+SCHEM,A1849,NADP,CHEBI:CHEBI:25523
+SCHEM,A1850,NADP+,CHEBI:CHEBI:18009
+SCHEM,A1851,NADPH,CHEBI:CHEBI:16474
+SCHEM,A1852,NBD peptide,
+SCHEM,A1853,NC-2100,MESH:C411578
+SCHEM,A1854,NCS 613,
+SCHEM,A1855,NFKB inhibitor,
+SCHEM,A1856,NG-Nitroarginine methyl ester,MESH:D019331
+SCHEM,A1857,NH4+,CHEBI:CHEBI:28938
+SCHEM,A1858,NMB,
+SCHEM,A1859,NNK,
+SCHEM,A1860,NNK (carcinogen),CHEBI:CHEBI:32692
+SCHEM,A1861,NS 398,CHEBI:CHEBI:73458
+SCHEM,A1862,NSC 330507,
+SCHEM,A1863,NSC 336628,
+SCHEM,A1864,Nadide,CHEBI:CHEBI:15846
+SCHEM,A1865,Nafenopin,MESH:D009255
+SCHEM,A1866,Naltrindole,MESH:C055382
+SCHEM,A1867,Nanterinone,MESH:C061526
+SCHEM,A1868,Naphthalene,CHEBI:CHEBI:16482
+SCHEM,A1869,Napsagatran,MESH:C087198
+SCHEM,A1870,Naringenin,CHEBI:CHEBI:50202
+SCHEM,A1871,"Natriuretic peptide, C-type",MESH:D020098
+SCHEM,A1872,"Natriuretic peptide, brain",MESH:D020097
+SCHEM,A1873,Nedaplatin,CHEBI:CHEBI:31898
+SCHEM,A1874,Nelfinavir,MESH:D019888
+SCHEM,A1875,Nemalite,
+SCHEM,A1876,Neomycin,CHEBI:CHEBI:7507
+SCHEM,A1877,Nerve growth factor,MESH:D020932
+SCHEM,A1878,Neurotensin,CHEBI:CHEBI:7542
+SCHEM,A1879,Neurotoxic Drug,
+SCHEM,A1880,"Neurotoxin, Clostridium botulinum",
+SCHEM,A1881,Neurotrophin-3,
+SCHEM,A1882,Ngamma-Nitro-L-arginine methyl ester,
+SCHEM,A1883,Niacin,CHEBI:CHEBI:15940
+SCHEM,A1884,Niacinamide,CHEBI:CHEBI:17154
+SCHEM,A1885,Nickel,CHEBI:CHEBI:28112
+SCHEM,A1886,Nicorandil,MESH:D020108
+SCHEM,A1887,Nicotine,CHEBI:CHEBI:18723
+SCHEM,A1888,Nicotinic acid adenine dinucleotide,MESH:C018348
+SCHEM,A1889,Nifedipine,CHEBI:CHEBI:7565
+SCHEM,A1890,Niflumic acid,MESH:D009544
+SCHEM,A1891,Nigericin,CHEBI:CHEBI:7569
+SCHEM,A1892,Nimesulide,CHEBI:CHEBI:44445
+SCHEM,A1893,Nimodipine,CHEBI:CHEBI:7575
+SCHEM,A1894,Nitecapone,MESH:C057364
+SCHEM,A1895,Nitrate compounds,
+SCHEM,A1896,Nitrate(1-),CHEBI:CHEBI:17632
+SCHEM,A1897,Nitric oxide,CHEBI:CHEBI:16480
+SCHEM,A1898,Nitrite(1-),CHEBI:CHEBI:16301
+SCHEM,A1899,Nitroarginine,MESH:D019335
+SCHEM,A1900,Nitrofen,MESH:C007350
+SCHEM,A1901,Nitroflurbiprofen,MESH:C095631
+SCHEM,A1902,Nitrogen,CHEBI:CHEBI:25555
+SCHEM,A1903,Nitrogen dioxide,CHEBI:CHEBI:33101
+SCHEM,A1904,Nitrogen oxides,CHEBI:CHEBI:35196
+SCHEM,A1905,Nitroglycerin,CHEBI:CHEBI:28787
+SCHEM,A1906,Nitrosamines,CHEBI:CHEBI:35803
+SCHEM,A1907,Nitrous oxide,CHEBI:CHEBI:17045
+SCHEM,A1908,Nocodazole,CHEBI:CHEBI:34892
+SCHEM,A1909,Nodularin,MESH:C063998
+SCHEM,A1910,Nonactin,MESH:C050476
+SCHEM,A1911,Nonanal,MESH:C008664
+SCHEM,A1912,Nonivamide,CHEBI:CHEBI:46936
+SCHEM,A1913,Nordihydroguaiaretic acid,CHEBI:CHEBI:7625
+SCHEM,A1914,Norepinephrine,CHEBI:CHEBI:33569
+SCHEM,A1915,Norethindrone,CHEBI:CHEBI:7627
+SCHEM,A1916,Norethynodrel,MESH:D009641
+SCHEM,A1917,Nornicotine,CHEBI:CHEBI:28313
+SCHEM,A1918,Noscapine hydrochloride,
+SCHEM,A1919,Notexin,MESH:C005082
+SCHEM,A1920,Novobiocin,CHEBI:CHEBI:28368
+SCHEM,A1921,Nucleotide,CHEBI:CHEBI:36976
+SCHEM,A1922,Nutlin 3,CHEBI:CHEBI:46742
+SCHEM,A1923,O(6)-Benzylguanine,MESH:C064976
+SCHEM,A1924,O-(4-Ethoxybutyl)berbamine,MESH:C050387
+SCHEM,A1925,O-Acylcarnitine,CHEBI:CHEBI:17387
+SCHEM,A1926,OP,
+SCHEM,A1927,ORG34116,
+SCHEM,A1928,ORG34517,MESH:C526064
+SCHEM,A1929,ORG34850,MESH:C526063
+SCHEM,A1930,Oblimersen sodium,
+SCHEM,A1931,Ochratoxin A,CHEBI:CHEBI:7719
+SCHEM,A1932,Octadecadienoic acid,CHEBI:CHEBI:25627
+SCHEM,A1933,"Octadecanoic acid, ion(1-)",CHEBI:CHEBI:25629
+SCHEM,A1934,"Octanoic acid, ion(1-)",CHEBI:CHEBI:25646
+SCHEM,A1935,Octanoyl-coenzyme A,CHEBI:CHEBI:15533
+SCHEM,A1936,Octreotide,CHEBI:CHEBI:7726
+SCHEM,A1937,Okadaic acid,CHEBI:CHEBI:44658
+SCHEM,A1938,Olanzapine,CHEBI:CHEBI:7735
+SCHEM,A1939,Oleic acid,CHEBI:CHEBI:16196
+SCHEM,A1940,Oleoyl-CoA,CHEBI:CHEBI:15534
+SCHEM,A1941,Oleoyl-coenzyme A,CHEBI:CHEBI:15534
+SCHEM,A1942,Oligomycin,CHEBI:CHEBI:25675
+SCHEM,A1943,Oligosaccharide,CHEBI:CHEBI:50699
+SCHEM,A1944,Oltipraz,MESH:C026209
+SCHEM,A1945,Omeprazole,CHEBI:CHEBI:7772
+SCHEM,A1946,Onapristone,MESH:C053238
+SCHEM,A1947,Oncostatin M,MESH:D053683
+SCHEM,A1948,Org 30029,MESH:C062763
+SCHEM,A1949,Org 9935,MESH:C097915
+SCHEM,A1950,Organic anion,CHEBI:CHEBI:25696
+SCHEM,A1951,Oridonin,MESH:C011959
+SCHEM,A1952,Orlistat,MESH:C055122
+SCHEM,A1953,Ornithine,CHEBI:CHEBI:18257
+SCHEM,A1954,Oroxylin A,CHEBI:CHEBI:61668
+SCHEM,A1955,Orthocresol,CHEBI:CHEBI:28054
+SCHEM,A1956,Orthophosphate,CHEBI:CHEBI:18367
+SCHEM,A1957,Osmolite,MESH:C080652
+SCHEM,A1958,Ossamycin,MESH:C008717
+SCHEM,A1959,Osteopontin,MESH:D053495
+SCHEM,A1960,Ouabain,CHEBI:CHEBI:472805
+SCHEM,A1961,Ovalbumin,MESH:D010047
+SCHEM,A1962,Oxalacetic acid,CHEBI:CHEBI:30744
+SCHEM,A1963,Oxalic acid,CHEBI:CHEBI:16995
+SCHEM,A1964,Oxaliplatin,CHEBI:CHEBI:31941
+SCHEM,A1965,Oxaloacetate,CHEBI:CHEBI:16452
+SCHEM,A1966,Oxandrolone,CHEBI:CHEBI:7820
+SCHEM,A1967,Oxazepam,CHEBI:CHEBI:7823
+SCHEM,A1968,Oxazolone,CHEBI:CHEBI:53076
+SCHEM,A1969,"Oxidase, xanthine",MESH:D014969
+SCHEM,A1970,Oxidized High Density Lipoprotein,
+SCHEM,A1971,Oxidized Low Density Lipoprotein,MESH:C099252
+SCHEM,A1972,Oxidized-Prostaglandin,
+SCHEM,A1973,Oxidopamine,MESH:D016627
+SCHEM,A1974,Oxiglutatione,CHEBI:CHEBI:17858
+SCHEM,A1975,Oxitropium bromide,
+SCHEM,A1976,Oxotremorine M,CHEBI:CHEBI:38322
+SCHEM,A1977,Oxygen,CHEBI:CHEBI:15379
+SCHEM,A1978,Oxyhemoglobin,CHEBI:CHEBI:7861
+SCHEM,A1979,Oxypurinol,CHEBI:CHEBI:28315
+SCHEM,A1980,Oxysterol,CHEBI:CHEBI:53030
+SCHEM,A1981,Oxytetracycline,CHEBI:CHEBI:27701
+SCHEM,A1982,Oxytocin,CHEBI:CHEBI:7872
+SCHEM,A1983,Ozone,CHEBI:CHEBI:25812
+SCHEM,A1984,PARP inhibitor,
+SCHEM,A1985,PC-SPES,MESH:C114209
+SCHEM,A1986,PD 0183812,MESH:C429523
+SCHEM,A1987,PD 116948,
+SCHEM,A1988,PD 117519,
+SCHEM,A1989,PD 123319,CHEBI:CHEBI:61014
+SCHEM,A1990,"PD 98,059",
+SCHEM,A1991,PD-168393,
+SCHEM,A1992,PD0325901,MESH:C506614
+SCHEM,A1993,PD153035,
+SCHEM,A1994,PD180,
+SCHEM,A1995,PD590089,
+SCHEM,A1996,PHA665752,
+SCHEM,A1997,PKF242-484,
+SCHEM,A1998,PKI166,MESH:C410026
+SCHEM,A1999,POVPC,CHEBI:CHEBI:60319
+SCHEM,A2000,PP1 tyrosine kinase inhibitor,
+SCHEM,A2001,PP2 tyrosine kinase inhibitor,
+SCHEM,A2002,PPAR Delta agonist,
+SCHEM,A2003,PPAR Gamma inhibitor,
+SCHEM,A2004,PQIP,
+SCHEM,A2005,PS-1145,MESH:C456319
+SCHEM,A2006,PTK787,
+SCHEM,A2007,Paclitaxel,CHEBI:CHEBI:45863
+SCHEM,A2008,"Paeonia lactiflora Pall., extract",
+SCHEM,A2009,Pak 104P,MESH:C103821
+SCHEM,A2010,Palmitate,CHEBI:CHEBI:7896
+SCHEM,A2011,Palmitic acid,CHEBI:CHEBI:15756
+SCHEM,A2012,Palmitoleic acid,CHEBI:CHEBI:28716
+SCHEM,A2013,Palmitoleoyl-CoA,CHEBI:CHEBI:53152
+SCHEM,A2014,Palmitoyl coenzyme A,CHEBI:CHEBI:15525
+SCHEM,A2015,Palmitoyl-CoA,CHEBI:CHEBI:15525
+SCHEM,A2016,Palmitoylcarnitine,MESH:D010172
+SCHEM,A2017,Pancreastatin,MESH:C050836
+SCHEM,A2018,Panobinostat,MESH:C496932
+SCHEM,A2019,Paraoxon,CHEBI:CHEBI:27827
+SCHEM,A2020,Paraquat,CHEBI:CHEBI:34905
+SCHEM,A2021,Parathyroid,
+SCHEM,A2022,Parecoxib,CHEBI:CHEBI:73038
+SCHEM,A2023,Pargyline,MESH:D010293
+SCHEM,A2024,Paricalcitol,CHEBI:CHEBI:7931
+SCHEM,A2025,Paroxetine,CHEBI:CHEBI:7936
+SCHEM,A2026,Parthenolide,CHEBI:CHEBI:7939
+SCHEM,A2027,Particulate Matter,MESH:D052638
+SCHEM,A2028,Pathogen Associated Molecular Patterns,
+SCHEM,A2029,Paxilline,MESH:C048220
+SCHEM,A2030,Peldesine,MESH:C104194
+SCHEM,A2031,Pentagastrin,MESH:D010418
+SCHEM,A2032,Pentane,CHEBI:CHEBI:37830
+SCHEM,A2033,"Pentanedioic acid, 2-oxo-, ion(2-)",
+SCHEM,A2034,Pentobarbital,CHEBI:CHEBI:7983
+SCHEM,A2035,Pentostatin,MESH:D015649
+SCHEM,A2036,Pentoxifylline,MESH:D010431
+SCHEM,A2037,Pentylenetetrazol,MESH:D010433
+SCHEM,A2038,Pepstatin,MESH:C031375
+SCHEM,A2039,Peptide,CHEBI:CHEBI:16670
+SCHEM,A2040,Peptidoglycan,CHEBI:CHEBI:8005
+SCHEM,A2041,Perfluorodecanoic acid,CHEBI:CHEBI:35546
+SCHEM,A2042,Perfluorooctane sulfonic acid,MESH:C076994
+SCHEM,A2043,Perfluorooctanoic acid,CHEBI:CHEBI:35549
+SCHEM,A2044,Perforin,MESH:D054353
+SCHEM,A2045,Perindopril,CHEBI:CHEBI:8024
+SCHEM,A2046,Perlecan,MESH:C071927
+SCHEM,A2047,Peroxide (O2(2-)),
+SCHEM,A2048,Peroxynitrite,CHEBI:CHEBI:25941
+SCHEM,A2049,Pertussis toxins,
+SCHEM,A2050,Pertuzumab,MESH:C485206
+SCHEM,A2051,Phenacetin,CHEBI:CHEBI:8050
+SCHEM,A2052,Phenelzine,MESH:D010624
+SCHEM,A2053,Phenethyl isothiocyanate,CHEBI:CHEBI:351346
+SCHEM,A2054,Phenethylamine,CHEBI:CHEBI:18397
+SCHEM,A2055,Phenformin,CHEBI:CHEBI:8064
+SCHEM,A2056,Phenobarbital,CHEBI:CHEBI:8069
+SCHEM,A2057,Phenol,CHEBI:CHEBI:15882
+SCHEM,A2058,"Phenol, 4-(1-(4-(2-(dimethylamino)ethoxy)phenyl)-2-phenyl-1-butenyl)-, (E)-",
+SCHEM,A2059,"Phenol, 4-(1-(4-(2-(dimethylamino)ethoxy)phenyl)-2-phenyl-1-butenyl)-, (Z)-",
+SCHEM,A2060,Phenolphthalein,CHEBI:CHEBI:34914
+SCHEM,A2061,Phenyl acetate,CHEBI:CHEBI:8082
+SCHEM,A2062,Phenyl-N-tert-butylnitrone,MESH:C029217
+SCHEM,A2063,Phenylacetaldehyde,CHEBI:CHEBI:16424
+SCHEM,A2064,Phenylacetic acid,CHEBI:CHEBI:30745
+SCHEM,A2065,Phenylalanine,CHEBI:CHEBI:28044
+SCHEM,A2066,Phenyldichloroarsine,MESH:C053663
+SCHEM,A2067,Phenylephrine,CHEBI:CHEBI:8093
+SCHEM,A2068,Phenylhydrazine,CHEBI:CHEBI:27924
+SCHEM,A2069,Phenylmethylsulfonyl fluoride,CHEBI:CHEBI:8102
+SCHEM,A2070,Phenylpyrazole,
+SCHEM,A2071,Phenytoin,CHEBI:CHEBI:8107
+SCHEM,A2072,Phlorhizin,CHEBI:CHEBI:8113
+SCHEM,A2073,Phorbol,CHEBI:CHEBI:8116
+SCHEM,A2074,"Phorbol 12,13-dibutyrate",CHEBI:CHEBI:17598
+SCHEM,A2075,Phorbolol myristate acetate,MESH:C016658
+SCHEM,A2076,Phorone,CHEBI:CHEBI:35572
+SCHEM,A2077,Phosphatase,MESH:D010744
+SCHEM,A2078,Phosphate,CHEBI:CHEBI:26020
+SCHEM,A2079,Phosphatidate,CHEBI:CHEBI:57739
+SCHEM,A2080,Phosphatidic acid,CHEBI:CHEBI:16337
+SCHEM,A2081,Phosphatidyl choline,
+SCHEM,A2082,Phosphatidylethanolamine,CHEBI:CHEBI:16038
+SCHEM,A2083,Phosphatidylinositol 3-phosphate,CHEBI:CHEBI:26034
+SCHEM,A2084,"Phosphatidylinositol-3,4,5-trisphosphate",CHEBI:CHEBI:16618
+SCHEM,A2085,Phosphoadenosine phosphosulfate,MESH:D010724
+SCHEM,A2086,Phosphocreatine,CHEBI:CHEBI:17287
+SCHEM,A2087,Phosphodiesterase,MESH:D010727
+SCHEM,A2088,Phosphoenolpyruvate,CHEBI:CHEBI:18021
+SCHEM,A2089,Phospholipase,MESH:D010740
+SCHEM,A2090,Phospholipase A2,MESH:D054467
+SCHEM,A2091,Phospholipase C,
+SCHEM,A2092,Phospholipid,CHEBI:CHEBI:16247
+SCHEM,A2093,Phosphoramidon,CHEBI:CHEBI:8164
+SCHEM,A2094,Phosphorylase b,MESH:D010763
+SCHEM,A2095,Phosphorylethanolamine,MESH:C005448
+SCHEM,A2096,Phosphoserine,CHEBI:CHEBI:37712
+SCHEM,A2097,Phthalic acid,CHEBI:CHEBI:29069
+SCHEM,A2098,"Phthalic acid, mono-sec-butyl ester",
+SCHEM,A2099,Phytanic acid,CHEBI:CHEBI:16285
+SCHEM,A2100,Phytic acid,CHEBI:CHEBI:17401
+SCHEM,A2101,Phytohemagglutinin,MESH:D010835
+SCHEM,A2102,Phytosphingosine,CHEBI:CHEBI:46961
+SCHEM,A2103,Piceatannol,CHEBI:CHEBI:28814
+SCHEM,A2104,Picibanil,MESH:D010844
+SCHEM,A2105,Picolinic acid,CHEBI:CHEBI:28747
+SCHEM,A2106,Pilocarpine,CHEBI:CHEBI:39462
+SCHEM,A2107,Pimagedine,CHEBI:CHEBI:40618
+SCHEM,A2108,Pinacidil,MESH:D020110
+SCHEM,A2109,Pioglitazone,CHEBI:CHEBI:8228
+SCHEM,A2110,Piperazine,CHEBI:CHEBI:28568
+SCHEM,A2111,Piperine,CHEBI:CHEBI:28821
+SCHEM,A2112,Piperonyl butoxide,CHEBI:CHEBI:32687
+SCHEM,A2113,Pirinixic acid,CHEBI:CHEBI:32509
+SCHEM,A2114,Piroxicam,CHEBI:CHEBI:8249
+SCHEM,A2115,Pituitary adenylate cyclase-activating peptide,
+SCHEM,A2116,Pituitary hormones,MESH:D010907
+SCHEM,A2117,Plasminogen,MESH:D010958
+SCHEM,A2118,Platelet activating factor phosphatidate,MESH:C044218
+SCHEM,A2119,Pleiotrophin,MESH:C066845
+SCHEM,A2120,Plicamycin,CHEBI:CHEBI:31856
+SCHEM,A2121,Plumbagin,CHEBI:CHEBI:8273
+SCHEM,A2122,Polaprezinc,MESH:C061957
+SCHEM,A2123,Policosanol,MESH:C080710
+SCHEM,A2124,Poly I-C,MESH:D011070
+SCHEM,A2125,Poly IC-polylysine carboxymethyl dextran,MESH:C042359
+SCHEM,A2126,"Poly(imino(1-(4-aminobutyl)-2-oxo-1,2-ethanediyl)), (S)- (9CI)",
+SCHEM,A2127,Polyamine,CHEBI:CHEBI:60143
+SCHEM,A2128,Polychlorinated biphenyls,MESH:D011078
+SCHEM,A2129,Polycyclic Aromatic Hydrocarbons,CHEBI:CHEBI:33848
+SCHEM,A2130,Polyethylene glycol,CHEBI:CHEBI:46793
+SCHEM,A2131,Polyglutamine,MESH:C097188
+SCHEM,A2132,Polymyxin,CHEBI:CHEBI:59062
+SCHEM,A2133,Polymyxin B,CHEBI:CHEBI:8309
+SCHEM,A2134,Polypeptide,CHEBI:CHEBI:15841
+SCHEM,A2135,Polyphenylalanine,MESH:C012001
+SCHEM,A2136,Polyunsaturated fatty acid,CHEBI:CHEBI:26208
+SCHEM,A2137,"Pomegranate, ext.",
+SCHEM,A2138,Ponasterone A,CHEBI:CHEBI:28135
+SCHEM,A2139,Porcine pancreatic elastase,
+SCHEM,A2140,Potassium,CHEBI:CHEBI:26216
+SCHEM,A2141,Potassium chloride,CHEBI:CHEBI:32588
+SCHEM,A2142,Potassium iodide,CHEBI:CHEBI:8346
+SCHEM,A2143,Potassium superoxide,MESH:C039316
+SCHEM,A2144,Pramipexole,CHEBI:CHEBI:8356
+SCHEM,A2145,Pranlukast,MESH:C047681
+SCHEM,A2146,Prasterone,CHEBI:CHEBI:28689
+SCHEM,A2147,Pravastatin,CHEBI:CHEBI:63618
+SCHEM,A2148,Prazosin,CHEBI:CHEBI:8364
+SCHEM,A2149,Pre-tRNA_Sec,
+SCHEM,A2150,Prednisolone,CHEBI:CHEBI:8378
+SCHEM,A2151,Pregabalin,CHEBI:CHEBI:64356
+SCHEM,A2152,"Pregn-5-ene-3,20-dione",CHEBI:CHEBI:63837
+SCHEM,A2153,Pregnenolone,CHEBI:CHEBI:16581
+SCHEM,A2154,Pregnenolone carbonitrile,CHEBI:CHEBI:35591
+SCHEM,A2155,Preprogastrin,MESH:C042873
+SCHEM,A2156,Presqualene pyrophosphate,MESH:C017672
+SCHEM,A2157,Previtamin D(3),MESH:C025168
+SCHEM,A2158,Pristanic acid,CHEBI:CHEBI:51340
+SCHEM,A2159,Pristanoyl-CoA,CHEBI:CHEBI:51341
+SCHEM,A2160,Probenecid,CHEBI:CHEBI:8426
+SCHEM,A2161,Probucol,CHEBI:CHEBI:8427
+SCHEM,A2162,Procainamide,CHEBI:CHEBI:8428
+SCHEM,A2163,Procolipase,MESH:C037107
+SCHEM,A2164,Progesterone,CHEBI:CHEBI:17026
+SCHEM,A2165,Progestins,CHEBI:CHEBI:59826
+SCHEM,A2166,Proglumide,CHEBI:CHEBI:32058
+SCHEM,A2167,Proinsulin C-peptide,MESH:D002096
+SCHEM,A2168,Prolactin,MESH:D011388
+SCHEM,A2169,Proliferin,
+SCHEM,A2170,Proline,CHEBI:CHEBI:26271
+SCHEM,A2171,Prolinedithiocarbamate,MESH:C066229
+SCHEM,A2172,Promega,MESH:C060580
+SCHEM,A2173,Promegestone,CHEBI:CHEBI:73390
+SCHEM,A2174,"Propanoic acid, 2-oxo-, ion(1-)",
+SCHEM,A2175,Propargylglycine,MESH:C009055
+SCHEM,A2176,Propentofylline,MESH:C032114
+SCHEM,A2177,Properdin,MESH:D011414
+SCHEM,A2178,Propionic acid,CHEBI:CHEBI:30768
+SCHEM,A2179,Propionyl-coenzyme A,CHEBI:CHEBI:15539
+SCHEM,A2180,Propofol,CHEBI:CHEBI:44915
+SCHEM,A2181,Propranolol,CHEBI:CHEBI:8499
+SCHEM,A2182,Propylthiouracil,CHEBI:CHEBI:8502
+SCHEM,A2183,Prostaglandin A1,CHEBI:CHEBI:15545
+SCHEM,A2184,Prostaglandin A2,CHEBI:CHEBI:27820
+SCHEM,A2185,Prostaglandin D2,CHEBI:CHEBI:15555
+SCHEM,A2186,Prostaglandin E2 methyl ester,MESH:C041324
+SCHEM,A2187,Prostaglandin E3,CHEBI:CHEBI:28031
+SCHEM,A2188,Prostaglandin F1,CHEBI:CHEBI:28852
+SCHEM,A2189,Prostaglandin F3alpha,CHEBI:CHEBI:36075
+SCHEM,A2190,Prostaglandin G2,CHEBI:CHEBI:27647
+SCHEM,A2191,Prostaglandin H2,CHEBI:CHEBI:15554
+SCHEM,A2192,Prostaglandin I2 methyl ester,MESH:C038499
+SCHEM,A2193,Prostaglandin-derived 2-trans-enoyl CoA,
+SCHEM,A2194,Prostaglandin-derived 3-ketoacyl CoA,
+SCHEM,A2195,Prostaglandin-derived L-3-hydroxyacyl CoA,
+SCHEM,A2196,Prostaglandin-derived acyl CoA,
+SCHEM,A2197,Prostaglandins,CHEBI:CHEBI:26333
+SCHEM,A2198,Prostratin,CHEBI:CHEBI:69818
+SCHEM,A2199,Proteasome inhibitor,CHEBI:CHEBI:52726
+SCHEM,A2200,Protein glutamate,
+SCHEM,A2201,"Protein, whey",
+SCHEM,A2202,"Proteinase, metallo-",
+SCHEM,A2203,Proteoglycan,CHEBI:CHEBI:37396
+SCHEM,A2204,Prothrombin,MESH:D011516
+SCHEM,A2205,Prothrombin fragment 1,MESH:C029733
+SCHEM,A2206,Prothrombin fragment 2,MESH:C044183
+SCHEM,A2207,Protocatechuic acid,CHEBI:CHEBI:36062
+SCHEM,A2208,Proton,CHEBI:CHEBI:24636
+SCHEM,A2209,Pseudoisocyanine,CHEBI:CHEBI:37994
+SCHEM,A2210,Pseudolaric acid B,MESH:C058391
+SCHEM,A2211,Psychosine,CHEBI:CHEBI:16874
+SCHEM,A2212,Puromycin,CHEBI:CHEBI:17939
+SCHEM,A2213,Puromycin aminonucleoside,CHEBI:CHEBI:42839
+SCHEM,A2214,Putrescine,CHEBI:CHEBI:17148
+SCHEM,A2215,Pyocyanine,CHEBI:CHEBI:62220
+SCHEM,A2216,Pyrazole,CHEBI:CHEBI:14973
+SCHEM,A2217,Pyrene,CHEBI:CHEBI:39106
+SCHEM,A2218,Pyridine,CHEBI:CHEBI:16227
+SCHEM,A2219,"Pyridine, dihydro-",
+SCHEM,A2220,Pyridinoline,MESH:C015484
+SCHEM,A2221,Pyridone 6,MESH:C524063
+SCHEM,A2222,Pyridoxal phosphate,CHEBI:CHEBI:18405
+SCHEM,A2223,Pyridoxine,CHEBI:CHEBI:16709
+SCHEM,A2224,Pyrilamine,CHEBI:CHEBI:6762
+SCHEM,A2225,"Pyrimidine, dimer",
+SCHEM,A2226,Pyrogallol,CHEBI:CHEBI:16164
+SCHEM,A2227,Pyrrolidine dithiocarbamic acid,MESH:C020972
+SCHEM,A2228,Pyruvaldehyde,CHEBI:CHEBI:17158
+SCHEM,A2229,Pyruvate,CHEBI:CHEBI:15361
+SCHEM,A2230,Pyruvic acid,CHEBI:CHEBI:32816
+SCHEM,A2231,Quartz,CHEBI:CHEBI:46727
+SCHEM,A2232,Quercetagetin,CHEBI:CHEBI:8695
+SCHEM,A2233,Quercetin,CHEBI:CHEBI:16243
+SCHEM,A2234,Quinacrine,CHEBI:CHEBI:8711
+SCHEM,A2235,Quinidine,CHEBI:CHEBI:28593
+SCHEM,A2236,Quinolinic acid,CHEBI:CHEBI:16675
+SCHEM,A2237,Quinpirole,CHEBI:CHEBI:75401
+SCHEM,A2238,R 59949,MESH:C058544
+SCHEM,A2239,RC 3095,
+SCHEM,A2240,"RNA, Transfer",CHEBI:CHEBI:17843
+SCHEM,A2241,ROCK inhibitor,
+SCHEM,A2242,Raffinose,CHEBI:CHEBI:16634
+SCHEM,A2243,Raloxifene,CHEBI:CHEBI:8772
+SCHEM,A2244,Ramipril,CHEBI:CHEBI:8774
+SCHEM,A2245,Ramiprilat,MESH:C052549
+SCHEM,A2246,Ranitidine,CHEBI:CHEBI:8776
+SCHEM,A2247,Rbp-jkappa protein,MESH:D051819
+SCHEM,A2248,Reactive Nitrogen Species,CHEBI:CHEBI:62764
+SCHEM,A2249,Reactive Oxygen Species,CHEBI:CHEBI:26523
+SCHEM,A2250,Realgar (AsS),
+SCHEM,A2251,Rebamipide,MESH:C052785
+SCHEM,A2252,"Recombinant human growth hormone, JR-8810",
+SCHEM,A2253,Relaxin,MESH:D012065
+SCHEM,A2254,Remnant lipoprotein,
+SCHEM,A2255,Renin,MESH:D012083
+SCHEM,A2256,Repaglinide,MESH:C072379
+SCHEM,A2257,Resveratrol,CHEBI:CHEBI:27881
+SCHEM,A2258,Retinaldehyde,CHEBI:CHEBI:17898
+SCHEM,A2259,Retinamide,MESH:C054441
+SCHEM,A2260,"Retinoic acid, 4,5-didehydro-5,6-dihydro-",
+SCHEM,A2261,Retinol acetate,CHEBI:CHEBI:32095
+SCHEM,A2262,Rev 5901,
+SCHEM,A2263,Rhein,MESH:C020491
+SCHEM,A2264,Riboflavin,CHEBI:CHEBI:17015
+SCHEM,A2265,Ribonuclease,MESH:D012260
+SCHEM,A2266,Riboprine,CHEBI:CHEBI:62881
+SCHEM,A2267,Ribose-5-phosphoric acid,
+SCHEM,A2268,Ribulose 5-phosphate,CHEBI:CHEBI:37455
+SCHEM,A2269,Riddelline,CHEBI:CHEBI:63924
+SCHEM,A2270,Rifampicin N-oxide,MESH:C043640
+SCHEM,A2271,Rifampin,CHEBI:CHEBI:28077
+SCHEM,A2272,Rifamycin,CHEBI:CHEBI:26580
+SCHEM,A2273,Riluzole,MESH:D019782
+SCHEM,A2274,Ritonavir,CHEBI:CHEBI:45409
+SCHEM,A2275,Rituximab,MESH:C092560
+SCHEM,A2276,Rmi 12330A,MESH:C014925
+SCHEM,A2277,Rmi 14514,
+SCHEM,A2278,Ro 13-7410,CHEBI:CHEBI:75261
+SCHEM,A2279,Ro 20-1724,MESH:D012368
+SCHEM,A2280,Ro 31-7549,MESH:C064755
+SCHEM,A2281,Ro 31-8220,CHEBI:CHEBI:38912
+SCHEM,A2282,Ro 31-8425,MESH:C071924
+SCHEM,A2283,Roflumilast,CHEBI:CHEBI:47657
+SCHEM,A2284,Rolipram,CHEBI:CHEBI:104872
+SCHEM,A2285,Rooperol,MESH:C079659
+SCHEM,A2286,Ropivacaine,CHEBI:CHEBI:60802
+SCHEM,A2287,Roquinimex,MESH:C045282
+SCHEM,A2288,Rosiglitazone,CHEBI:CHEBI:50122
+SCHEM,A2289,Rosuvastatin,CHEBI:CHEBI:38545
+SCHEM,A2290,Rotenone,CHEBI:CHEBI:28201
+SCHEM,A2291,Rottlerin,CHEBI:CHEBI:8899
+SCHEM,A2292,Roxatidine,
+SCHEM,A2293,Roxithromycin,CHEBI:CHEBI:48844
+SCHEM,A2294,Ruthenium red,CHEBI:CHEBI:34956
+SCHEM,A2295,Ryanodine,CHEBI:CHEBI:8925
+SCHEM,A2296,"S-(1,1,2,2-Tetrafluoroethyl)cysteine",MESH:C064116
+SCHEM,A2297,"S-(1,2-Dichlorovinyl)cysteine",MESH:C039961
+SCHEM,A2298,"S-(2,4-Dinitrophenyl)glutathione",CHEBI:CHEBI:8927
+SCHEM,A2299,S-2-Hydroxybutanedioic acid,CHEBI:CHEBI:30797
+SCHEM,A2300,S-4-Bromobenzylglutathione cyclopentyl diester,MESH:C099177
+SCHEM,A2301,S-Acetyldihydrolipoamide,CHEBI:CHEBI:16807
+SCHEM,A2302,S-Acrylyl-N-acetylcysteamine,MESH:C061074
+SCHEM,A2303,S-Adenosylhomocysteine,CHEBI:CHEBI:16680
+SCHEM,A2304,S-Adenosylmethioninamine,CHEBI:CHEBI:15625
+SCHEM,A2305,S-Adenosylmethionine,CHEBI:CHEBI:15414
+SCHEM,A2306,S-Farnesylcysteine,CHEBI:CHEBI:62197
+SCHEM,A2307,S-Nitroso-N-acetylpenicillamine,MESH:D026423
+SCHEM,A2308,S-Nitrosoglutathione,CHEBI:CHEBI:50091
+SCHEM,A2309,S-Succinyldihydrolipoamide,CHEBI:CHEBI:17432
+SCHEM,A2310,S-Tetradecanoyl-coenzyme A,CHEBI:CHEBI:15532
+SCHEM,A2311,S-methyl N-butylthiocarbamate,
+SCHEM,A2312,S-methyl N-butylthiocarbamate sulfoxide,
+SCHEM,A2313,SB 201146,MESH:C084128
+SCHEM,A2314,SB 202129,
+SCHEM,A2315,SB 209670,
+SCHEM,A2316,SB-202190,
+SCHEM,A2317,SB-203580,MESH:C093642
+SCHEM,A2318,SB-216763,MESH:C417521
+SCHEM,A2319,SB-559457,MESH:C546477
+SCHEM,A2320,SC 514,MESH:C477523
+SCHEM,A2321,SC 58125,
+SCHEM,A2322,SC58236,
+SCHEM,A2323,SD-208,MESH:C511004
+SCHEM,A2324,SF 2370,MESH:C047321
+SCHEM,A2325,SK&F 82958,MESH:C071262
+SCHEM,A2326,SK&F 91488,MESH:C024535
+SCHEM,A2327,SK&F 95654,MESH:C060368
+SCHEM,A2328,SK&F 96365,
+SCHEM,A2329,SK&F-38393,
+SCHEM,A2330,SKF L-94901,
+SCHEM,A2331,SM 11044,MESH:C076952
+SCHEM,A2332,SN 38,
+SCHEM,A2333,SN50,
+SCHEM,A2334,SP600125,
+SCHEM,A2335,SQ 22536,
+SCHEM,A2336,SQ 29548,MESH:C045749
+SCHEM,A2337,SR 11237,MESH:C087130
+SCHEM,A2338,SREBP Cleavage Hs,
+SCHEM,A2339,SREBP Cleavage Mm,
+SCHEM,A2340,ST 638,MESH:C060747
+SCHEM,A2341,SU 11274,MESH:C478479
+SCHEM,A2342,SU 5416,
+SCHEM,A2343,SU 6656,MESH:C416927
+SCHEM,A2344,SU 6668,
+SCHEM,A2345,SU6656,MESH:C416927
+SCHEM,A2346,Safingol,CHEBI:CHEBI:16566
+SCHEM,A2347,Salbutamol,CHEBI:CHEBI:2549
+SCHEM,A2348,Salmeterol,CHEBI:CHEBI:9011
+SCHEM,A2349,Salubrinal,MESH:C496827
+SCHEM,A2350,San 58035,MESH:C040256
+SCHEM,A2351,Sapropterin,CHEBI:CHEBI:59560
+SCHEM,A2352,Saquinavir,CHEBI:CHEBI:63621
+SCHEM,A2353,Sarcosine,CHEBI:CHEBI:15611
+SCHEM,A2354,Sarin,CHEBI:CHEBI:75701
+SCHEM,A2355,Saturated fatty acid,CHEBI:CHEBI:26607
+SCHEM,A2356,Sch-23390,MESH:C534628
+SCHEM,A2357,Secalciferol,CHEBI:CHEBI:28818
+SCHEM,A2358,Selegiline,CHEBI:CHEBI:50217
+SCHEM,A2359,Selenite,CHEBI:CHEBI:18212
+SCHEM,A2360,Selenium,CHEBI:CHEBI:27568
+SCHEM,A2361,Selenocysteine,CHEBI:CHEBI:9093
+SCHEM,A2362,Semaxanib,
+SCHEM,A2363,Sepiapterin,CHEBI:CHEBI:16095
+SCHEM,A2364,Serine,CHEBI:CHEBI:17822
+SCHEM,A2365,Serine D-form,
+SCHEM,A2366,Serotonin,CHEBI:CHEBI:28790
+SCHEM,A2367,Sertraline,CHEBI:CHEBI:9123
+SCHEM,A2368,Serum Glucagon,
+SCHEM,A2369,Sesame oil,MESH:D012715
+SCHEM,A2370,Sesamin,MESH:C054125
+SCHEM,A2371,Severin,MESH:C036571
+SCHEM,A2372,Shikonin,MESH:C016101
+SCHEM,A2373,Short-chain 2-trans-enoyl CoA,
+SCHEM,A2374,Short-chain 3-ketoacyl CoA,
+SCHEM,A2375,Short-chain L-3-hydroxyacyl CoA,
+SCHEM,A2376,Short-chain fatty acid,CHEBI:CHEBI:26666
+SCHEM,A2377,Short-chain fatty acyl CoA,
+SCHEM,A2378,Short-chain fatty acyl CoA (-C2),
+SCHEM,A2379,Shortened Acyl-CoA,
+SCHEM,A2380,Siguazodan,MESH:C056215
+SCHEM,A2381,Sildenafil,CHEBI:CHEBI:9139
+SCHEM,A2382,Silibinin,CHEBI:CHEBI:9144
+SCHEM,A2383,"Siliceous earth, purified",
+SCHEM,A2384,Silver,CHEBI:CHEBI:30512
+SCHEM,A2385,Silymarin,CHEBI:CHEBI:9144
+SCHEM,A2386,Simvastatin,CHEBI:CHEBI:9150
+SCHEM,A2387,Singlet oxygen,MESH:D026082
+SCHEM,A2388,Siomycin,MESH:C025311
+SCHEM,A2389,Sirolimus,CHEBI:CHEBI:9168
+SCHEM,A2390,Sirtinol,CHEBI:CHEBI:73158
+SCHEM,A2391,Sitosterol,CHEBI:CHEBI:27693
+SCHEM,A2392,Small High Density Lipoprotein,
+SCHEM,A2393,Smoke condensate,
+SCHEM,A2394,"Smoke condensate, cigar",
+SCHEM,A2395,"Smoke condensate, cigarette",
+SCHEM,A2396,"Smoke condensate, cigarette (heated)",
+SCHEM,A2397,"Smoke extract, cigarette",
+SCHEM,A2398,"Smoke, cigarette",
+SCHEM,A2399,"Smoke, cigarette (past exposure)",
+SCHEM,A2400,Sodium,CHEBI:CHEBI:26708
+SCHEM,A2401,Sodium Hydroxide,CHEBI:CHEBI:32145
+SCHEM,A2402,Sodium Lauryl Sulfate,CHEBI:CHEBI:8984
+SCHEM,A2403,Sodium Salicylate,MESH:D012980
+SCHEM,A2404,Sodium arsenate,MESH:C009277
+SCHEM,A2405,Sodium arsenite,CHEBI:CHEBI:29678
+SCHEM,A2406,Sodium azide,CHEBI:CHEBI:278547
+SCHEM,A2407,Sodium bisulfate,
+SCHEM,A2408,Sodium bisulfide,MESH:C025451
+SCHEM,A2409,Sodium butyrate,CHEBI:CHEBI:64103
+SCHEM,A2410,Sodium chloride,CHEBI:CHEBI:26710
+SCHEM,A2411,Sodium dextran sulfate,
+SCHEM,A2412,Sodium fluoride,CHEBI:CHEBI:28741
+SCHEM,A2413,Sodium glutamate,CHEBI:CHEBI:64220
+SCHEM,A2414,Sodium nitroprusside,CHEBI:CHEBI:29321
+SCHEM,A2415,Sodium phenylbutyrate,CHEBI:CHEBI:75316
+SCHEM,A2416,Sodium selenite,CHEBI:CHEBI:48843
+SCHEM,A2417,Sofalcone,MESH:C035032
+SCHEM,A2418,Soman,MESH:D012999
+SCHEM,A2419,Somatostatin,CHEBI:CHEBI:64628
+SCHEM,A2420,Somatotropin,MESH:D013006
+SCHEM,A2421,Soot,MESH:D053260
+SCHEM,A2422,Sorafenib Tosylate,CHEBI:CHEBI:50928
+SCHEM,A2423,Sorbic acid,CHEBI:CHEBI:35962
+SCHEM,A2424,Sorbinil,CHEBI:CHEBI:102029
+SCHEM,A2425,Sorbitol,CHEBI:CHEBI:30911
+SCHEM,A2426,Sorboyl-CoA,
+SCHEM,A2427,Sp-cAMP,
+SCHEM,A2428,Sparfosic acid,
+SCHEM,A2429,Spermidine,CHEBI:CHEBI:16610
+SCHEM,A2430,Spermine,CHEBI:CHEBI:15746
+SCHEM,A2431,Sphingomyelins,CHEBI:CHEBI:17636
+SCHEM,A2432,Sphingosine,CHEBI:CHEBI:16393
+SCHEM,A2433,Sphingosine 1-phosphate,CHEBI:CHEBI:37550
+SCHEM,A2434,Sphingosine-1-phosphate,CHEBI:CHEBI:37550
+SCHEM,A2435,Sphingosyl-phosphocholine,CHEBI:CHEBI:52897
+SCHEM,A2436,Spironolactone,CHEBI:CHEBI:9241
+SCHEM,A2437,Splitomicin,CHEBI:CHEBI:75272
+SCHEM,A2438,Sq 32709,MESH:C108149
+SCHEM,A2439,Squalamine,MESH:C079655
+SCHEM,A2440,Squalene,CHEBI:CHEBI:15440
+SCHEM,A2441,Squalestatin 1,CHEBI:CHEBI:75170
+SCHEM,A2442,Src-like kinase inhibitor,
+SCHEM,A2443,Stannous chloride,MESH:C023599
+SCHEM,A2444,Stanolone,CHEBI:CHEBI:16330
+SCHEM,A2445,Staurosporine,CHEBI:CHEBI:15738
+SCHEM,A2446,Stearic acid,CHEBI:CHEBI:28842
+SCHEM,A2447,Stearidonic acid,MESH:C062895
+SCHEM,A2448,Stearoyl-coenzyme A,CHEBI:CHEBI:15541
+SCHEM,A2449,Steroid,CHEBI:CHEBI:35341
+SCHEM,A2450,Steroidal estrogens,
+SCHEM,A2451,Sterol,CHEBI:CHEBI:15889
+SCHEM,A2452,Stigmasterol,CHEBI:CHEBI:28824
+SCHEM,A2453,Stigmatellin,MESH:C041573
+SCHEM,A2454,Straight-chain 2-trans-enoyl CoA,
+SCHEM,A2455,Straight-chain 3-ketoacyl CoA,
+SCHEM,A2456,Straight-chain L-3-hydroxyacyl CoA,
+SCHEM,A2457,Straight-chain fatty acid,CHEBI:CHEBI:59202
+SCHEM,A2458,Straight-chain fatty acyl CoA,
+SCHEM,A2459,Streptomycin,CHEBI:CHEBI:17076
+SCHEM,A2460,Streptozocin,CHEBI:CHEBI:9288
+SCHEM,A2461,Strontium,CHEBI:CHEBI:35104
+SCHEM,A2462,Suberoylanilide hydroxamic acid,CHEBI:CHEBI:45716
+SCHEM,A2463,Suberylglycine,MESH:C013264
+SCHEM,A2464,Substance P,MESH:D013373
+SCHEM,A2465,Succinate,MESH:D013386
+SCHEM,A2466,Succinic acid,CHEBI:CHEBI:15741
+SCHEM,A2467,Succinyl-CoA,CHEBI:CHEBI:15380
+SCHEM,A2468,Succinyl-alanyl-alanyl-prolyl-valine chloromethyl ketone,MESH:C031135
+SCHEM,A2469,Succinyl-coenzyme A,CHEBI:CHEBI:15380
+SCHEM,A2470,Succinylacetone,MESH:C020804
+SCHEM,A2471,Sucrose,CHEBI:CHEBI:17992
+SCHEM,A2472,Sufentanil,CHEBI:CHEBI:9316
+SCHEM,A2473,Sugar phosphate,CHEBI:CHEBI:33447
+SCHEM,A2474,Sulfamethazine,CHEBI:CHEBI:102265
+SCHEM,A2475,Sulfasalazine,CHEBI:CHEBI:9334
+SCHEM,A2476,Sulfobromophthalein,MESH:D013448
+SCHEM,A2477,Sulforafan,CHEBI:CHEBI:47807
+SCHEM,A2478,Sulindac,CHEBI:CHEBI:9352
+SCHEM,A2479,Sulindac sulfide,CHEBI:CHEBI:75408
+SCHEM,A2480,Sulindac sulfone,CHEBI:CHEBI:64212
+SCHEM,A2481,Sulpiride,CHEBI:CHEBI:32168
+SCHEM,A2482,Sulprostone,MESH:C016767
+SCHEM,A2483,Sumatriptan,CHEBI:CHEBI:10650
+SCHEM,A2484,Sunitinib,CHEBI:CHEBI:38940
+SCHEM,A2485,Superoxide dismutase,MESH:D013482
+SCHEM,A2486,Superoxides,MESH:D013481
+SCHEM,A2487,Suramin,CHEBI:CHEBI:45906
+SCHEM,A2488,Swainsonine,CHEBI:CHEBI:9367
+SCHEM,A2489,Syntaxin,MESH:D050765
+SCHEM,A2490,T-butyl sulfide,
+SCHEM,A2491,T0901317,MESH:C423915
+SCHEM,A2492,TAPI (inhibitor),MESH:C092152
+SCHEM,A2493,TAS-103,
+SCHEM,A2494,TEMPO,CHEBI:CHEBI:32849
+SCHEM,A2495,TES,CHEBI:CHEBI:39035
+SCHEM,A2496,TGFBR1 inhibitor,
+SCHEM,A2497,TPCA-1,MESH:C499326
+SCHEM,A2498,Tacalcitol,
+SCHEM,A2499,Tacrine,CHEBI:CHEBI:45980
+SCHEM,A2500,Tacrolimus,CHEBI:CHEBI:61049
+SCHEM,A2501,Tadalafil,CHEBI:CHEBI:71940
+SCHEM,A2502,Tamoxifen,CHEBI:CHEBI:41774
+SCHEM,A2503,Tannic acid,CHEBI:CHEBI:75211
+SCHEM,A2504,Taurine,CHEBI:CHEBI:15891
+SCHEM,A2505,Taurochenodeoxycholic acid,CHEBI:CHEBI:16525
+SCHEM,A2506,Taurocholic acid,CHEBI:CHEBI:28865
+SCHEM,A2507,Taurolidine,MESH:C012566
+SCHEM,A2508,Taurolithocholic acid 3-sulfate,CHEBI:CHEBI:17864
+SCHEM,A2509,Tauroursodeoxycholic acid,MESH:C031655
+SCHEM,A2510,Tautomycin,MESH:C053079
+SCHEM,A2511,Taxane,CHEBI:CHEBI:36064
+SCHEM,A2512,Tazarotene,CHEBI:CHEBI:32184
+SCHEM,A2513,Telmisartan,CHEBI:CHEBI:9434
+SCHEM,A2514,Telomerase,MESH:D019098
+SCHEM,A2515,Telomestatin,MESH:C431888
+SCHEM,A2516,Temocapril,
+SCHEM,A2517,Teniposide,CHEBI:CHEBI:75988
+SCHEM,A2518,Terazosin,CHEBI:CHEBI:9445
+SCHEM,A2519,Testosterone,CHEBI:CHEBI:17347
+SCHEM,A2520,Testosterone propionate,MESH:D043343
+SCHEM,A2521,Tetracaine,CHEBI:CHEBI:9468
+SCHEM,A2522,Tetrachlorodibenzo-p-dioxin,
+SCHEM,A2523,Tetrachlorodibenzodioxin,CHEBI:CHEBI:28119
+SCHEM,A2524,Tetracycline,CHEBI:CHEBI:27902
+SCHEM,A2525,Tetradecanoylphorbol acetate,CHEBI:CHEBI:37537
+SCHEM,A2526,Tetraethylammonium,CHEBI:CHEBI:44296
+SCHEM,A2527,Tetrahydrocorticosterone,MESH:C003676
+SCHEM,A2528,Tetrahydrocortisol,CHEBI:CHEBI:28320
+SCHEM,A2529,Tetrahydrodeoxycorticosterone,MESH:C009413
+SCHEM,A2530,Tetrahydrofolic acid,CHEBI:CHEBI:26907
+SCHEM,A2531,Tetrahydrofolyl-[Glu](n),CHEBI:CHEBI:28624
+SCHEM,A2532,Tetrahydrofurandiol,
+SCHEM,A2533,Tetrahydrogestrinone,MESH:C479553
+SCHEM,A2534,Tetramethylthiourea,MESH:C019107
+SCHEM,A2535,Tetrandrine,MESH:C009438
+SCHEM,A2536,Tetrodotoxin,CHEBI:CHEBI:9506
+SCHEM,A2537,Thalidomide,CHEBI:CHEBI:9513
+SCHEM,A2538,Thapsigargicin,MESH:C046319
+SCHEM,A2539,Thapsigargin,CHEBI:CHEBI:9516
+SCHEM,A2540,Thenoyltrifluoroacetone,MESH:D013804
+SCHEM,A2541,Theobromine,CHEBI:CHEBI:28946
+SCHEM,A2542,Theophylline,CHEBI:CHEBI:28177
+SCHEM,A2543,Thiabendazole,CHEBI:CHEBI:45979
+SCHEM,A2544,Thiamine,CHEBI:CHEBI:26948
+SCHEM,A2545,Thiazolidine,CHEBI:CHEBI:38333
+SCHEM,A2546,Thiazolidinedione,MESH:C089946
+SCHEM,A2547,Thioacetamide,CHEBI:CHEBI:32497
+SCHEM,A2548,Thioctic acid,CHEBI:CHEBI:30314
+SCHEM,A2549,Thiocyanate,CHEBI:CHEBI:18022
+SCHEM,A2550,Thiodigalactoside,MESH:C031803
+SCHEM,A2551,Thiodiglycol,CHEBI:CHEBI:75184
+SCHEM,A2552,Thioguanine,CHEBI:CHEBI:9555
+SCHEM,A2553,Thiomalic acid,CHEBI:CHEBI:38705
+SCHEM,A2554,Thiophane,CHEBI:CHEBI:48458
+SCHEM,A2555,Thioredoxin,CHEBI:CHEBI:15033
+SCHEM,A2556,Thiorphan,MESH:D015244
+SCHEM,A2557,Threonine,CHEBI:CHEBI:26986
+SCHEM,A2558,Thrombin receptor peptide sfllrnp,MESH:C086309
+SCHEM,A2559,Thrombopoietin,MESH:D013926
+SCHEM,A2560,Thromboxane,CHEBI:CHEBI:26995
+SCHEM,A2561,Thromboxane A2,CHEBI:CHEBI:15627
+SCHEM,A2562,"Thromboxane A2, carbocyclic",MESH:C024587
+SCHEM,A2563,Thromboxane B2,CHEBI:CHEBI:28728
+SCHEM,A2564,Thymeleatoxin,MESH:C080287
+SCHEM,A2565,Thymidine,CHEBI:CHEBI:17748
+SCHEM,A2566,Thymidine 5'-triphosphate,CHEBI:CHEBI:18077
+SCHEM,A2567,Thymine,CHEBI:CHEBI:17821
+SCHEM,A2568,Thymosin beta(1),MESH:C047192
+SCHEM,A2569,Thymosin beta(4),MESH:C033402
+SCHEM,A2570,Thyroid,
+SCHEM,A2571,Thyroid hormones,CHEBI:CHEBI:60311
+SCHEM,A2572,Thyrotropin,MESH:D013972
+SCHEM,A2573,Tinzaparin sodium,
+SCHEM,A2574,Tipifarnib[USAN],
+SCHEM,A2575,Tirapazamine,MESH:C049947
+SCHEM,A2576,Tiron,
+SCHEM,A2577,Titanium,CHEBI:CHEBI:33341
+SCHEM,A2578,Titanium dioxide,CHEBI:CHEBI:32234
+SCHEM,A2579,Tobacco smoke,
+SCHEM,A2580,"Tobacco, smokeless, aqueous extract",
+SCHEM,A2581,Tocladesine,
+SCHEM,A2582,Tolbutamide,CHEBI:CHEBI:27999
+SCHEM,A2583,Tolcapone,CHEBI:CHEBI:63630
+SCHEM,A2584,Toluene,CHEBI:CHEBI:17578
+SCHEM,A2585,Topotecan,CHEBI:CHEBI:63632
+SCHEM,A2586,Toremifene,CHEBI:CHEBI:9635
+SCHEM,A2587,Tosufloxacin,MESH:C055185
+SCHEM,A2588,Tosyllysine chloromethyl ketone,MESH:D014107
+SCHEM,A2589,Tosylphenylalanyl chloromethyl ketone,CHEBI:CHEBI:9642
+SCHEM,A2590,"Toxin B, Clostridium difficile",MESH:C031815
+SCHEM,A2591,Tranilast,MESH:C012293
+SCHEM,A2592,Trans-resveratrol,CHEBI:CHEBI:45713
+SCHEM,A2593,Transferrin,MESH:D014168
+SCHEM,A2594,Tranylcypromine,CHEBI:CHEBI:9652
+SCHEM,A2595,Trapoxin A,MESH:C067070
+SCHEM,A2596,Trastuzumab,MESH:C112748
+SCHEM,A2597,Trazodone,CHEBI:CHEBI:9654
+SCHEM,A2598,Trehalose,CHEBI:CHEBI:27082
+SCHEM,A2599,Trequinsin,MESH:C035964
+SCHEM,A2600,Tretinoin,CHEBI:CHEBI:15367
+SCHEM,A2601,Tretinoin tocoferil,MESH:C089853
+SCHEM,A2602,Triacsin C,MESH:C034613
+SCHEM,A2603,Triacylglycerol,CHEBI:CHEBI:17855
+SCHEM,A2604,Triamcinolone,CHEBI:CHEBI:9667
+SCHEM,A2605,Triazole,CHEBI:CHEBI:38597
+SCHEM,A2606,Tributyrin,MESH:C005830
+SCHEM,A2607,Trichloroepoxypropane,MESH:D014239
+SCHEM,A2608,Trichloromethyl radical,CHEBI:CHEBI:30737
+SCHEM,A2609,Trichostatin A,CHEBI:CHEBI:46024
+SCHEM,A2610,Triclosan,CHEBI:CHEBI:164200
+SCHEM,A2611,Triethylsulfonium,MESH:C036565
+SCHEM,A2612,Trifluoperazine,CHEBI:CHEBI:45951
+SCHEM,A2613,Trifluoroacetylchloride,
+SCHEM,A2614,Trilostane,CHEBI:CHEBI:32260
+SCHEM,A2615,Trimethyl telluride,
+SCHEM,A2616,Trimethylenediamine,CHEBI:CHEBI:15725
+SCHEM,A2617,Trimethyloxamine,CHEBI:CHEBI:15724
+SCHEM,A2618,Trimethylsulfonium,CHEBI:CHEBI:17434
+SCHEM,A2619,Trinitrobenzenesulfonic acid,CHEBI:CHEBI:53063
+SCHEM,A2620,Trinitrobenzoylated polylysine,MESH:C055580
+SCHEM,A2621,Triolein,CHEBI:CHEBI:53753
+SCHEM,A2622,Tripterine,CHEBI:CHEBI:63959
+SCHEM,A2623,Triptolide,MESH:C001899
+SCHEM,A2624,Triptorelin,CHEBI:CHEBI:63633
+SCHEM,A2625,Tristearin,MESH:C022618
+SCHEM,A2626,Triterpenoid,CHEBI:CHEBI:36615
+SCHEM,A2627,Tritylnucleoside,
+SCHEM,A2628,Troglitazone,CHEBI:CHEBI:9753
+SCHEM,A2629,Trolox C,
+SCHEM,A2630,Troponin I,MESH:D019210
+SCHEM,A2631,Trovafloxacin,MESH:C080163
+SCHEM,A2632,"Trypsin, pancreatic, type V-S",MESH:C077442
+SCHEM,A2633,Tryptamine,CHEBI:CHEBI:16765
+SCHEM,A2634,Tryptophan,CHEBI:CHEBI:27897
+SCHEM,A2635,Tubocurarine,CHEBI:CHEBI:9774
+SCHEM,A2636,Tungsten,CHEBI:CHEBI:27998
+SCHEM,A2637,Tunicamycin,CHEBI:CHEBI:29699
+SCHEM,A2638,Turmeric extract,MESH:C012596
+SCHEM,A2639,Tyramine,CHEBI:CHEBI:15760
+SCHEM,A2640,Tyrosine,CHEBI:CHEBI:18186
+SCHEM,A2641,Tyrosine kinase inhibitor,CHEBI:CHEBI:38637
+SCHEM,A2642,Tyrphostin AG 1478,CHEBI:CHEBI:75404
+SCHEM,A2643,Tyrphostin AG 825,CHEBI:CHEBI:75405
+SCHEM,A2644,Tyrphostin AG1295,
+SCHEM,A2645,Tyrphostin AG17,MESH:C084894
+SCHEM,A2646,"U 46,619",
+SCHEM,A2647,U 73122,
+SCHEM,A2648,U 75302,MESH:C062137
+SCHEM,A2649,U0126,CHEBI:CHEBI:64208
+SCHEM,A2650,UDP 4,
+SCHEM,A2651,UDP-D-galactose,CHEBI:CHEBI:18307
+SCHEM,A2652,UDP-N-acetyl-D-galactosamine,CHEBI:CHEBI:16650
+SCHEM,A2653,UDPglucose,CHEBI:CHEBI:18066
+SCHEM,A2654,UDPglucuronate,CHEBI:CHEBI:17200
+SCHEM,A2655,Ubidecarenone,CHEBI:CHEBI:46245
+SCHEM,A2656,Ubiquinol-10,CHEBI:CHEBI:64183
+SCHEM,A2657,Ubiquinone,CHEBI:CHEBI:16389
+SCHEM,A2658,Ubiquinone 9,MESH:C030571
+SCHEM,A2659,Ucn 01,
+SCHEM,A2660,Ultraviolet B radiation,
+SCHEM,A2661,Uracil,CHEBI:CHEBI:17568
+SCHEM,A2662,Uranyl acetate,MESH:C005460
+SCHEM,A2663,Urea,CHEBI:CHEBI:16199
+SCHEM,A2664,"Urea, N,N''-sulfonylbis-",
+SCHEM,A2665,Urethane,CHEBI:CHEBI:17967
+SCHEM,A2666,Uric acid,CHEBI:CHEBI:27226
+SCHEM,A2667,Uridine,CHEBI:CHEBI:16704
+SCHEM,A2668,Uridine diphosphate,CHEBI:CHEBI:17659
+SCHEM,A2669,Uridine diphosphate N-acetylglucosamine,MESH:D014537
+SCHEM,A2670,Uridine diphosphate glucuronic acid,CHEBI:CHEBI:17200
+SCHEM,A2671,Uridine monophosphate,CHEBI:CHEBI:16695
+SCHEM,A2672,Uridine triphosphate,CHEBI:CHEBI:15713
+SCHEM,A2673,Urokinase,MESH:D014568
+SCHEM,A2674,Uroporphyrin I,CHEBI:CHEBI:27484
+SCHEM,A2675,Ursodiol,CHEBI:CHEBI:9907
+SCHEM,A2676,Ursolic acid,CHEBI:CHEBI:9908
+SCHEM,A2677,Usnic acid,CHEBI:CHEBI:38319
+SCHEM,A2678,Valdecoxib,CHEBI:CHEBI:63634
+SCHEM,A2679,Valine,CHEBI:CHEBI:27266
+SCHEM,A2680,Valproate Sodium,CHEBI:CHEBI:9925
+SCHEM,A2681,Valproic acid,CHEBI:CHEBI:39867
+SCHEM,A2682,Valsartan,CHEBI:CHEBI:9927
+SCHEM,A2683,Vanadate,CHEBI:CHEBI:46442
+SCHEM,A2684,"Vanadate (VO43-), trisodium, (T-4)-",
+SCHEM,A2685,"Vanadate(2-), oxodiperoxy(2-pyridinecarboxylato-N1,O2)-, dipotassium",
+SCHEM,A2686,Vanadium,CHEBI:CHEBI:27698
+SCHEM,A2687,Vanadyl sulfate,CHEBI:CHEBI:33146
+SCHEM,A2688,Vasoactive intestinal peptide,MESH:D014660
+SCHEM,A2689,Vasopressin,CHEBI:CHEBI:9937
+SCHEM,A2690,Vasopressin (arginine form),CHEBI:CHEBI:34543
+SCHEM,A2691,Verapamil,CHEBI:CHEBI:9948
+SCHEM,A2692,Verlukast,MESH:C059141
+SCHEM,A2693,Very Low Density Lipoprotein,MESH:D008079
+SCHEM,A2694,Very long-chain 2-trans-enoyl CoA,
+SCHEM,A2695,Very long-chain 3-ketoacyl CoA,
+SCHEM,A2696,Very long-chain D-3-hydroxyacyl CoA,
+SCHEM,A2697,Very long-chain fatty acid,CHEBI:CHEBI:27283
+SCHEM,A2698,Very long-chain fatty acyl CoA,
+SCHEM,A2699,Vigabatrin,CHEBI:CHEBI:63638
+SCHEM,A2700,Vinblastine,CHEBI:CHEBI:27375
+SCHEM,A2701,Vincristine,CHEBI:CHEBI:28445
+SCHEM,A2702,Vinorelbine,CHEBI:CHEBI:480999
+SCHEM,A2703,Vinpocetine,MESH:C013983
+SCHEM,A2704,Vinyl carbamate,CHEBI:CHEBI:27292
+SCHEM,A2705,Vinyl chloride,CHEBI:CHEBI:28509
+SCHEM,A2706,Vitamin A,CHEBI:CHEBI:12777
+SCHEM,A2707,Vitamin B12,MESH:D014805
+SCHEM,A2708,Vitamin D,CHEBI:CHEBI:27300
+SCHEM,A2709,Vitamin D3,CHEBI:CHEBI:28940
+SCHEM,A2710,Vitamin D3 butyrate,MESH:C033556
+SCHEM,A2711,Vitamin E,CHEBI:CHEBI:33234
+SCHEM,A2712,Vitamin E hemisuccinate,
+SCHEM,A2713,Vitamin E succinate,
+SCHEM,A2714,Vitamin K,CHEBI:CHEBI:28384
+SCHEM,A2715,Vitamin K2,CHEBI:CHEBI:16374
+SCHEM,A2716,Vitaxin,
+SCHEM,A2717,Vitronectin,MESH:D019096
+SCHEM,A2718,Voriconazole,CHEBI:CHEBI:10023
+SCHEM,A2719,Vorozole,MESH:C060523
+SCHEM,A2720,WIN 62586,
+SCHEM,A2721,WMC-79,MESH:C506941
+SCHEM,A2722,WR 1065,CHEBI:CHEBI:72583
+SCHEM,A2723,Warfarin,CHEBI:CHEBI:10033
+SCHEM,A2724,Water,CHEBI:CHEBI:15377
+SCHEM,A2725,Wax ester,CHEBI:CHEBI:10036
+SCHEM,A2726,Wnt-3A protein,MESH:D060509
+SCHEM,A2727,Wogonin,CHEBI:CHEBI:10043
+SCHEM,A2728,Wood dust,
+SCHEM,A2729,Wortmannin,CHEBI:CHEBI:52289
+SCHEM,A2730,Xanthine,CHEBI:CHEBI:15318
+SCHEM,A2731,Xanthophyll,CHEBI:CHEBI:27325
+SCHEM,A2732,Xanthosine,CHEBI:CHEBI:18107
+SCHEM,A2733,Xanthosine monophosphate,MESH:C011141
+SCHEM,A2734,Ximelagatran,CHEBI:CHEBI:65172
+SCHEM,A2735,Xylene,CHEBI:CHEBI:27338
+SCHEM,A2736,Xylitol,CHEBI:CHEBI:17151
+SCHEM,A2737,Xylulose,CHEBI:CHEBI:27353
+SCHEM,A2738,Y 27632,CHEBI:CHEBI:75393
+SCHEM,A2739,Y-27632,CHEBI:CHEBI:75393
+SCHEM,A2740,YC 1,
+SCHEM,A2741,YM155,
+SCHEM,A2742,Z-VAD-FMK,MESH:C096713
+SCHEM,A2743,ZD0892,
+SCHEM,A2744,ZD6474,CHEBI:CHEBI:49960
+SCHEM,A2745,ZM 241385,MESH:C097270
+SCHEM,A2746,Zalcitabine,CHEBI:CHEBI:10101
+SCHEM,A2747,Zaprinast,MESH:C011145
+SCHEM,A2748,Zardaverine,CHEBI:CHEBI:46548
+SCHEM,A2749,Zebularine,CHEBI:CHEBI:46938
+SCHEM,A2750,Zidovudine,CHEBI:CHEBI:10110
+SCHEM,A2751,Zinc,CHEBI:CHEBI:27363
+SCHEM,A2752,Zinc chloride,CHEBI:CHEBI:49976
+SCHEM,A2753,Zinc protoporphyrin,CHEBI:CHEBI:28783
+SCHEM,A2754,Zinc sulfate,CHEBI:CHEBI:35176
+SCHEM,A2755,"Zinc, ion (Zn2+)",CHEBI:CHEBI:29105
+SCHEM,A2756,Zinostatin,MESH:D009353
+SCHEM,A2757,Zn++,
+SCHEM,A2758,Zymosan,CHEBI:CHEBI:37671
+SCHEM,A2759,Zymostenol,CHEBI:CHEBI:16608
+SCHEM,A2760,Zymosterol,CHEBI:CHEBI:18252
+SCHEM,A2761,Zymosterone,CHEBI:CHEBI:52386
+SCHEM,A2762,"[2,3-d]pyridopyrimidine",
+SCHEM,A2763,acetoacetate,CHEBI:CHEBI:13705
+SCHEM,A2764,acetoacetyl-CoA,CHEBI:CHEBI:15345
+SCHEM,A2765,acetylated-LDL,
+SCHEM,A2766,adhesion molecule,
+SCHEM,A2767,"alpha-1,6 mannose",
+SCHEM,A2768,alpha-Amanitin,CHEBI:CHEBI:37415
+SCHEM,A2769,alpha-Amino-3-hydroxy-5-methyl-4-isoxazolepropionic acid,MESH:D018350
+SCHEM,A2770,alpha-Bungarotoxin,
+SCHEM,A2771,alpha-Carotene,CHEBI:CHEBI:28425
+SCHEM,A2772,alpha-Cobratoxin,MESH:C025154
+SCHEM,A2773,alpha-D-Glucose,CHEBI:CHEBI:17925
+SCHEM,A2774,alpha-D-glucose 6-phosphate,CHEBI:CHEBI:17665
+SCHEM,A2775,alpha-Estradiol,CHEBI:CHEBI:17160
+SCHEM,A2776,alpha-Ketobutyric acid,CHEBI:CHEBI:30831
+SCHEM,A2777,alpha-Ketoglutaric acid,CHEBI:CHEBI:30915
+SCHEM,A2778,alpha-Lactalbumin (cattle reduced),
+SCHEM,A2779,alpha-Linoleate,
+SCHEM,A2780,alpha-Naphthoflavone,MESH:C011512
+SCHEM,A2781,alpha-Tocopherol phosphate,MESH:C012552
+SCHEM,A2782,amino acid,CHEBI:CHEBI:33709
+SCHEM,A2783,antioxidant,CHEBI:CHEBI:22586
+SCHEM,A2784,apo-10'-lycopenoic acid,MESH:C523199
+SCHEM,A2785,apoptolidin,MESH:C114125
+SCHEM,A2786,beta Catenin,MESH:D051176
+SCHEM,A2787,beta carotene,MESH:D019207
+SCHEM,A2788,beta-Alanine,CHEBI:CHEBI:16958
+SCHEM,A2789,beta-Aminopropion aldehyde,CHEBI:CHEBI:27608
+SCHEM,A2790,beta-Aminopropionitrile fumarate,MESH:C027243
+SCHEM,A2791,"beta-Cyclodextrin, methyl ethers",
+SCHEM,A2792,beta-D-Galactose,CHEBI:CHEBI:27667
+SCHEM,A2793,beta-D-Galactoside,CHEBI:CHEBI:28034
+SCHEM,A2794,beta-Elemene,CHEBI:CHEBI:62854
+SCHEM,A2795,beta-HIVS,MESH:C118460
+SCHEM,A2796,beta-Hydroxy-beta-methylglutaryl coenzyme A (HMG CoA),
+SCHEM,A2797,beta-Lactoglobulin B (cattle reduced) 162,
+SCHEM,A2798,beta-Monopalmitin,
+SCHEM,A2799,beta-Naphthoflavone,MESH:D019324
+SCHEM,A2800,beta-Neuroprotectin,MESH:C064164
+SCHEM,A2801,beta-VLDL,
+SCHEM,A2802,bisimidazoacridone,
+SCHEM,A2803,carbamylated-HDL,
+SCHEM,A2804,carbamylated-LDL,
+SCHEM,A2805,catecholamine,CHEBI:CHEBI:33567
+SCHEM,A2806,cationized LDL,
+SCHEM,A2807,cerulein,CHEBI:CHEBI:59219
+SCHEM,A2808,chemokine,MESH:D018925
+SCHEM,A2809,"cholesta-8(9),24-dien-3-one",
+SCHEM,A2810,cholesterol sulfate,CHEBI:CHEBI:41321
+SCHEM,A2811,"cis,cis-3,6-Dodecadienoyl-CoA",CHEBI:CHEBI:28002
+SCHEM,A2812,clasto lactacystin beta lactone,
+SCHEM,A2813,copper Ox-LDL,
+SCHEM,A2814,cyclic AMP,CHEBI:CHEBI:17489
+SCHEM,A2815,cytokine,MESH:D016207
+SCHEM,A2816,delta-Aminolevulinic acid,CHEBI:CHEBI:17549
+SCHEM,A2817,"delta8,24-carboxymethylsterol",
+SCHEM,A2818,"delta8,24-monomethylsterone",
+SCHEM,A2819,diacylglycerols,CHEBI:CHEBI:18035
+SCHEM,A2820,"diglycidyl ether of 1,6-hexanediol",
+SCHEM,A2821,diglycidyl ether of 1-hexanediol,
+SCHEM,A2822,"diglycidyl ether of 4,4prime dihydroxy 3,3prime,5,5prime tetramethylbiphenyl",
+SCHEM,A2823,diglycidyl ether of o-Cresol,
+SCHEM,A2824,dihydroceramide,CHEBI:CHEBI:31488
+SCHEM,A2825,dimethyloxalylglycine,
+SCHEM,A2826,dolichol-linked Man7GlcNAc2,
+SCHEM,A2827,double-stranded DNA break,
+SCHEM,A2828,double-stranded RNA,MESH:D012330
+SCHEM,A2829,erythro-9-2-hydroxy-3-nonyl-adenine,
+SCHEM,A2830,extracellular region,
+SCHEM,A2831,fibrate,
+SCHEM,A2832,free radical,CHEBI:CHEBI:26519
+SCHEM,A2833,gamma-Glutaminyl-S-(4-chlorobenzyl)cysteinyl-phenylglycine,MESH:C085408
+SCHEM,A2834,gamma-Glutamylcysteine,CHEBI:CHEBI:24195
+SCHEM,A2835,gamma-Linoleate,
+SCHEM,A2836,gamma-Radiation and X-radiation,
+SCHEM,A2837,gamma-Tocopherol,CHEBI:CHEBI:18185
+SCHEM,A2838,glycoprotein,CHEBI:CHEBI:17089
+SCHEM,A2839,heavy metal,MESH:D019216
+SCHEM,A2840,heparan sulfate proteoglycan,CHEBI:CHEBI:24499
+SCHEM,A2841,heparin sulfate proteoglycan,MESH:C036090
+SCHEM,A2842,hexadec-2-enal,
+SCHEM,A2843,hydroperoxyeicosatetraenoic acid,
+SCHEM,A2844,hydroperoxyfatty acid,
+SCHEM,A2845,hydroperoxyoctadecadienoic acid,
+SCHEM,A2846,hydroxyfatty acid,
+SCHEM,A2847,iron (ferrous),
+SCHEM,A2848,isoprostane,MESH:D028421
+SCHEM,A2849,kringle 5,
+SCHEM,A2850,"l-3,4-dihydroxyphenylalanine",MESH:D007980
+SCHEM,A2851,latrunculin,
+SCHEM,A2852,lipid,CHEBI:CHEBI:18059
+SCHEM,A2853,lipoprotein,CHEBI:CHEBI:6495
+SCHEM,A2854,lysophosphatidic acid,CHEBI:CHEBI:52288
+SCHEM,A2855,lysosomal lumen,
+SCHEM,A2856,mTOR inhibitor,CHEBI:CHEBI:68481
+SCHEM,A2857,membrane cholesterol,
+SCHEM,A2858,methylglyoxalbis-guanyl-hydrazone,
+SCHEM,A2859,mica,MESH:C011934
+SCHEM,A2860,mithramycin SDK,
+SCHEM,A2861,mitomycin C,CHEBI:CHEBI:27504
+SCHEM,A2862,mucin,MESH:D009077
+SCHEM,A2863,myo-Inositol polyphosphate,CHEBI:CHEBI:18087
+SCHEM,A2864,"myo-Inositol, tris(dihydrogen phosphate)",
+SCHEM,A2865,myosin 6S,
+SCHEM,A2866,n-3 Polyunsaturated fatty acid,MESH:D015525
+SCHEM,A2867,n-6 Polyunsaturated fatty acid,
+SCHEM,A2868,n3 Fatty acid,
+SCHEM,A2869,o-Phthalaldehyde,CHEBI:CHEBI:70851
+SCHEM,A2870,omega-N-Methylarginine,CHEBI:CHEBI:28229
+SCHEM,A2871,ortho-Vanadate,CHEBI:CHEBI:46442
+SCHEM,A2872,oxidized 1-palmitoyl-2-arachidonyl-sn-3-glycero-phosphorylcholine,
+SCHEM,A2873,oxidized Thioredoxin,CHEBI:CHEBI:18191
+SCHEM,A2874,oxidized beta-carotene,
+SCHEM,A2875,p-Chloromercuribenzoic acid,CHEBI:CHEBI:28420
+SCHEM,A2876,p38 kinase inhibitor,
+SCHEM,A2877,pervanadate,MESH:C076715
+SCHEM,A2878,phosphatidylinositol,CHEBI:CHEBI:28874
+SCHEM,A2879,phosphatidylserine,CHEBI:CHEBI:18303
+SCHEM,A2880,phosphoethanolamine,CHEBI:CHEBI:36711
+SCHEM,A2881,phytoceramide,CHEBI:CHEBI:31998
+SCHEM,A2882,prebeta-HDL,MESH:D053442
+SCHEM,A2883,"pregn-5-ene-3,20-dione-17-ol",CHEBI:CHEBI:63843
+SCHEM,A2884,primary monoamine,CHEBI:CHEBI:32877
+SCHEM,A2885,pristanal,CHEBI:CHEBI:49189
+SCHEM,A2886,"pyridine nucleotides, oxidized",
+SCHEM,A2887,"pyridine nucleotides, reduced",
+SCHEM,A2888,pyrophosphate,CHEBI:CHEBI:18361
+SCHEM,A2889,quinoline-val-asp(OMe)-CH2-OPH,MESH:C468548
+SCHEM,A2890,roscovitine,MESH:C104586
+SCHEM,A2891,sarafotoxin S6c,
+SCHEM,A2892,serum CCL2,
+SCHEM,A2893,serum DF,
+SCHEM,A2894,serum HP,
+SCHEM,A2895,serum IL10,
+SCHEM,A2896,serum IL1B,
+SCHEM,A2897,serum IL8,
+SCHEM,A2898,serum MIF,
+SCHEM,A2899,serum NGFB,
+SCHEM,A2900,serum SERPINE1,
+SCHEM,A2901,serum TGFB1,
+SCHEM,A2902,serum TNF,
+SCHEM,A2903,serum adiponectin,
+SCHEM,A2904,serum alanine,
+SCHEM,A2905,serum amino acid,
+SCHEM,A2906,serum calcium,
+SCHEM,A2907,serum cholesterol,
+SCHEM,A2908,serum fatty acid,
+SCHEM,A2909,serum glucose,
+SCHEM,A2910,serum glycerol,
+SCHEM,A2911,serum insulin,
+SCHEM,A2912,serum ketone body,
+SCHEM,A2913,serum leptin,
+SCHEM,A2914,serum triacylglycerol,
+SCHEM,A2915,"smoke condensate, cigarette (gas phase)",
+SCHEM,A2916,"smoke condensate, cigarette (particulate phase)",
+SCHEM,A2917,sorting endosome,
+SCHEM,A2918,sphinganine,CHEBI:CHEBI:16566
+SCHEM,A2919,sphinganine 1-phosphate,CHEBI:CHEBI:16893
+SCHEM,A2920,sphingomyelin,CHEBI:CHEBI:64583
+SCHEM,A2921,statin,CHEBI:CHEBI:35664
+SCHEM,A2922,stearate,CHEBI:CHEBI:25629
+SCHEM,A2923,stearyl-CoA,CHEBI:CHEBI:15541
+SCHEM,A2924,sulfated-sialyl-Lewisx,
+SCHEM,A2925,sulfatide,CHEBI:CHEBI:18318
+SCHEM,A2926,t-Butyloxycarbonyl-methionyl-leucyl-phenylalanine,MESH:C046832
+SCHEM,A2927,tRNA_Sec,
+SCHEM,A2928,tert-Butylhydroperoxide,CHEBI:CHEBI:64090
+SCHEM,A2929,"trans,cis-Lauro-2,6-dienoyl-CoA",CHEBI:CHEBI:28387
+SCHEM,A2930,trans-Dec-2-enoyl-CoA,CHEBI:CHEBI:10723
+SCHEM,A2931,trans-Diphenylpropene Oxide,
+SCHEM,A2932,trans-Golgi network,
+SCHEM,A2933,trans-Hex-2-enoyl-CoA,CHEBI:CHEBI:28706
+SCHEM,A2934,trans-Hexadec-2-enoyl-CoA,CHEBI:CHEBI:28935
+SCHEM,A2935,trans-Oct-2-enoyl-CoA,CHEBI:CHEBI:27537
+SCHEM,A2936,trans-Tetradec-2-enoyl-CoA,CHEBI:CHEBI:27721
+SCHEM,A2937,"trans10,cis12-Octadecadienoate",
+SCHEM,A2938,tropomyosin,MESH:D014335
+SCHEM,A2939,unsaturated Fatty acid,CHEBI:CHEBI:27208
+SCHEM,A2940,vimentin,MESH:D014746
+SCHEM,A2941,xenobiotic,CHEBI:CHEBI:35703
+SCOMP,C0001,9-1-1 Complex,GO:GO:0030896
+SCOMP,C0002,AMP Activated Protein Kinase Complex,GO:GO:0031588
+SCOMP,C0003,AP-1 Complex,GO:GO:0035976
+SCOMP,C0004,ATP Dependent Potassium Channel Complex,GO:GO:0008282
+SCOMP,C0005,Acetyl CoA Carboxylase Complex,GO:GO:0009317
+SCOMP,C0006,Acetylcholine Current Channel Complex,GO:GO:0005892
+SCOMP,C0007,Adaptor Protein I Complex,GO:GO:0030121
+SCOMP,C0008,Adaptor Protein II Complex,GO:GO:0030122
+SCOMP,C0009,Adaptor Protein III Complex,GO:GO:0030123
+SCOMP,C0010,Anaphase Promoting Complex,GO:GO:0005680
+SCOMP,C0011,Annexin II Heterotetramer Complex,
+SCOMP,C0012,Arp2/3 Protein Complex,GO:GO:0005885
+SCOMP,C0013,BK Channel Complex,
+SCOMP,C0014,Branched Chain Alpha Keto Acid Dehydrogenase Complex,GO:GO:0017086
+SCOMP,C0015,C1 Complex,GO:GO:0005602
+SCOMP,C0016,C1q Complex,GO:GO:0005602
+SCOMP,C0017,C3 Convertase Complex,GO:GO:0005601
+SCOMP,C0018,C5 Convertase Complex,GO:GO:0005601
+SCOMP,C0019,CAMK2 Complex,GO:GO:0005954
+SCOMP,C0020,CBF3 Complex,GO:GO:0031518
+SCOMP,C0021,CCT Complex,GO:GO:0005832
+SCOMP,C0022,CD3 Complex,
+SCOMP,C0023,CD8 Complex,
+SCOMP,C0024,CHRN Complex,GO:GO:0005892
+SCOMP,C0025,CK II Complex,GO:GO:0005956
+SCOMP,C0026,CRSP Complex,
+SCOMP,C0027,CSNK2 Complex,GO:GO:0005956
+SCOMP,C0028,Ca Activated Chloride Channel Complex,
+SCOMP,C0029,Ca Activated Potassium Channel Complex,
+SCOMP,C0030,Calcineurin Complex,GO:GO:0005955
+SCOMP,C0031,Clathrin Complex,GO:GO:0071439
+SCOMP,C0032,CoA Ligase GDP Complex,GO:GO:0045244
+SCOMP,C0033,Cohesin Complex,GO:GO:0008278
+SCOMP,C0034,Cytochrome C Oxidase Complex,GO:GO:0045277
+SCOMP,C0035,Cytochrome C Oxidase Complex Muscle,
+SCOMP,C0036,Cytochrome C Oxidase Complex Non Muscle,
+SCOMP,C0037,Cytoplasmic Dynein Complex,GO:GO:0005868
+SCOMP,C0038,Cytosolic NFAT Complex,
+SCOMP,C0039,DNA Polymerase delta Complex,GO:GO:0043625
+SCOMP,C0040,Dodecenoyl CoA Isomerase Complex,
+SCOMP,C0041,Dystrophin Associated Glycoprotein Complex,GO:GO:0016010
+SCOMP,C0042,E1A Binding Protein Complex,
+SCOMP,C0043,ECH1 Complex,
+SCOMP,C0044,ECHS1 Complex,
+SCOMP,C0045,EIF2 Complex,GO:GO:0005850
+SCOMP,C0046,EIF2B Complex,GO:GO:0005851
+SCOMP,C0047,EIF4F Complex,GO:GO:0016281
+SCOMP,C0048,ENaC Complex,
+SCOMP,C0049,ER Chaperone Complex,GO:GO:0034663
+SCOMP,C0050,F Channel Complex,
+SCOMP,C0051,FcR Gamma Chain Complex,GO:GO:0032997
+SCOMP,C0052,Fibrinogen Complex,GO:GO:0005577
+SCOMP,C0053,Follicle Stimulating Hormone Complex,GO:GO:0016914
+SCOMP,C0054,GABRA Complex,
+SCOMP,C0055,GPIT Complex,GO:GO:0042765
+SCOMP,C0056,GTF2E Complex,
+SCOMP,C0057,GTF2F Complex,
+SCOMP,C0058,GUCY1 Complex,GO:GO:0008074
+SCOMP,C0059,HDL Complex,GO:GO:0034364
+SCOMP,C0060,Hemoglobin Complex,GO:GO:0005833
+SCOMP,C0061,IK Channel Complex,
+SCOMP,C0062,IL2R Complex,
+SCOMP,C0063,Ib-V-IX Complex,
+SCOMP,C0064,IgG Immune Complex,
+SCOMP,C0065,IkappaB Kinase Complex,GO:GO:0008385
+SCOMP,C0066,Inhibin Complex,GO:GO:0043511
+SCOMP,C0067,Interferon Gamma Receptor Complex,
+SCOMP,C0068,Interleukin 4 Receptor Complex,GO:GO:0016516
+SCOMP,C0069,Inward Rectifier Potassium Channel Complex,
+SCOMP,C0070,Kinetochore Complex,GO:GO:0000776
+SCOMP,C0071,L Type Calcium Channel Complex,
+SCOMP,C0072,Laminin 1 Complex,GO:GO:0005606
+SCOMP,C0073,Laminin 5 Complex,GO:GO:0005610
+SCOMP,C0074,Laminin Complex,GO:GO:0043256
+SCOMP,C0075,Luteinizing Hormone Complex,
+SCOMP,C0076,MHC Class I Complex,GO:GO:0042612
+SCOMP,C0077,MHC Class II Complex,GO:GO:0042613
+SCOMP,C0078,Membrane Attack Complex,GO:GO:0005579
+SCOMP,C0079,NADH Dehydrogenase Complex,GO:GO:0030964
+SCOMP,C0080,NADH Dehydrogenase Complex I,GO:GO:0045271
+SCOMP,C0081,NADPH Oxidase Complex,GO:GO:0043020
+SCOMP,C0082,NFAT Complex,
+SCOMP,C0083,Na/K Exchanging ATPase Complex,GO:GO:0005890
+SCOMP,C0084,Nfkb Complex,GO:GO:0071159
+SCOMP,C0085,Nfy Complex,GO:GO:0016602
+SCOMP,C0086,Ngf Complex,
+SCOMP,C0087,Nua4 Complex,GO:GO:0035267
+SCOMP,C0088,Nuclear NFAT Complex,
+SCOMP,C0089,PDGF Complex,
+SCOMP,C0090,PDGF Receptor Complex,
+SCOMP,C0091,POLR2 Complex,GO:GO:0016591
+SCOMP,C0092,PP2A Complex,GO:GO:0000159
+SCOMP,C0093,PRC1 Maintenance Complex,GO:GO:0035102
+SCOMP,C0094,PRC2 Initiation Complex,GO:GO:0035098
+SCOMP,C0095,Phosphorylase B Kinase Complex,GO:GO:0005964
+SCOMP,C0096,Phosphorylase Kinase Complex,GO:GO:0005964
+SCOMP,C0097,Prefoldin Complex,GO:GO:0016272
+SCOMP,C0098,Preinitiation Complex,GO:GO:0070993
+SCOMP,C0099,Propionyl CoA Carboxylase Complex,
+SCOMP,C0100,Proteasome Complex,GO:GO:0000502
+SCOMP,C0101,Proteasome Core Complex,GO:GO:0005839
+SCOMP,C0102,Proteasome Core Complex alpha Subunit Complex,GO:GO:0019773
+SCOMP,C0103,Proteasome Core Complex beta Subunit Complex,GO:GO:0019774
+SCOMP,C0104,Proteasome Regulatory Particle Base Complex,GO:GO:0008540
+SCOMP,C0105,Proteasome Regulatory Particle Lid Complex,GO:GO:0008541
+SCOMP,C0106,Proton Transporting ATP Synthase Complex,GO:GO:0045259
+SCOMP,C0107,Pyruvate Dehydrogenase Complex,GO:GO:0045254
+SCOMP,C0108,RFC Complex,GO:GO:0005663
+SCOMP,C0109,RNApo I Complex,GO:GO:0005736
+SCOMP,C0110,RNApo II Complex,GO:GO:0016591
+SCOMP,C0111,Respiratory Chain Complex I,GO:GO:0045271
+SCOMP,C0112,Respiratory Chain Complex II,GO:GO:0045273
+SCOMP,C0113,Respiratory Chain Complex III,GO:GO:0045275
+SCOMP,C0114,Respiratory Chain Complex IV,GO:GO:0045277
+SCOMP,C0115,SK Channel Complex,
+SCOMP,C0116,SWI/SNF Complex,GO:GO:0016514
+SCOMP,C0117,Succinate CoA Ligase GDP Forming Complex,GO:GO:0045244
+SCOMP,C0118,Succinate Dehydrogenase Complex,GO:GO:0045281
+SCOMP,C0119,T Cell Receptor Antigen Recognition Complex,GO:GO:0042101
+SCOMP,C0120,T Cell Receptor Complex,GO:GO:0042101
+SCOMP,C0121,T Type Calcium Channel Complex,
+SCOMP,C0122,TFIIH Complex,GO:GO:0000439
+SCOMP,C0123,TIF IB Complex,
+SCOMP,C0124,TORC1 Complex,GO:GO:0031931
+SCOMP,C0125,TORC2 Complex,GO:GO:0031932
+SCOMP,C0126,TR Auxiliary Protein Complex,GO:GO:0016592
+SCOMP,C0127,Ternary Complex,GO:GO:0044207
+SCOMP,C0128,Thrombin Antithrombin Complex,
+SCOMP,C0129,Trifunctional Complex,GO:GO:0016507
+SCOMP,C0130,Voltage Dependent Potassium Channel Complex,GO:GO:0008076
+SCOMP,C0131,Voltage Gated Sodium Channel Complex,GO:GO:0001518
+SCOMP,C0132,WAVE2 Complex,
+SCOMP,C0133,gamma Secretase Complex,GO:GO:0070765
+SCOMP,C0134,mRNA Cap Complex,GO:GO:0005845
+SCOMP,C0135,p85/p110 PI3Kinase Complex,GO:GO:0005942
+SDIS,D0001,APOB folding,
+SDIS,D0002,ATP Depletion,
+SDIS,D0003,Acidification,GO:GO:0045851
+SDIS,D0004,Acute Myocardial Infarction,DOID:DOID:9408
+SDIS,D0005,Adult Liver Hematopoiesis,GO:GO:0030097|MESH:D006410
+SDIS,D0006,Alzheimers disease,DOID:DOID:10652
+SDIS,D0007,Androgen independence,
+SDIS,D0008,Atherogenesis,DOID:DOID:1936
+SDIS,D0009,Atherosclerotic lesion,
+SDIS,D0010,B cell lymphoma,DOID:DOID:707
+SDIS,D0011,B cell polarization,GO:GO:0001769
+SDIS,D0012,CD4+CD3+TCR+ naive T-cell differentiation,
+SDIS,D0013,CD8+CD3+TCR+ naive T-cell differentiation,
+SDIS,D0014,Carcinoma of Hepatocyte,DOID:DOID:684
+SDIS,D0015,Carcinoma of astrocyte,
+SDIS,D0016,Carcinoma of bone,
+SDIS,D0017,Carcinoma of brain,DOID:DOID:1319
+SDIS,D0018,Carcinoma of breast,DOID:DOID:3459
+SDIS,D0019,Carcinoma of endometrium,DOID:DOID:2871
+SDIS,D0020,Carcinoma of esophagus,DOID:DOID:1107
+SDIS,D0021,Carcinoma of gastrointestinal tract,DOID:DOID:3119
+SDIS,D0022,Carcinoma of germ cell,DOID:DOID:2994
+SDIS,D0023,Carcinoma of intestine,
+SDIS,D0024,Carcinoma of kidney,DOID:DOID:4451
+SDIS,D0025,Carcinoma of large intestine,DOID:DOID:5672
+SDIS,D0026,Carcinoma of lymphocyte,
+SDIS,D0027,Carcinoma of melanocyte,DOID:DOID:1909
+SDIS,D0028,Carcinoma of mouth,DOID:DOID:8618
+SDIS,D0029,Carcinoma of muscle,DOID:DOID:4045
+SDIS,D0030,Carcinoma of myeloid cell,
+SDIS,D0031,Carcinoma of nasopharynx,DOID:DOID:9261
+SDIS,D0032,Carcinoma of nervous system,
+SDIS,D0033,Carcinoma of pancreas,DOID:DOID:4905
+SDIS,D0034,Carcinoma of rectum,DOID:DOID:1993
+SDIS,D0035,Carcinoma of skin,DOID:DOID:3451
+SDIS,D0036,Carcinoma of t-cell,
+SDIS,D0037,Carcinoma of thymus,
+SDIS,D0038,Carcinoma of thyroid gland,DOID:DOID:1781
+SDIS,D0039,Carcinoma of uterus,
+SDIS,D0040,Cardiomyopathy,DOID:DOID:0050700
+SDIS,D0041,Cftr maturation,
+SDIS,D0042,Chronic Obstructive Pulmonary Disease,DOID:DOID:3083
+SDIS,D0043,Chylomicron secretion,
+SDIS,D0044,Cisplatin resistance,
+SDIS,D0045,Collagen VI Mm,GO:GO:0005589
+SDIS,D0046,Colonic Mucosal Wound Healing,
+SDIS,D0047,Crohn's Disease,DOID:DOID:8778
+SDIS,D0048,Cytotoxic T-cell activation,
+SDIS,D0049,DNA polymerase a-primase Hs,GO:GO:0005658
+SDIS,D0050,Deep Venous Thrombosis,MESH:D020246
+SDIS,D0051,Diabetes,DOID:DOID:9351
+SDIS,D0052,Down syndrome,DOID:DOID:14250
+SDIS,D0053,Doxorubicin resistance,
+SDIS,D0054,EGFR inhibitor resistance,
+SDIS,D0055,ENaC Complex hs,
+SDIS,D0056,ER negative breast cancer,DOID:DOID:0060076
+SDIS,D0057,ER positive breast cancer,DOID:DOID:0060075
+SDIS,D0058,ERBB2 overexpressing breast cancer,DOID:DOID:0060079
+SDIS,D0059,ERK signaling cascade,GO:GO:0070371
+SDIS,D0060,Encephalopathy,DOID:DOID:936
+SDIS,D0061,Erlotinib resistance,
+SDIS,D0062,Esophageal Adenocarcinoma,DOID:DOID:4914
+SDIS,D0063,Etoposide resistance,
+SDIS,D0064,Exercise,MESH:D015444
+SDIS,D0065,Fc-IgE receptor 1 Mm,GO:GO:0032998
+SDIS,D0066,Fc-IgE receptor 1 Rn,GO:GO:0032998
+SDIS,D0067,Fetal Liver Hematopoiesis,
+SDIS,D0068,G0 phase of mitotic cell cycle,MESH:D016192
+SDIS,D0069,Gastric Adenoma,DOID:DOID:3717
+SDIS,D0070,Glomerulogenesis,
+SDIS,D0071,Hemodialysis,
+SDIS,D0072,Hepatic Cirrhosis,
+SDIS,D0073,Hepatitis B viral infection,DOID:DOID:2043
+SDIS,D0074,Hepatitis C viral infection,DOID:DOID:1883
+SDIS,D0075,Homoharringtonine resistance,
+SDIS,D0076,Hyperinsulinemia,DOID:DOID:2018
+SDIS,D0077,Hyperlipidemia,
+SDIS,D0078,Hypertensive Heart Disease,DOID:DOID:11516
+SDIS,D0079,Hypoketonemia,
+SDIS,D0080,I(CaL) L-type calcium channel current,
+SDIS,D0081,I(CaT) T-type calcium channel current,
+SDIS,D0082,"I(Cl, vol) volume-regulated outwardly rectifying chloride current",
+SDIS,D0083,"I(Cl,ATP) ATP-dependent chloride current",
+SDIS,D0084,"I(Cl,Ca) calcium-activated chloride current",
+SDIS,D0085,"I(Cl,PKA) PKA-dependent chloride current",
+SDIS,D0086,"I(Cl,PKC) PKC-dependent chloride current",
+SDIS,D0087,"I(Cl,ir) cell swelling-activated inwardly rectifying chloride current",
+SDIS,D0088,I(K ATP) ATP-dependent potassium channel current,
+SDIS,D0089,I(K1) inward rectifier potassium channel current,
+SDIS,D0090,I(KACh) acetylcholine-activated current,
+SDIS,D0091,I(Kr) fast delayed rectifier potassium current,
+SDIS,D0092,I(Ks) slow delayed rectifier potassium current,
+SDIS,D0093,I(NCX) sodium-calcium exchanger current,
+SDIS,D0094,I(Na)  sodium channel current,
+SDIS,D0095,I(f) F-channel current,
+SDIS,D0096,I(p) sodium-potassium pump current,
+SDIS,D0097,I(st) St channel current,
+SDIS,D0098,I(to) transient outward current,
+SDIS,D0099,Inflammatory Bowel Disease,DOID:DOID:0050589
+SDIS,D0100,Influenza A Virus Infection,
+SDIS,D0101,"Influenza A Virus, H5N1 Subtype Infection",
+SDIS,D0102,Insulin Control Element activator Hs,
+SDIS,D0103,Insulin_signaling,GO:GO:0008286
+SDIS,D0104,Irinotecan resistance,
+SDIS,D0105,JNK signaling pathway,
+SDIS,D0106,L-type calcium channel complex,
+SDIS,D0107,LDL biosynthesis,
+SDIS,D0108,LDL oxidation,
+SDIS,D0109,LDL uptake,
+SDIS,D0110,Laminar shear stress,
+SDIS,D0111,Lipid Droplet,
+SDIS,D0112,Lipid droplet,GO:GO:0005811
+SDIS,D0113,Liver Injury,
+SDIS,D0114,Liver Regeneration,
+SDIS,D0115,Miller-Dieker syndrome,
+SDIS,D0116,Mitochondrial Uncoupling,
+SDIS,D0117,Myoblast proliferation,
+SDIS,D0118,Myopathy,DOID:DOID:423
+SDIS,D0119,"Na,K-ATPase Rn",
+SDIS,D0120,Nephrogenesis,
+SDIS,D0121,Oedema,
+SDIS,D0122,Oncogene induced senescence,
+SDIS,D0123,Osteopenia,
+SDIS,D0124,PR positive breast cancer,
+SDIS,D0125,Paclitaxel resistance,
+SDIS,D0126,Partial Pancreatectomy,
+SDIS,D0127,Photo-oxidative Stress,
+SDIS,D0128,Positive-Pressure Respiration,
+SDIS,D0129,Proteasome assembly,
+SDIS,D0130,Renal Maturation,
+SDIS,D0131,Renal Sclerosis,DOID:DOID:11664
+SDIS,D0132,Respiratory Syncytial Virus Infection,
+SDIS,D0133,Retinopathy,
+SDIS,D0134,Schizophrenia,DOID:DOID:5419
+SDIS,D0135,Skeletal Muscle Disuse Atrophy,
+SDIS,D0136,Skeletal Muscle Hypertrophy,
+SDIS,D0137,Steatosis,
+SDIS,D0138,Steroidogenesis,
+SDIS,D0139,Superimposed Alcoholic Hepatitus,
+SDIS,D0140,Systemic Lupus Erythematosus,DOID:DOID:9074
+SDIS,D0141,T-cell apoptosis,
+SDIS,D0142,T-cell leukemia,DOID:DOID:715
+SDIS,D0143,T-cell migration,
+SDIS,D0144,T-cell survival,
+SDIS,D0145,T-helper 17 cell activation,
+SDIS,D0146,T-helper 2 cell proliferation,
+SDIS,D0147,T-type calcium channel complex,
+SDIS,D0148,TLR signaling,
+SDIS,D0149,TLR3 signaling,
+SDIS,D0150,TLR4 signaling,
+SDIS,D0151,TLR9 signaling,
+SDIS,D0152,TSLP activity,
+SDIS,D0153,Th1 cell activation,
+SDIS,D0154,Th1 response,
+SDIS,D0155,Th1:Th2 ratio,
+SDIS,D0156,Th2 response,
+SDIS,D0157,Triglyceride Synthesis,
+SDIS,D0158,Type I diabetes,
+SDIS,D0159,Type II diabetes,DOID:DOID:9352
+SDIS,D0160,Ulcerative Colitis,DOID:DOID:8577
+SDIS,D0161,Urothelial Plaque,
+SDIS,D0162,VCP Hexamer Mm,
+SDIS,D0163,VLDL biosynthesis,
+SDIS,D0164,VLDL secretion,
+SDIS,D0165,Vascular Wall Inflammation,
+SDIS,D0166,Vincristine resistance,
+SDIS,D0167,Weibel-Palade body externalization,
+SDIS,D0168,activated t cell extravasation,
+SDIS,D0169,activated t cell tethering / rolling,
+SDIS,D0170,acute endotoxemia,
+SDIS,D0171,acute lymphoblastic leukemia,DOID:DOID:9952
+SDIS,D0172,acute myelogenous leukemia,DOID:DOID:9119
+SDIS,D0173,acute phase reaction,
+SDIS,D0174,adenocarcinoma,DOID:DOID:299
+SDIS,D0175,adenoma,DOID:DOID:657
+SDIS,D0176,adipocyte lipid droplet,
+SDIS,D0177,adipocyte lipolysis,
+SDIS,D0178,adipose glucose import,
+SDIS,D0179,adipose insulin receptor signaling pathway,
+SDIS,D0180,advanced Adenocarcinoma,
+SDIS,D0181,amyotrophic lateral sclerosis,DOID:DOID:332
+SDIS,D0182,anchorage-independent growth,
+SDIS,D0183,anemia,DOID:DOID:2355
+SDIS,D0184,aneurysm formation,DOID:DOID:2403
+SDIS,D0185,ankylosing spondylitis,DOID:DOID:7147
+SDIS,D0186,arteritis,
+SDIS,D0187,astrocytoma,DOID:DOID:3069
+SDIS,D0188,atrial fibrillation,
+SDIS,D0189,atrophy,
+SDIS,D0190,autoimmunity,DOID:DOID:417
+SDIS,D0191,b-cell migration,
+SDIS,D0192,bacterial infection,
+SDIS,D0193,barrett esophagus,DOID:DOID:9206
+SDIS,D0194,basophil extravasation,
+SDIS,D0195,bile duct ligation,DOID:DOID:4138
+SDIS,D0196,blood flow,
+SDIS,D0197,bradycardia,
+SDIS,D0198,breast cancer metastasis,
+SDIS,D0199,burn injury,
+SDIS,D0200,cachexia,MESH:D002100
+SDIS,D0201,calcification,
+SDIS,D0202,calpain activation,
+SDIS,D0203,cancer,DOID:DOID:162
+SDIS,D0204,carcinoma of epithelium,
+SDIS,D0205,carcinoma of liver,DOID:DOID:3571
+SDIS,D0206,carcinoma of lung,DOID:DOID:3905
+SDIS,D0207,carcinoma of prostate gland,
+SDIS,D0208,carcinoma of squamous cell,
+SDIS,D0209,carcinoma of stomach,DOID:DOID:5517
+SDIS,D0210,cardiac arrhythmia,
+SDIS,D0211,cardiac pacemaker activity,
+SDIS,D0212,cardiomyocyte hypertrophy,
+SDIS,D0213,castration,
+SDIS,D0214,cell scattering,
+SDIS,D0215,cell senescence,
+SDIS,D0216,chondrogenesis,
+SDIS,D0217,chronic myeloid leukemia,DOID:DOID:8552
+SDIS,D0218,cirrhosis,DOID:DOID:5082
+SDIS,D0219,classical focal adhesion,
+SDIS,D0220,clot formation,
+SDIS,D0221,colitis,DOID:DOID:8577
+SDIS,D0222,colorectal adenoma,DOID:DOID:9256
+SDIS,D0223,congestive heart failure,DOID:DOID:6000
+SDIS,D0224,cyclic stretch,
+SDIS,D0225,cystic fibrosis,DOID:DOID:1485
+SDIS,D0226,degranulation,MESH:D015550
+SDIS,D0227,dendritic cell extravasation,
+SDIS,D0228,dendritic cell migration to infection,
+SDIS,D0229,dendritic cell tethering / rolling,
+SDIS,D0230,denervation,
+SDIS,D0231,dilatation,
+SDIS,D0232,ductal carcinoma,
+SDIS,D0233,edema,
+SDIS,D0234,eif2 complex mm,
+SDIS,D0235,emphysema,DOID:DOID:9675
+SDIS,D0236,endothelial barrier function,
+SDIS,D0237,eosinophil extravasation,GO:GO:0072682
+SDIS,D0238,eosinophil migration to infection,
+SDIS,D0239,epidermal stem cell homeostasis,
+SDIS,D0240,epithelial barrier function,
+SDIS,D0241,erectile dysfunction,
+SDIS,D0242,erythrocyte sedimentation rate,
+SDIS,D0243,exercise,MESH:D015444
+SDIS,D0244,fatty acid esterification,
+SDIS,D0245,fatty acid import,
+SDIS,D0246,fatty-acid synthesis,
+SDIS,D0247,female fertility,
+SDIS,D0248,fertility,
+SDIS,D0249,fibrillar adhesion,
+SDIS,D0250,fibronectin matrix assembly,
+SDIS,D0251,fibrosis,DOID:DOID:3770
+SDIS,D0252,focal adhesion disassembly,
+SDIS,D0253,follicle formation,
+SDIS,D0254,food intake,MESH:D004435
+SDIS,D0255,gallstones,
+SDIS,D0256,gastric adenocarcinoma,DOID:DOID:3717
+SDIS,D0257,glioblastoma,DOID:DOID:3068
+SDIS,D0258,glioma,DOID:DOID:3070
+SDIS,D0259,glomerulonephritis,DOID:DOID:2921
+SDIS,D0260,glomerulosclerosis,
+SDIS,D0261,glucose oxidation,
+SDIS,D0262,granulocyte activation,
+SDIS,D0263,haptotaxis,
+SDIS,D0264,heart block,
+SDIS,D0265,heart rate,
+SDIS,D0266,hematocrit,
+SDIS,D0267,hematopoiesis,
+SDIS,D0268,hemorrhage,
+SDIS,D0269,hepatitis,DOID:DOID:2237
+SDIS,D0270,hepatocellular carcinoma,DOID:DOID:684
+SDIS,D0271,hepatocyte response to toxin,
+SDIS,D0272,hereditary breast cancer,
+SDIS,D0273,high-fat diet,
+SDIS,D0274,hodgkins disease,
+SDIS,D0275,hydrocephalus,DOID:DOID:10908
+SDIS,D0276,hyperalgesia,
+SDIS,D0277,hypercholesterolemia,DOID:DOID:2487
+SDIS,D0278,hyperemia,
+SDIS,D0279,hyperoxia,
+SDIS,D0280,hyperplasia,
+SDIS,D0281,hyperplasia of breast tissue,
+SDIS,D0282,hypertension,DOID:DOID:10763
+SDIS,D0283,hypertrophy,
+SDIS,D0284,hypoglycemia,DOID:DOID:9993
+SDIS,D0285,immortalization,
+SDIS,D0286,immunoglobulin synthesis,
+SDIS,D0287,impaired glucose tolerance,
+SDIS,D0288,infection,MESH:D007239
+SDIS,D0289,insulin resistance,
+SDIS,D0290,integrin mediated cell adhesion,
+SDIS,D0291,intestinal dysfunction,
+SDIS,D0292,intrauterine growth retardation,
+SDIS,D0293,invasive breast cancer,
+SDIS,D0294,invasive cancer,
+SDIS,D0295,inward rectifier potassium channel complex hs,
+SDIS,D0296,ketoacidosis,
+SDIS,D0297,laminar shear stress,
+SDIS,D0298,large cell carcinoma,DOID:DOID:4552
+SDIS,D0299,leakage of blood vessels,
+SDIS,D0300,left ventricular systolic dysfunction,
+SDIS,D0301,leiomyloid tumor,
+SDIS,D0302,leiomyoma,DOID:DOID:127
+SDIS,D0303,leptin activity,
+SDIS,D0304,leukemia,DOID:DOID:1240
+SDIS,D0305,leukemic infiltration,
+SDIS,D0306,leukocyte PAF secretion,
+SDIS,D0307,leukocyte migration to infection,
+SDIS,D0308,lipid peroxidation,
+SDIS,D0309,lipogenesis,
+SDIS,D0310,liposome,
+SDIS,D0311,liver fibrosis,
+SDIS,D0312,liver glucose import,
+SDIS,D0313,liver insulin receptor signaling pathway,
+SDIS,D0314,local Adenocarcinoma,
+SDIS,D0315,local acute phase reaction,
+SDIS,D0316,long QT syndrome,DOID:DOID:2843
+SDIS,D0317,long-chain peroxisomal fatty acid beta-oxidation,
+SDIS,D0318,low pH,
+SDIS,D0319,lung adenocarcinoma,DOID:DOID:3910
+SDIS,D0320,lung squamous cell carcinoma,DOID:DOID:3907
+SDIS,D0321,lung surfactant secretion,
+SDIS,D0322,lymphadenopathy,
+SDIS,D0323,lymphoid hyperplasia,
+SDIS,D0324,lymphoma,DOID:DOID:0060058
+SDIS,D0325,lymphopenia,DOID:DOID:614
+SDIS,D0326,macrophage IL1A secretion,
+SDIS,D0327,macrophage IL6 secretion,
+SDIS,D0328,macrophage IL8 secretion,
+SDIS,D0329,macrophage TNF secretion,
+SDIS,D0330,male fertility,
+SDIS,D0331,mast cell TNF secretion,
+SDIS,D0332,mast cell histamine secretion,
+SDIS,D0333,mean arterial pressure,
+SDIS,D0334,mechanical strain,
+SDIS,D0335,mechanical stress,
+SDIS,D0336,medulloblastoma,DOID:DOID:3858
+SDIS,D0337,melanoma,DOID:DOID:1909
+SDIS,D0338,membrane polarization,
+SDIS,D0339,mesothelioma,DOID:DOID:2645
+SDIS,D0340,metastasis,
+SDIS,D0341,microvesicle,
+SDIS,D0342,microvesicle lipid raft,
+SDIS,D0343,mitochondrial DNA damage,
+SDIS,D0344,mitochondrial damage,
+SDIS,D0345,mitochondrial membrane potential,
+SDIS,D0346,monocyte adherence,
+SDIS,D0347,monocyte diapadesis,
+SDIS,D0348,monocyte extravasation,GO:GO:0035696
+SDIS,D0349,monocyte migration to infection,
+SDIS,D0350,monocyte tethering / rolling,
+SDIS,D0351,motor neuron cell death,
+SDIS,D0352,multiple myeloma,DOID:DOID:9538
+SDIS,D0353,muscle glucose import,
+SDIS,D0354,muscle insulin receptor signaling pathway,
+SDIS,D0355,muscle stretch,
+SDIS,D0356,muscular distrophy,
+SDIS,D0357,mycobacterial infection,
+SDIS,D0358,myelodysplastic syndromes,DOID:DOID:4972
+SDIS,D0359,myeloproliferative disorder,DOID:DOID:4960
+SDIS,D0360,myocardial contraction,
+SDIS,D0361,myocardial infarction,DOID:DOID:5844
+SDIS,D0362,nanovesicle,
+SDIS,D0363,nanovesicle lipid raft,
+SDIS,D0364,natural killer cell activation-dependent arrest,
+SDIS,D0365,natural killer cell extravasation,
+SDIS,D0366,natural killer cell migration to infection,
+SDIS,D0367,neoplasia,DOID:DOID:14566
+SDIS,D0368,nephropathy,
+SDIS,D0369,neuroblastoma,DOID:DOID:769
+SDIS,D0370,neurodegeneration,
+SDIS,D0371,neuron cell death,
+SDIS,D0372,neuropathy,DOID:DOID:870
+SDIS,D0373,neutrophil ELA2 secretion,
+SDIS,D0374,neutrophil activation-dependent arrest,
+SDIS,D0375,neutrophil extravasation,GO:GO:0072672
+SDIS,D0376,neutrophil migration to infection,
+SDIS,D0377,neutrophil polarization,
+SDIS,D0378,neutrophil tethering / rolling,
+SDIS,D0379,non-hodgkins lymphoma,DOID:DOID:0060060
+SDIS,D0380,non-small cell lung carcinoma,DOID:DOID:3908
+SDIS,D0381,noninvasive breast cancer,DOID:DOID:0060074
+SDIS,D0382,obesity,DOID:DOID:9970
+SDIS,D0383,oncogenic transformation,
+SDIS,D0384,osteoarthritis,DOID:DOID:8398
+SDIS,D0385,osteoclast activity,
+SDIS,D0386,osteopetrosis,DOID:DOID:13533
+SDIS,D0387,osteoporosis,DOID:DOID:11476
+SDIS,D0388,osteosarcoma,DOID:DOID:3347
+SDIS,D0389,pancreatic ductal carcinoma,DOID:DOID:3587
+SDIS,D0390,peroxisomal fatty acid beta-oxidation,
+SDIS,D0391,peroxisome proliferation,
+SDIS,D0392,phosphatidylcholine excretion,
+SDIS,D0393,phospholipid excretion,
+SDIS,D0394,plaque destabilization,DOID:DOID:1936
+SDIS,D0395,platelet activation-dependent arrest,
+SDIS,D0396,platelet spreading,
+SDIS,D0397,platelet tethering / rolling,
+SDIS,D0398,polycystic kidney disease,DOID:DOID:898
+SDIS,D0399,polycythemia,DOID:DOID:8432
+SDIS,D0400,prostate cancer,DOID:DOID:10283
+SDIS,D0401,psoriasis,DOID:DOID:8893
+SDIS,D0402,rapid cell migration,
+SDIS,D0403,regulatory t-cell differentiation,
+SDIS,D0404,renal sodium ion reabsorption,
+SDIS,D0405,renal water reabsorption,
+SDIS,D0406,reperfusion injury,
+SDIS,D0407,response to shear stress,
+SDIS,D0408,retinoblastoma,DOID:DOID:768
+SDIS,D0409,rhabdomyosarcoma,DOID:DOID:3247
+SDIS,D0410,rheumatoid arthritis,DOID:DOID:7148
+SDIS,D0411,skin lesion,
+SDIS,D0412,small cell carcinoma,DOID:DOID:0050685
+SDIS,D0413,sodium-calcium exchanger complex,
+SDIS,D0414,splenomegaly,
+SDIS,D0415,steatohepatitis,DOID:DOID:9452
+SDIS,D0416,stroke,DOID:DOID:3455
+SDIS,D0417,systemic acute phase reaction,
+SDIS,D0418,t(4 14) translocation,
+SDIS,D0419,tachycardia,
+SDIS,D0420,th2 cell activation,
+SDIS,D0421,thermogenesis,
+SDIS,D0422,thrombopoietin activity,
+SDIS,D0423,tight junction formation,
+SDIS,D0424,tight junction permeability,
+SDIS,D0425,tissue damage,
+SDIS,D0426,tissue repair,
+SDIS,D0427,triple microtubule,
+SDIS,D0428,tuberculosis,DOID:DOID:399
+SDIS,D0429,tumor angiogenesis,
+SDIS,D0430,tumor cell invasion,
+SDIS,D0431,tumor growth,
+SDIS,D0432,turbulent shear stress,
+SDIS,D0433,vascular dysfunction,
+SDIS,D0434,vascular remodeling,
+SDIS,D0435,vascular smooth muscle cell migration,
+SDIS,D0436,vascular smooth muscle cell proliferation,
+SDIS,D0437,vascular tissue damage,
+SDIS,D0438,vasculitis,DOID:DOID:865
+SDIS,D0439,ventricular fibrillation,
+SDIS,D0440,very-long-chain peroxisomal fatty acid beta-oxidation,
+SDIS,D0441,viral infection,DOID:DOID:934
+SFAM,F0001,14-3-3 Family,
+SFAM,F0002,ACAD Family,
+SFAM,F0003,Acetyl-CoA Synthetase Family,
+SFAM,F0004,ACOX Family,
+SFAM,F0005,ACSL Family,
+SFAM,F0006,ACT Family,
+SFAM,F0007,ACTN Family,
+SFAM,F0008,ADCY Family,
+SFAM,F0009,ADH Family,
+SFAM,F0010,ADRA Family,
+SFAM,F0011,ADRA2 Family,
+SFAM,F0012,ADRB Family,
+SFAM,F0013,ADRBK Family,
+SFAM,F0014,AKT Family,
+SFAM,F0015,ALDH Family,
+SFAM,F0016,ALDO Family,
+SFAM,F0017,APOA Family,
+SFAM,F0018,ARRB Family,
+SFAM,F0019,ATP2A Family,
+SFAM,F0020,ATP5G Family,
+SFAM,F0021,AXIN Family,
+SFAM,F0022,BIRC Family,
+SFAM,F0023,BMP Family,
+SFAM,F0024,BMP Receptor Type I Family,
+SFAM,F0025,BMP Receptor Type II Family,
+SFAM,F0026,CALM Family,
+SFAM,F0027,CAMK Family,
+SFAM,F0028,CAMK2 Family,
+SFAM,F0029,CAPN Family,
+SFAM,F0030,Carboxylesterase Family,
+SFAM,F0031,CASP Family,
+SFAM,F0032,CAV Family,
+SFAM,F0033,CCNA Family,
+SFAM,F0034,CCND Family,
+SFAM,F0035,CCNE Family,
+SFAM,F0036,CD16 Family,
+SFAM,F0037,CD32 Family,
+SFAM,F0038,CD64 Family,
+SFAM,F0039,CDC25 Family,
+SFAM,F0040,CDH Family,
+SFAM,F0041,CEBP Family,
+SFAM,F0042,Chemokine Receptor Family,
+SFAM,F0043,Cholinesterase Family,
+SFAM,F0044,CHRM Family,
+SFAM,F0045,COL1 Family,
+SFAM,F0046,COL4 Family,
+SFAM,F0047,COL5 Family,
+SFAM,F0048,COX4 Family,
+SFAM,F0049,COX6A Family,
+SFAM,F0050,COX6B Family,
+SFAM,F0051,COX7A Family,
+SFAM,F0052,COX7B Family,
+SFAM,F0053,COX8 Family,
+SFAM,F0054,CREB Family,
+SFAM,F0055,CRISP Family,
+SFAM,F0056,CSNK1 Family,
+SFAM,F0057,CSNK2 Family,
+SFAM,F0058,CTNNA Family,
+SFAM,F0059,CUL Family,
+SFAM,F0060,Cu-Zn SOD Family,
+SFAM,F0061,CXCL ELR-Negative Family,
+SFAM,F0062,CXCL ELR-Positive Family,
+SFAM,F0063,Cyclophilin Family,
+SFAM,F0064,DDR Family,
+SFAM,F0065,Desmoglein Family,
+SFAM,F0066,DGK Family,
+SFAM,F0067,DNM Family,
+SFAM,F0068,DRD Family,
+SFAM,F0069,DVL Family,
+SFAM,F0070,E2F Family,
+SFAM,F0071,EDN Family,
+SFAM,F0072,EGFR Ligand Family,
+SFAM,F0073,EGFR/ERBB Family,
+SFAM,F0074,EGR Family,
+SFAM,F0075,EIF4A Family,
+SFAM,F0076,EIF4EBP Family,
+SFAM,F0077,ELA Family,
+SFAM,F0078,ENO Family,
+SFAM,F0079,Ephrin Receptor Family,
+SFAM,F0080,EPN Family,
+SFAM,F0081,ESR Family,
+SFAM,F0082,ETS Family,
+SFAM,F0083,FGF Family,
+SFAM,F0084,FGFR Family,
+SFAM,F0085,FLOT Family,
+SFAM,F0086,FLRT Family,
+SFAM,F0087,FOXO Family,
+SFAM,F0088,FZD Family,
+SFAM,F0089,GABR Family,
+SFAM,F0090,GAS6 Receptor Family,
+SFAM,F0091,GATA Family,
+SFAM,F0092,GNA Gq Family,
+SFAM,F0093,GNA Gs Family,
+SFAM,F0094,GNAI Family,
+SFAM,F0095,GNB Family,
+SFAM,F0096,GNG Family,
+SFAM,F0097,GPX Family,
+SFAM,F0098,GRIA Family,
+SFAM,F0099,GRK Family,
+SFAM,F0100,GRM Family,
+SFAM,F0101,GSK3 Family,
+SFAM,F0102,GST Family,
+SFAM,F0103,GUCY Family,
+SFAM,F0104,GYS Family,
+SFAM,F0105,HDAC Class I Family,
+SFAM,F0106,HDAC Class II Family,
+SFAM,F0107,HDAC Family,
+SFAM,F0108,Hedgehog Family,
+SFAM,F0109,HES Family,
+SFAM,F0110,Histone Family,
+SFAM,F0111,Histone H1 Family,
+SFAM,F0112,Histone H2A Family,
+SFAM,F0113,Histone H2B Family,
+SFAM,F0114,Histone H3 Family,
+SFAM,F0115,Histone H4 Family,
+SFAM,F0116,HLA-DR Family,
+SFAM,F0117,HMOX Family,
+SFAM,F0118,HSP90 Family,
+SFAM,F0119,HSPA Family,
+SFAM,F0120,HSPB Family,
+SFAM,F0121,IFNA Family,
+SFAM,F0122,IgE Family,
+SFAM,F0123,IGFBP Family,
+SFAM,F0124,IkappaB Kinase Family,
+SFAM,F0125,IL1 Family,
+SFAM,F0126,INS Family,
+SFAM,F0127,INSR Family,
+SFAM,F0128,IRS Family,
+SFAM,F0129,IRX Family,
+SFAM,F0130,JAK Family,
+SFAM,F0131,KLK Family,
+SFAM,F0132,LDH Family,
+SFAM,F0133,MAF Family,
+SFAM,F0134,MAPK Erk1/2 Family,
+SFAM,F0135,MAPK JNK Family,
+SFAM,F0136,MAPK p38 Family,
+SFAM,F0137,MEF2 Family,
+SFAM,F0138,MEK1/2 Family,
+SFAM,F0139,MMP Family,
+SFAM,F0140,MYH Family,
+SFAM,F0141,MYL Alkali Family,
+SFAM,F0142,MYL Family,
+SFAM,F0143,MYL Regulatory Family,
+SFAM,F0144,MYL Slow Family,
+SFAM,F0145,MYST Family,
+SFAM,F0146,NCOR Family,
+SFAM,F0147,NDRG Family,
+SFAM,F0148,NFAT Family,
+SFAM,F0149,NKD Family,
+SFAM,F0150,NOS Family,
+SFAM,F0151,NOTCH Family,
+SFAM,F0152,NRG1/2 Family,
+SFAM,F0153,NRG3/4 Family,
+SFAM,F0154,NTRK Family,
+SFAM,F0155,p160/SRC Family,
+SFAM,F0156,P2RX Family,
+SFAM,F0157,P2RY Family,
+SFAM,F0158,PAK Family,
+SFAM,F0159,PARV Family,
+SFAM,F0160,PBX Family,
+SFAM,F0161,PDE Family,
+SFAM,F0162,PDE1 Family,
+SFAM,F0163,PDE3 Family,
+SFAM,F0164,PDE4 Family,
+SFAM,F0165,PDE4 Long Family,
+SFAM,F0166,PDE4 Long No A Family,
+SFAM,F0167,PDE4 Short Family,
+SFAM,F0168,PDE6 Family,
+SFAM,F0169,PDGF Family,
+SFAM,F0170,PDGFR Family,
+SFAM,F0171,PDK Family,
+SFAM,F0172,PFN Family,
+SFAM,F0173,PIK3C Class IA Family,
+SFAM,F0174,PIK3R Class IA Family,
+SFAM,F0175,PKI Family,
+SFAM,F0176,PLA2 Family,
+SFAM,F0177,PLA2G2 Family,
+SFAM,F0178,PLC Family,
+SFAM,F0179,PLCB Family,
+SFAM,F0180,PLCG Family,
+SFAM,F0181,PLD Family,
+SFAM,F0182,PPAP2 Family,
+SFAM,F0183,PPAR Family,
+SFAM,F0184,PPP1C Family,
+SFAM,F0185,PPP1R Family,
+SFAM,F0186,PPP2C Family,
+SFAM,F0187,PPP2R Subunit A Family,
+SFAM,F0188,PPP2R Subunit B Family,
+SFAM,F0189,PPP3 Family,
+SFAM,F0190,PPP3C Family,
+SFAM,F0191,PPP3R Family,
+SFAM,F0192,PRDX Family,
+SFAM,F0193,PRKA Family,
+SFAM,F0194,PRKAA Family,
+SFAM,F0195,PRKAB Family,
+SFAM,F0196,PRKAG Family,
+SFAM,F0197,PRKAR Family,
+SFAM,F0198,PRKC Family,
+SFAM,F0199,PRKG Family,
+SFAM,F0200,PTGER Family,
+SFAM,F0201,RAB Family,
+SFAM,F0202,RAC Family,
+SFAM,F0203,RAF Family,
+SFAM,F0204,RAR Family,
+SFAM,F0205,RAS Family,
+SFAM,F0206,RFX Family,
+SFAM,F0207,RHO Family,
+SFAM,F0208,ROCK Family,
+SFAM,F0209,ROR Family,
+SFAM,F0210,RPS6KA Family,
+SFAM,F0211,RPS6KB Family,
+SFAM,F0212,RXR Family,
+SFAM,F0213,S100A Family,
+SFAM,F0214,S1PR Family,
+SFAM,F0215,SAA Family,
+SFAM,F0216,SCD Family,
+SFAM,F0217,SERPINB Family,
+SFAM,F0218,SLC2A Family,
+SFAM,F0219,SMAD Family,
+SFAM,F0220,SMC1 Family,
+SFAM,F0221,SNAI Family,
+SFAM,F0222,SOS Family,
+SFAM,F0223,SRC Family,
+SFAM,F0224,SREBF Family,
+SFAM,F0225,STAT Family,
+SFAM,F0226,STAT5 Family,
+SFAM,F0227,Sulfonylurea Receptor Family,
+SFAM,F0228,TAP Family,
+SFAM,F0229,TCF/LEF Family,
+SFAM,F0230,TFAP2 Family,
+SFAM,F0231,TFDP Family,
+SFAM,F0232,TGFB Family,
+SFAM,F0233,THBS Family,
+SFAM,F0234,THR Family,
+SFAM,F0235,TN Family,
+SFAM,F0236,TNFRSF Family,
+SFAM,F0237,TOP2 Family,
+SFAM,F0238,Tryptase Family,
+SFAM,F0239,TUBA Family,
+SFAM,F0240,TUBB Family,
+SFAM,F0241,TXN Family,
+SFAM,F0242,TXNRD Family,
+SFAM,F0243,UBE2 Family,
+SFAM,F0244,VAV Family,
+SFAM,F0245,VEGF Family,
+SFAM,F0246,VEGFR Family,
+SFAM,F0247,WNT Family,
