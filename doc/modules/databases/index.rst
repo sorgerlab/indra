@@ -10,10 +10,10 @@ identifiers.org mappings and URLs (:py:mod:`indra.databases.identifiers`)
 .. automodule:: indra.databases.identifiers
     :members:
 
-Bioregistry mappings and URLs (:py:mod:`indra.databases.bioregistry`)
----------------------------------------------------------------------
+Bioregistry mappings and URLs (:py:mod:`indra.databases.bioregistry_client`)
+----------------------------------------------------------------------------
 
-.. automodule:: indra.databases.bioregistry
+.. automodule:: indra.databases.bioregistry_client
     :members:
 
 HGNC client (:py:mod:`indra.databases.hgnc_client`)

@@ -13,7 +13,7 @@ one that uses data from identifiers.org and another for Bioregistry.
 import re
 import logging
 from indra.statements import *
-from indra.databases import bioregistry, identifiers
+from indra.databases import bioregistry_client, identifiers
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,8 @@ class InvalidIdentifier(ValueError):
     """Raised when the identifier doesn't match the pattern."""
 
     def __str__(self):
-        return f'Invalid identifier: {self.args[1]} for {self.args[0]} pattern {self.args[2]}'
+        return f'Invalid identifier: {self.args[1]} for {self.args[0]} ' \
+            f'pattern {self.args[2]}'
 
 
 class UnknownIdentifier(ValueError):
@@ -119,8 +120,9 @@ class BioregistryValidator:
     def assert_valid_ns(db_ns):
         if db_ns in non_grounding:
             return
-        prefix = bioregistry.bioregistry_overrides.get(db_ns, db_ns.lower())
-        if prefix in bioregistry.registry:
+        prefix = bioregistry_client.bioregistry_overrides.get(db_ns,
+                                                              db_ns.lower())
+        if prefix in bioregistry_client.registry:
             return
         raise UnknownNamespace(db_ns)
 
@@ -130,9 +132,11 @@ class BioregistryValidator:
             raise MissingIdentifier(db_ns, None)
         if db_ns in non_grounding:
             return
-        prefix = bioregistry.bioregistry_overrides.get(db_ns, db_ns.lower())
-        if prefix in bioregistry.registry:
-            pattern = bioregistry.registry[prefix].get('pattern_compiled')
+        prefix = bioregistry_client.bioregistry_overrides.get(db_ns,
+                                                              db_ns.lower())
+        if prefix in bioregistry_client.registry:
+            pattern = bioregistry_client.registry[prefix].get(
+                'pattern_compiled')
             if not pattern or pattern.match(db_id):
                 return
             else:
