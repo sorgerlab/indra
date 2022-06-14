@@ -140,6 +140,13 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
         elif k == 'RGD' and not re.match(
                 identifiers_registry['rgd']['pattern'], v):
             db_refs.pop('RGD', None)
+        # These were left over from RLIMS-P where they denote MESH IDs so
+        # we can remove and replace these.
+        elif k == 'CTD':
+            if 'MESH' in db_refs:
+                db_refs.pop('CTD')
+            else:
+                db_refs['MESH'] = db_refs.pop('CTD')
         else:
             new_val = ensure_prefix_if_needed(k, v)
             db_refs[k] = new_val
