@@ -5,8 +5,11 @@ __all__ = ['fix_invalidities', 'fix_invalidities_db_refs',
 import re
 import copy
 from typing import List, Mapping
-from indra.databases.identifiers import ensure_prefix_if_needed, \
-    identifiers_registry
+from indra.databases.identifiers import ensure_prefix_if_needed as \
+    ensure_prefix_if_needed_identifiers
+from indra.databases.identifiers import identifiers_registry
+from indra.databases.bioregistry_client import ensure_prefix_if_needed as \
+    ensure_prefix_if_needed_bioregistry
 from indra.statements.validate import text_ref_patterns
 from indra.statements import Evidence, Statement, Agent, BioContext, \
     Translocation
@@ -116,8 +119,9 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             if v.startswith('SL-'):
                 db_refs['UPLOC'] = db_refs.pop('UP')
             # There are cases where an isoform is under the UP key, we
-            # standardize these
-            if '-' in v:
+            # standardize these. Note that the elif here is important to
+            # avoid matching SL- here
+            elif '-' in v:
                 parts = v.split('-')
                 db_refs['UP'] = parts[0]
                 db_refs['UPISO'] = v
@@ -154,7 +158,9 @@ def fix_invalidities_db_refs(db_refs: Mapping[str, str]) -> Mapping[str, str]:
             else:
                 db_refs['MESH'] = db_refs.pop('CTD')
         else:
-            new_val = ensure_prefix_if_needed(k, v)
+            # Since
+            new_val = ensure_prefix_if_needed_identifiers(k, v)
+            new_val = ensure_prefix_if_needed_bioregistry(k, new_val)
             db_refs[k] = new_val
     return db_refs
 
