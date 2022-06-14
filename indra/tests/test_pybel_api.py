@@ -160,8 +160,8 @@ def test_get_agent_sfam():
     )
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
-    assert len(agent.db_refs) == 2
-    assert agent.db_refs['SFAM'] == 'PRKC Family'
+    assert len(agent.db_refs) == 2, agent.db_refs
+    assert agent.db_refs['SFAM'] == 'F0198', agent.db_refs
     assert agent.db_refs['FPLX'] == 'PKC'
     assert agent.name == 'PKC'
 
@@ -172,7 +172,7 @@ def test_get_agent_sdis():
     assert isinstance(agent, Agent)
     assert agent.name == 'metastasis'
     assert len(agent.db_refs) == 1
-    assert agent.db_refs['SDIS'] == 'metastasis'
+    assert agent.db_refs['SDIS'] == 'D0340', agent.db_refs
 
 
 def test_get_agent_chebi():
@@ -189,8 +189,8 @@ def test_get_agent_schem():
     agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'Promegestone'
-    assert len(agent.db_refs) == 1
-    assert agent.db_refs['SCHEM'] == 'Promegestone'
+    assert len(agent.db_refs) == 2, agent.db_refs
+    assert agent.db_refs['SCHEM'] == 'A2173', agent.db_refs
 
 
 def test_get_agent_mirna():
