@@ -10,8 +10,8 @@ identifiers.org mappings and URLs (:py:mod:`indra.databases.identifiers`)
 .. automodule:: indra.databases.identifiers
     :members:
 
-Bioregisry mappings and URLs (:py:mod:`indra.databases.bioregistry`)
---------------------------------------------------------------------
+Bioregistry mappings and URLs (:py:mod:`indra.databases.bioregistry`)
+---------------------------------------------------------------------
 
 .. automodule:: indra.databases.bioregistry
     :members:
