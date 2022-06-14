@@ -4419,7 +4419,7 @@
   ]
  },
  "uniprot.disease": {
-  "pattern": "^\\d{5}$",
+  "pattern": "^DI-\\d{5}$",
   "synonyms": [
    "DI",
    "SP_DI"
@@ -4432,7 +4432,7 @@
   ]
  },
  "uniprot.keyword": {
-  "pattern": "^\\d{4}$",
+  "pattern": "^KW-\\d{4}$",
   "synonyms": [
    "SP_KW",
    "UniProtKB-KW",
@@ -4441,7 +4441,7 @@
   ]
  },
  "uniprot.location": {
-  "pattern": "^\\d+$",
+  "pattern": "^SL-\\d+$",
   "synonyms": [
    "SP_SL",
    "UPLOC",
@@ -4449,16 +4449,16 @@
   ]
  },
  "uniprot.ptm": {
-  "pattern": "^\\d{4}$",
+  "pattern": "^PTM-\\d{4}$",
   "synonyms": [
    "PTM"
   ]
  },
  "uniprot.resource": {
-  "pattern": "^\\d{4}$"
+  "pattern": "^DB-\\d{4}$"
  },
  "uniprot.tissue": {
-  "pattern": "^\\d{4}$"
+  "pattern": "^TS-\\d{4}$"
  },
  "uniprot.var": {
   "pattern": "^\\d+$",
