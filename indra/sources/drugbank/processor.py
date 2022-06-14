@@ -178,18 +178,48 @@ def _complex(a, b, evidence):
     return Complex([a, b], evidence=evidence)
 
 
-activation_actions = {'inducer', 'potentiator',
-                      'stimulator', 'cofactor', 'activator',
-                      'protector',
-                      'positive allosteric modulator', 'positive modulator'}
+activation_actions = {
+    'inducer',
+    'potentiator',
+    'stimulator',
+    'cofactor',
+    'activator',
+    'protector',
+    'positive allosteric modulator',
+    'positive modulator',
+    # All agonists activate receptors, The only differences are potency,
+    # how efficiently they bind and how long they stay at the receptor site
+    'agonist',
+    'partial agonist',
+}
 
-inhibition_actions = {'inhibitor', 'antibody',
-                      'inactivator', 'blocker', 'negative modulator',
-                      'neutralizer', 'weak inhibitor',
-                      'suppressor', 'disruptor', 'chelator',
-                      'inhibitory allosteric modulator',
-                      'translocation inhibitor', 'nucleotide exchange blocker',
-                      }
+inhibition_actions = {
+    'inhibitor',
+    'antibody',
+    'inactivator',
+    'blocker',
+    'negative modulator',
+    'neutralizer',
+    'weak inhibitor',
+    'suppressor',
+    'disruptor',
+    'chelator',
+    'inhibitory allosteric modulator',
+    'translocation inhibitor',
+    'nucleotide exchange blocker',
+    # Antagonists can either bind to the receptor and do nothing and prevent
+    # physiologic agonists to bind (which can be overcome with higher agonist
+    # dosage [except in the case of irreversible antagonism which obviously
+    # can't be competed with]) or can be a noncompetitive antagonist that will
+    # change the structure of the active site and prevent agonist binding.
+    'antagonist',
+    'partial antagonist',
+    # Inverse agonists act exactly the same as competitive antagonists
+    # unless there is a basal physiological agonism. In which case the
+    # inverse agonist will have more of an opposite effect than just a
+    # pure antagonist would have.
+    'inverse agonist',
+}
 
 decrease_amount_actions = {
     'downregulator',
@@ -198,6 +228,7 @@ decrease_amount_actions = {
     'incorporation into and destabilization',
     'cleavage',
     'inhibition of synthesis',
+    'antisense oligonucleotide',
 }
 
 increase_amount_actions = {'stabilization', 'chaperone'}
@@ -207,18 +238,12 @@ neutral_actions = {
     'binding',
     'modulator',
     'regulator',
-    'antagonist',
     'substrate',
-    'agonist',
     'ligand',
     # e.g., Doxorubicin intercalates DNA to prevent transcription
     'intercalation',
-    'inverse agonist',
     # e.g., inhibits process on a protein's aggregation (like APP or LRRK)
     'aggregation inhibitor',
-    'partial agonist',
-    'partial antagonist',
-    'antisense oligonucleotide',
     'adduct',
     'component of',
     'product of',
@@ -229,7 +254,7 @@ neutral_actions = {
     'acetylation',
     'allosteric modulator',
     'deoxidizer',
-    'cross-linking/alkylation', # e.g. Busulfan (DB01008) alkalytes DNA
+    'cross-linking/alkylation',  # e.g. Busulfan (DB01008) alkalytes DNA
 }
 
 skip_actions = {
