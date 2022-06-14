@@ -27,7 +27,6 @@ identifiers_mappings = {
     'LINCS': 'lincs.smallmolecule',
     'PUBCHEM': 'pubchem.compound',
     'CHEMBL': 'chembl.compound',
-    'CTD': 'ctd.chemical',
     'CVCL': 'cellosaurus',
 }
 
