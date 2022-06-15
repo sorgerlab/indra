@@ -3963,6 +3963,9 @@
  "scopus": {
   "pattern": "^\\d+$"
  },
+ "scr": {
+  "pattern": "^\\d+$"
+ },
  "scretf": {
   "pattern": "^\\w+$"
  },
@@ -4023,7 +4026,7 @@
  "sider.effect": {
   "pattern": "^C\\d+$"
  },
- "sigmaaldirch": {},
+ "sigmaaldrich": {},
  "signaling-gateway": {
   "pattern": "^A\\d{6}$"
  },
@@ -4430,6 +4433,9 @@
   "synonyms": [
    "UPISO"
   ]
+ },
+ "uniprot.journal": {
+  "pattern": "^\\d{4}$"
  },
  "uniprot.keyword": {
   "pattern": "^KW-\\d{4}$",
