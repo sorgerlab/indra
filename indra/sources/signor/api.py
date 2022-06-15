@@ -45,16 +45,20 @@ _signor_fields = [
 _SignorRow_ = namedtuple('SignorRow', _signor_fields)
 
 
-def process_from_file(signor_data_file, signor_complexes_file=None):
+def process_from_file(signor_data_file, signor_complexes_file=None,
+                      delimiter='\t'):
     """Process Signor interaction data from CSV files.
 
     Parameters
     ----------
     signor_data_file : str
         Path to the Signor interaction data file in CSV format.
-    signor_complexes_file : str
-        Path to the Signor complexes data in CSV format. If unspecified,
+    signor_complexes_file : Optional[str]
+        Path to the Signor complexes data in CSV format. If specified,
         Signor complexes will not be expanded to their constitutents.
+    delimiter : Optional[str]
+        The delimiter used in the data file. Older data files use ;
+        as a delimiter whereas more recent ones use tabs.
 
     Returns
     -------
@@ -62,7 +66,8 @@ def process_from_file(signor_data_file, signor_complexes_file=None):
         SignorProcessor containing Statements extracted from the Signor data.
     """
     # Get generator over the CSV file
-    data_iter = read_unicode_csv(signor_data_file, delimiter=';', skiprows=1)
+    data_iter = read_unicode_csv(signor_data_file, delimiter=delimiter,
+                                 skiprows=1)
     complexes_iter = None
     if signor_complexes_file:
         complexes_iter = read_unicode_csv(signor_complexes_file, delimiter=';',

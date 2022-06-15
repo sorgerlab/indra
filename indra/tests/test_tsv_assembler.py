@@ -4,7 +4,8 @@ from indra.assemblers.tsv import TsvAssembler
 
 # Get some statements from Signor
 from .test_signor import test_data_file, test_complexes_file
-sp = signor.process_from_file(test_data_file, test_complexes_file)
+sp = signor.process_from_file(test_data_file, test_complexes_file,
+                              delimiter=';')
 stmts = sp.statements
 
 def test_tsv_init():

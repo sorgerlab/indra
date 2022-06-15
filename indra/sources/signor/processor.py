@@ -13,6 +13,7 @@ import logging
 from copy import deepcopy
 from collections import Counter
 from os.path import join, dirname
+import tqdm
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.resources import get_resource_path
@@ -147,7 +148,8 @@ class SignorProcessor(object):
         # Process into statements
         self.statements = []
         self.no_mech_rows = []
-        for row in self._data:
+        for idx, row in enumerate(tqdm.tqdm(self._data,
+                                            desc='Processing SIGNOR rows')):
             row_stmts, no_mech = self._process_row(row)
             if no_mech:
                 self.no_mech_rows.append(row)
@@ -158,7 +160,8 @@ class SignorProcessor(object):
                                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
-        for complex_id in sorted(self.complex_map.keys()):
+        for complex_id in tqdm.tqdm(sorted(self.complex_map.keys()),
+                                    desc='Processing SIGNOR complexes'):
             agents = self._get_complex_agents(complex_id)
             if len(agents) < 2:
                 logger.info('Skipping Complex %s with less than 2 members' %
@@ -186,6 +189,9 @@ class SignorProcessor(object):
             agent.bound_conditions = \
                 [BoundCondition(a, True) for a in agents[1:]]
             return agent
+        elif ent_type == 'mirna' and id.startswith('URS'):
+            db_refs = {'RNACENTRAL': id}
+            return get_standard_agent(name, db_refs=db_refs)
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
@@ -238,7 +244,7 @@ class SignorProcessor(object):
             # If an agent string, add it to the agent string list immediately
             assert c in self.complex_map
             for s in self.complex_map[c]:
-                if s in self.complex_map:
+                if s in self.complex_map and s != c:
                     expand_these_next.append(s)
                 else:
                     expanded_agent_strings.append(s)
