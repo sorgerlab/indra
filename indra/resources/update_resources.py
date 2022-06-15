@@ -9,6 +9,8 @@ from collections import defaultdict, Counter
 from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 from indra.util import read_unicode_csv, write_unicode_csv
+from indra.databases.identifiers import ensure_prefix_if_needed
+from indra.statements.validate import assert_valid_db_refs
 from indra.databases.obo_client import OboClient, PyOboClient
 from indra.databases.owl_client import OwlClient
 from indra.databases import chebi_client, pubchem_client
@@ -367,6 +369,55 @@ def update_bel_chebi_map():
                                            key=lambda x: x[0]):
             fh.write(('%s\tCHEBI:%s\n' %
                       (chebi_name, chebi_id)).encode('utf-8'))
+
+
+def update_selventa_entries():
+    fname = os.path.join(path, 'selventa_entries.tsv')
+
+    xref_mappings = {
+        'CHEBI': 'CHEBI',
+        'MESHC': 'MESH',
+        'MESHD': 'MESH',
+        'MESHPP': 'MESH',
+        'GOBP': 'GO',
+        'GOCC': 'GO',
+        'DO': 'DOID',
+        }
+
+    def process_selventa_xref(xref):
+        if pandas.isna(xref):
+            return ''
+        db_refs = {}
+        for xref_part in xref.split('|'):
+            prefix, db_id = xref_part.split(':', maxsplit=1)
+            ns = xref_mappings.get(prefix)
+            if not ns:
+                logger.info('Unknown namespace: %s' % prefix)
+                continue
+            db_id = ensure_prefix_if_needed(ns, db_id)
+            db_refs[ns] = db_id
+        assert_valid_db_refs(db_refs)
+        db_refs_str = '|'.join(['%s:%s' % (k, v)
+                                for k, v in sorted(db_refs.items())])
+        return db_refs_str
+
+    resources = {
+        'SCHEM': 'selventa-legacy-chemical-names',
+        'SDIS': 'selventa-legacy-diseases',
+        'SCOMP': 'selventa-named-complexes',
+        'SFAM': 'selventa-protein-families'
+    }
+    base_url = ('https://raw.githubusercontent.com/OpenBEL/resource-generator'
+                '/master/datasets/')
+    rows = []
+    for ns, resource in resources.items():
+        url = base_url + resource + '.txt'
+        df = pandas.read_csv(url, sep='\t', comment='#')
+        for _, df_row in df.iterrows():
+            row = [ns, df_row['ID'], df_row['LABEL'],
+                   process_selventa_xref(df_row['XREF'])]
+            rows.append(row)
+    write_unicode_csv(fname, sorted(rows))
 
 
 def update_pubchem_mesh_map():
@@ -753,6 +804,18 @@ def update_identifiers_registry():
         json.dump(patterns, fh, indent=1)
 
 
+def update_bioregistry():
+    url = 'https://raw.githubusercontent.com/biopragmatics/bioregistry/main/' \
+        'exports/registry/registry.json'
+    res = requests.get(url)
+    entries = {}
+    keys = ['pattern', 'banana', 'synonyms']
+    for prefix, data in res.json().items():
+        entries[prefix] = {k: data[k] for k in keys if k in data}
+    with open(os.path.join(path, 'bioregistry.json'), 'w') as fh:
+        json.dump(entries, fh, indent=1)
+
+
 def update_biomappings():
     """Update mappings from the BioMappings project."""
     from indra.databases import mesh_client
@@ -920,6 +983,7 @@ def main():
     update_chebi_accessions()
     update_hmdb_chebi_map()
     update_bel_chebi_map()
+    update_selventa_entries()
     update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()

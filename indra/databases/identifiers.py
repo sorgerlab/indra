@@ -22,12 +22,11 @@ identifiers_mappings = {
     'LNCRNADB': 'rnacentral',
     'MIRBASEM': 'mirbase.mature',
     'EGID': 'ncbigene',
-    'NCBI': 'ncibgene',
+    'NCBI': 'ncbigene',
     'HGNC_GROUP': 'hgnc.genefamily',
     'LINCS': 'lincs.smallmolecule',
     'PUBCHEM': 'pubchem.compound',
     'CHEMBL': 'chembl.compound',
-    'CTD': 'ctd.chemical',
     'CVCL': 'cellosaurus',
 }
 
@@ -37,12 +36,6 @@ non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'HMS-LINCS', 'NXPFA',
     'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK',
     'DRUGBANK.SALT', 'SMILES',
-}
-
-# These are namespaces that can appear in db_refs but are actually not
-# representing grounding.
-non_grounding = {
-    'TEXT', 'TEXT_NORM'
 }
 
 # These are reverse mappings from identifiers.org namespaces to INDRA

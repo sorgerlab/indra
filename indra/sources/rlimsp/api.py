@@ -1,4 +1,7 @@
-__all__ = ['process_from_webservice', 'process_from_json_file',
+__all__ = ['process_from_webservice',
+           'process_jsonl_file',
+           'process_jsonl_str',
+           'process_from_json_file',
            'process_from_jsonish_str']
 
 import json
@@ -56,8 +59,8 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc'):
     return rp
 
 
-def process_from_json_file(filename, doc_id_type=None):
-    """Process RLIMSP extractions from a bulk-download JSON file.
+def process_jsonl_file(filename, doc_id_type=None):
+    """Process RLIMSP extractions from a bulk-download JSON-L file.
 
     Parameters
     ----------
@@ -76,22 +79,19 @@ def process_from_json_file(filename, doc_id_type=None):
         in its statements attribute.
     """
     with open(filename, 'rt') as f:
-        lines = f.readlines()
-        json_list = []
-        for line in lines:
-            json_list.append(json.loads(line))
+        json_list = [json.loads(line) for line in f.readlines()]
         rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
         rp.extract_statements()
     return rp
 
 
-def process_from_jsonish_str(jsonish_str, doc_id_type=None):
-    """Process RLIMSP extractions from a bulk-download JSON file.
+def process_jsonl_str(jsonl_str, doc_id_type=None):
+    """Process RLIMSP extractions from a JSON-L string.
 
     Parameters
     ----------
-    jsonish_str : str
-        The contents of one of the not-quite-json files you can find here:
+    jsonl_str : str
+        The contents of one of the JSON-L files you can find here:
         https://hershey.dbi.udel.edu/textmining/export
     doc_id_type : Optional[str]
         In some cases the RLIMS-P paragraph info doesn't contain 'pmid' or
@@ -105,10 +105,23 @@ def process_from_jsonish_str(jsonish_str, doc_id_type=None):
         An RlimspProcessor which contains a list of extracted INDRA Statements
         in its statements attribute.
     """
-    lines = jsonish_str.splitlines()
-    json_list = []
-    for line in lines:
-        json_list.append(json.loads(line))
+    json_list = [json.loads(line) for line in jsonl_str.splitlines()]
     rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
     rp.extract_statements()
     return rp
+
+
+# DEPRECATED functions
+
+def process_from_json_file(filename, doc_id_type=None):
+    """DEPRECATED: use process_jsonl_file instead."""
+    logger.warning('process_from_json_file is deprecated. Use '
+                   'process_jsonl_file instead.')
+    return process_jsonl_file(filename, doc_id_type=doc_id_type)
+
+
+def process_from_jsonish_str(jsonish_str, doc_id_type=None):
+    """DEPRECATED: use process_jsonl_str instead."""
+    logger.warning('process_jsonish_str is deprecated. Use '
+                   'process_jsonl_str instead.')
+    return process_jsonl_str(jsonish_str, doc_id_type=doc_id_type)

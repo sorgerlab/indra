@@ -19,6 +19,7 @@ from indra.databases import (
     mirbase_client, uniprot_client, taxonomy_client,
     identifiers
 )
+from indra.resources import get_resource_path
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
@@ -546,7 +547,8 @@ def get_db_refs_by_name(ns, name, node_data):
             db_refs = {'UP': up_id}
     # Map Selventa families and complexes to FamPlex
     elif ns == 'SFAM':
-        db_refs = {'SFAM': name}
+        sfam_id, xrefs = selventa_lookup[('SFAM', name)]
+        db_refs = {'SFAM': sfam_id}
         indra_name = bel_to_indra.get(name)
         if indra_name is None:
             logger.info('Could not find mapping for BEL/SFAM family: '
@@ -555,7 +557,8 @@ def get_db_refs_by_name(ns, name, node_data):
             db_refs['FPLX'] = indra_name
             name = indra_name
     elif ns == 'SCOMP':
-        db_refs = {'SCOMP': name}
+        scomp_id, xrefs = selventa_lookup[('SCOMP', name)]
+        db_refs = {'SCOMP': scomp_id}
         indra_name = bel_to_indra.get(name)
         if indra_name is None:
             logger.info('Could not find mapping for BEL/SCOMP complex: '
@@ -609,8 +612,12 @@ def get_db_refs_by_name(ns, name, node_data):
         chebi_id = identifiers.ensure_chebi_prefix(name)
         db_refs = {'CHEBI': chebi_id}
         name = chebi_client.get_chebi_name_from_id(chebi_id)
-    # SDIS, SCHEM: Include the name as the ID for the namespace
-    elif ns in ('SDIS', 'SCHEM', 'TEXT'):
+    # SDIS, SCHEM: Look up the ID and include it in the db_refs
+    elif ns in {'SDIS', 'SCHEM'}:
+        sid, xrefs = selventa_lookup[(ns, name)]
+        db_refs = xrefs.copy()
+        db_refs[ns] = sid
+    elif ns == 'TEXT':
         db_refs = {ns: name}
     elif ns == 'TAX':
         tid = taxonomy_client.get_taxonomy_id(name)
@@ -917,9 +924,7 @@ def _parse_mutation(s):
 
 
 def _build_famplex_map():
-    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         os.pardir, os.pardir, 'resources',
-                         'famplex_map.tsv')
+    fname = get_resource_path('famplex_map.tsv')
     bel_to_indra = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
@@ -932,9 +937,7 @@ def _build_famplex_map():
 
 
 def _build_chebi_map():
-    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         os.pardir, os.pardir, 'resources',
-                         'bel_chebi_map.tsv')
+    fname = get_resource_path('bel_chebi_map.tsv')
     chebi_name_id = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
@@ -944,9 +947,24 @@ def _build_chebi_map():
     return chebi_name_id
 
 
+def read_selventa_resources():
+    fname = get_resource_path('selventa_entries.tsv')
+    csv_rows = read_unicode_csv(fname)
+    selventa_lookup = {}
+    for namespace, sid, name, xrefs_str in csv_rows:
+        # namespace, name -> ID, xrefs
+        if xrefs_str:
+            xrefs_dict = {x.split(':', 1)[0]: x.split(':', 1)[1]
+                          for x in xrefs_str.split('|')}
+        else:
+            xrefs_dict = {}
+        selventa_lookup[(namespace, name)] = (sid, xrefs_dict)
+    return selventa_lookup
+
+
 bel_to_indra = _build_famplex_map()
 chebi_name_id = _build_chebi_map()
-
+selventa_lookup = read_selventa_resources()
 
 mouse_lookup = {gene_name: up_id for up_id, gene_name in
                 uniprot_client.um.uniprot_gene_name.items()

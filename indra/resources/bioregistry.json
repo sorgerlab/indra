@@ -1,0 +1,4768 @@
+{
+ "3dmet": {
+  "pattern": "^B\\d{5}$"
+ },
+ "4dn.biosource": {
+  "pattern": "^4DN[A-Z]{2}[A-Z0-9]{7}$",
+  "synonyms": [
+   "4DN"
+  ]
+ },
+ "4dn.replicate": {},
+ "aao": {
+  "banana": "AAO"
+ },
+ "abcd": {},
+ "abm": {},
+ "abs": {
+  "pattern": "^A\\d+$"
+ },
+ "ac": {},
+ "aceview.worm": {
+  "pattern": "^[a-z0-9-]+$"
+ },
+ "addexbio": {},
+ "addgene": {
+  "pattern": "^[0-9]{5}(-[a-zA-Z0-9-]{0,7})?$|^[0-9]{10}$"
+ },
+ "adw": {
+  "pattern": "^[A-Z_a-z]+$",
+  "banana": "ADW"
+ },
+ "aeo": {
+  "pattern": "^\\d{7}$",
+  "banana": "AEO",
+  "synonyms": [
+   "AEO_RETIRED"
+  ]
+ },
+ "aero": {
+  "pattern": "^\\d{7}$",
+  "banana": "AERO"
+ },
+ "affy.probeset": {
+  "pattern": "^\\d{4,}((_[asx])?_at)$"
+ },
+ "afo": {},
+ "aftol.taxonomy": {
+  "pattern": "^\\d+$"
+ },
+ "agilent.probe": {
+  "pattern": "^A_\\d+_.+$"
+ },
+ "agricola": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "AGR",
+   "AGRICOLA_ID"
+  ]
+ },
+ "agro": {
+  "pattern": "^\\d{8}$",
+  "banana": "AGRO"
+ },
+ "agrovoc": {
+  "pattern": "^[a-z0-9]+$"
+ },
+ "aism": {
+  "pattern": "^\\d{7}$",
+  "banana": "AISM"
+ },
+ "allergome": {
+  "pattern": "^\\d+$"
+ },
+ "alzforum.mutation": {
+  "synonyms": [
+   "Alzforum_mut"
+  ]
+ },
+ "amoebadb": {
+  "pattern": "^EDI_\\d+$"
+ },
+ "amphx": {
+  "pattern": "^\\d+$",
+  "banana": "AMPHX"
+ },
+ "antibodyregistry": {
+  "pattern": "^\\d{6}$"
+ },
+ "antweb": {
+  "pattern": "^casent\\d+(\\-D\\d+)?$"
+ },
+ "aop": {
+  "pattern": "^\\d+$"
+ },
+ "aop.events": {
+  "pattern": "^\\d+$"
+ },
+ "aop.relationships": {
+  "pattern": "^\\d+$"
+ },
+ "aop.stressor": {
+  "pattern": "^\\d+$"
+ },
+ "apaonto": {},
+ "apd": {
+  "pattern": "^\\d{5}$"
+ },
+ "aphidbase.transcript": {
+  "pattern": "^ACYPI\\d{6}(-RA)?$"
+ },
+ "apid.interactions": {
+  "pattern": "^([A-N,R-Z][0-9]([A-Z][A-Z, 0-9][A-Z, 0-9][0-9]){1,2})|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\.\\d+)?$"
+ },
+ "apo": {
+  "pattern": "^\\d{7}$",
+  "banana": "APO"
+ },
+ "apollosv": {
+  "pattern": "^\\d{8}$",
+  "banana": "APOLLO_SV"
+ },
+ "arachnoserver": {
+  "pattern": "^AS\\d{6}$"
+ },
+ "araport": {},
+ "ardb": {
+  "pattern": "^[A-Z_]{3}[0-9]{4,}$"
+ },
+ "ark": {
+  "pattern": "^/*[0-9A-Za-z]+(?:/[\\w/.=*+@\\$-]*)?(?:\\?.*)?$",
+  "banana": "ark"
+ },
+ "aro": {
+  "pattern": "^\\d{7}$",
+  "banana": "ARO"
+ },
+ "arrayexpress": {
+  "pattern": "^[AEP]-\\w{4}-\\d+$"
+ },
+ "arrayexpress.platform": {
+  "pattern": "^[AEP]-\\w{4}-\\d+$"
+ },
+ "arraymap": {
+  "pattern": "^[\\w\\-:,]{3,64}$"
+ },
+ "arxiv": {
+  "pattern": "^(\\w+(\\-\\w+)?(\\.\\w+)?)?\\d{4,7}(\\.\\d+(v\\d+)?)?$"
+ },
+ "asap": {
+  "pattern": "^[A-Za-z0-9-]+$"
+ },
+ "ascl": {
+  "pattern": "^[0-9\\.]+$"
+ },
+ "asin": {
+  "pattern": "^[0-9]{10}$"
+ },
+ "aspgd.locus": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "aspgd.protein": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "asrp": {},
+ "atc": {
+  "pattern": "^[A-Z](\\d+([A-Z]{1,2}(\\d+)?)?)?$",
+  "synonyms": [
+   "ATC_code",
+   "ATTC"
+  ]
+ },
+ "atcc": {
+  "pattern": "^([A-Z]+-)?\\d+$",
+  "synonyms": [
+   "ATCC",
+   "ATCC number",
+   "ATCC(dna)",
+   "ATCC(in host)"
+  ]
+ },
+ "atcvet": {
+  "pattern": "^Q[A-Z0-9]+$"
+ },
+ "atfdb.family": {
+  "pattern": "^\\w+$"
+ },
+ "ato": {
+  "pattern": "^\\d{7}$",
+  "banana": "ATO"
+ },
+ "atol": {
+  "pattern": "^\\d{7}$"
+ },
+ "autdb": {
+  "pattern": "^[A-Z]+[A-Z-0-9]{2,}$"
+ },
+ "bacdive": {
+  "pattern": "^[0-9]+$"
+ },
+ "bacmap.biog": {
+  "pattern": "^\\d+$"
+ },
+ "bacmap.map": {
+  "pattern": "^\\w+(\\_)?\\d+(\\.\\d+)?$"
+ },
+ "bactibase": {},
+ "bams": {},
+ "bao": {
+  "pattern": "^\\d{7}$",
+  "synonyms": [
+   "BAO"
+  ]
+ },
+ "bbkg": {
+  "pattern": "^[-\\w]+(?:\\/[-\\w]+)(?:\\/\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b)$"
+ },
+ "bbtp": {
+  "pattern": "^\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b$"
+ },
+ "bcgo": {
+  "banana": "BCGO"
+ },
+ "bcio": {
+  "pattern": "^\\d{6}$"
+ },
+ "bco": {
+  "pattern": "^\\d{7}$",
+  "banana": "BCO"
+ },
+ "bcrc": {
+  "pattern": "^\\d+$"
+ },
+ "bcrj": {
+  "pattern": "^\\d{4}$"
+ },
+ "bdgp.est": {
+  "pattern": "^\\w+(\\.)?(\\d+)?$"
+ },
+ "bdgp.insertion": {
+  "pattern": "^\\w+$"
+ },
+ "bdsc": {
+  "pattern": "^\\d+$"
+ },
+ "beetlebase": {
+  "pattern": "^TC\\d+$"
+ },
+ "begdb": {
+  "pattern": "^[0-9]+$"
+ },
+ "beiresources": {
+  "synonyms": [
+   "BEI_Resources"
+  ]
+ },
+ "bel": {},
+ "bfo": {
+  "pattern": "^\\d{7}$",
+  "banana": "BFO"
+ },
+ "bgee.family": {
+  "pattern": "^(ENSFM|ENSGTV:)\\d+$"
+ },
+ "bgee.gene": {
+  "pattern": "^[A-Za-z]+\\d+$"
+ },
+ "bgee.organ": {
+  "pattern": "^(XAO|ZFA|EHDAA|EMAPA|EV|MA)\\:\\d+$"
+ },
+ "bgee.stage": {
+  "pattern": "^(FBvd|XtroDO|HsapDO|MmusDO)\\:\\d+$"
+ },
+ "bigg.compartment": {
+  "pattern": "^[a-z_A-Z]+$"
+ },
+ "bigg.metabolite": {
+  "pattern": "^[a-z_A-Z0-9]+$"
+ },
+ "bigg.model": {
+  "pattern": "^[a-z_A-Z0-9]+$"
+ },
+ "bigg.reaction": {
+  "pattern": "^[a-z_A-Z0-9]+$"
+ },
+ "bila": {
+  "banana": "BILA"
+ },
+ "bindingdb": {
+  "pattern": "^\\w\\d+$"
+ },
+ "biocarta.pathway": {
+  "pattern": "^([hm]\\_)?\\w+Pathway$"
+ },
+ "biocatalogue.service": {
+  "pattern": "^\\d+$"
+ },
+ "biocyc": {
+  "pattern": "^[A-Z-0-9]+(\\:)?[A-Za-z0-9+_.%-:]+$"
+ },
+ "biogrid": {
+  "pattern": "^\\d+$"
+ },
+ "biogrid.interaction": {
+  "pattern": "^\\d+$"
+ },
+ "biolegend": {
+  "pattern": "^\\d+$"
+ },
+ "biolink": {
+  "pattern": "^\\S+$"
+ },
+ "biominder": {
+  "pattern": "^[a-z0-9\\-]+$"
+ },
+ "biomodels.db": {
+  "pattern": "^((BIOMD|MODEL)\\d{10})|(BMID\\d{12})$",
+  "synonyms": [
+   "BIOMD"
+  ]
+ },
+ "biomodels.kisao": {
+  "pattern": "^KISAO_\\d+$",
+  "banana": "KISAO",
+  "synonyms": [
+   "kisao"
+  ]
+ },
+ "biomodels.teddy": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "teddy"
+  ]
+ },
+ "biomodels.vocabulary": {
+  "pattern": "^[A-Za-z]+$"
+ },
+ "bionumbers": {
+  "pattern": "^\\d+$"
+ },
+ "bioportal": {
+  "pattern": "^\\d+$"
+ },
+ "bioproject": {
+  "pattern": "^PRJ[DEN][A-Z]\\d+$"
+ },
+ "bioregistry": {},
+ "bioregistry.collection": {
+  "pattern": "^\\d{7}$"
+ },
+ "bioregistry.registry": {},
+ "bioregistry.schema": {
+  "pattern": "^\\d{7}$"
+ },
+ "biorxiv": {
+  "pattern": "^(\\d{4}\\.\\d{2}\\.\\d{2}\\.)?\\d{6,8}(v\\d{1,3})?$"
+ },
+ "biosample": {
+  "pattern": "^SAM[NED](\\w)?\\d+$",
+  "synonyms": [
+   "biosamples"
+  ]
+ },
+ "biosimulations": {
+  "pattern": "^[a-zA-Z0-9_-]{3,}$"
+ },
+ "biosimulators": {
+  "pattern": "^[a-zA-Z0-9-_]+$"
+ },
+ "biostudies": {
+  "pattern": "^S-[A-Z]{4}[A-Z\\d\\-]+$"
+ },
+ "biosystems": {
+  "pattern": "^\\d+$"
+ },
+ "biotools": {
+  "pattern": "^[-A-Za-z0-9\\_]*$"
+ },
+ "biozil": {},
+ "birnlex": {},
+ "bitbucket": {
+  "pattern": "^[0-9A-Za-z-_\\.]+/[0-9A-Za-z-_\\.]+$"
+ },
+ "bitterdb.cpd": {
+  "pattern": "^\\d+$"
+ },
+ "bitterdb.rec": {
+  "pattern": "^\\d+$"
+ },
+ "bko": {
+  "pattern": "^\\d+$"
+ },
+ "bmrb": {
+  "pattern": "^(bmr|bmse|bmst)?[0-9]{1,6}$"
+ },
+ "bmrb.restraint": {
+  "pattern": "^\\d+$"
+ },
+ "bold.taxonomy": {
+  "pattern": "^\\d+$"
+ },
+ "bootstrep": {
+  "banana": "BOOTSTREP"
+ },
+ "bpdb": {
+  "pattern": "^\\d+$"
+ },
+ "brenda": {
+  "pattern": "^((\\d+\\.-\\.-\\.-)|(\\d+\\.\\d+\\.-\\.-)|(\\d+\\.\\d+\\.\\d+\\.-)|(\\d+\\.\\d+\\.\\d+\\.\\d+))$"
+ },
+ "brenda.ligand": {
+  "pattern": "^\\d+$"
+ },
+ "brenda.ligandgroup": {
+  "pattern": "^\\d+$"
+ },
+ "broad": {
+  "pattern": "^S\\d+$"
+ },
+ "bs": {
+  "pattern": "^\\d+$"
+ },
+ "bspo": {
+  "pattern": "^\\d{7}$",
+  "banana": "BSPO"
+ },
+ "bto": {
+  "pattern": "^\\d{7}$",
+  "banana": "BTO",
+  "synonyms": [
+   "BTO"
+  ]
+ },
+ "bugbase.expt": {
+  "pattern": "^\\d+$"
+ },
+ "bugbase.protocol": {
+  "pattern": "^\\d+$"
+ },
+ "bykdb": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "cabri": {
+  "pattern": "^([A-Za-z]+)?(\\_)?([A-Za-z-]+)\\:([A-Za-z0-9 ]+)$"
+ },
+ "cadsr": {
+  "pattern": "^[0-9]*$"
+ },
+ "caloha": {
+  "pattern": "^TS-\\d+$"
+ },
+ "cameo": {
+  "pattern": "^[0-9\\-_]+$"
+ },
+ "caps": {
+  "pattern": "^\\d+$"
+ },
+ "caro": {
+  "pattern": "^\\d{7}$",
+  "banana": "CARO"
+ },
+ "cas": {
+  "pattern": "^\\d{1,7}\\-\\d{2}\\-\\d$",
+  "synonyms": [
+   "CASID",
+   "CAS_RN",
+   "SECONDARY_CAS_RN",
+   "cas_id"
+  ]
+ },
+ "casspc": {
+  "pattern": "^\\d+$"
+ },
+ "cath": {
+  "pattern": "^[1-6]\\.[0-9]+\\.[0-9]+\\.[0-9]+$"
+ },
+ "cath.domain": {
+  "pattern": "^\\w+$"
+ },
+ "cath.superfamily": {
+  "pattern": "^\\d+(\\.\\d+(\\.\\d+(\\.\\d+)?)?)?$"
+ },
+ "cattleqtldb": {
+  "pattern": "^\\d+$"
+ },
+ "cazy": {
+  "pattern": "^(GT|GH|PL|CE|CBM)\\d+(\\_\\d+)?$"
+ },
+ "cba": {
+  "pattern": "^\\d+$"
+ },
+ "cbioportal": {
+  "pattern": "^[a-z0-9\\_]+$"
+ },
+ "ccdc": {
+  "pattern": "^\\d{6,7}$"
+ },
+ "ccds": {
+  "pattern": "^CCDS\\d+\\.\\d+$"
+ },
+ "ccle": {
+  "synonyms": [
+   "ccle.cell"
+  ]
+ },
+ "cco": {
+  "pattern": "^\\w+$",
+  "banana": "CCO"
+ },
+ "ccrid": {},
+ "cdao": {
+  "pattern": "^\\d{7}$",
+  "banana": "CDAO"
+ },
+ "cdd": {
+  "pattern": "^(cd)?\\d{5}$"
+ },
+ "cdno": {
+  "pattern": "^\\d{7}$",
+  "banana": "CDNO"
+ },
+ "cdpd": {
+  "pattern": "^\\d+$"
+ },
+ "cdt": {
+  "pattern": "^\\d{7}$"
+ },
+ "cell_biolabs": {},
+ "cell_model_passport": {},
+ "cellbank.australia": {},
+ "cellimage": {
+  "pattern": "^\\d+$"
+ },
+ "cellopub": {},
+ "cellosaurus": {
+  "pattern": "^CVCL_[A-Z0-9]{4}$",
+  "synonyms": [
+   "CVCL"
+  ]
+ },
+ "cellosaurus.resource": {},
+ "cellrepo": {
+  "pattern": "^[0-9]+$"
+ },
+ "ceph": {
+  "pattern": "^\\d{7}$",
+  "banana": "CEPH"
+ },
+ "cgd": {
+  "pattern": "^CAL\\d{7}$"
+ },
+ "cghdb": {},
+ "cgnc": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "BirdBase",
+   "CGNC"
+  ]
+ },
+ "cgsc": {
+  "pattern": "^\\d+$"
+ },
+ "charprot": {
+  "pattern": "^CH_\\d+$"
+ },
+ "chebi": {
+  "pattern": "^\\d+$",
+  "banana": "CHEBI",
+  "synonyms": [
+   "CHEBI",
+   "CHEBIID",
+   "ChEBI"
+  ]
+ },
+ "chembl": {
+  "pattern": "^CHEMBL\\d+$",
+  "synonyms": [
+   "ChEMBL",
+   "ChEMBL_ID",
+   "chembl"
+  ]
+ },
+ "chembl.cell": {
+  "synonyms": [
+   "ChEMBL-Cells"
+  ]
+ },
+ "chembl.compound": {
+  "pattern": "^CHEMBL\\d+$"
+ },
+ "chembl.target": {
+  "pattern": "^CHEMBL\\d+$",
+  "synonyms": [
+   "ChEMBL-Targets"
+  ]
+ },
+ "chemdb": {
+  "pattern": "^\\d+$"
+ },
+ "chemidplus": {
+  "pattern": "^\\d+\\-\\d+\\-\\d+$",
+  "synonyms": [
+   "ChemIDplus"
+  ]
+ },
+ "cheminf": {
+  "pattern": "^\\d{6}$",
+  "banana": "CHEMINF"
+ },
+ "chemspider": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "ChemSpiderID",
+   "Chemspider"
+  ]
+ },
+ "chickenqtldb": {
+  "pattern": "^\\d+$"
+ },
+ "chiro": {
+  "banana": "CHIRO"
+ },
+ "chmo": {
+  "pattern": "^\\d{7}$",
+  "banana": "CHMO"
+ },
+ "cido": {
+  "pattern": "^\\d{7}$",
+  "banana": "CIDO"
+ },
+ "cio": {
+  "pattern": "^\\d{7}$",
+  "banana": "CIO"
+ },
+ "citexplore": {
+  "synonyms": [
+   "CTX"
+  ]
+ },
+ "civic.aid": {
+  "pattern": "^[0-9]+$"
+ },
+ "civic.eid": {
+  "pattern": "^[0-9]+$"
+ },
+ "cl": {
+  "pattern": "^\\d{7}$",
+  "banana": "CL"
+ },
+ "clao": {
+  "pattern": "^\\d{7}$",
+  "banana": "CLAO"
+ },
+ "classyfire": {
+  "pattern": "^\\d{7}$",
+  "synonyms": [
+   "CHEMONTID"
+  ]
+ },
+ "cldb": {
+  "pattern": "^(cl|tum)\\d+$"
+ },
+ "clingene": {},
+ "clinicaltrials": {
+  "pattern": "^NCT\\d{8}$"
+ },
+ "clinvar": {
+  "pattern": "^\\d+$"
+ },
+ "clinvar.record": {
+  "pattern": "^RCV\\d+(\\.\\d+)?$"
+ },
+ "clinvar.submission": {
+  "pattern": "^SCV\\d+(\\.\\d+)?$"
+ },
+ "clinvar.submitter": {
+  "pattern": "^\\d+$"
+ },
+ "clo": {
+  "pattern": "^\\d{7}$",
+  "banana": "CLO",
+  "synonyms": [
+   "CLO"
+  ]
+ },
+ "cls": {},
+ "clyh": {
+  "pattern": "^\\d+$",
+  "banana": "CLYH"
+ },
+ "cmecs": {
+  "pattern": "^\\d+$"
+ },
+ "cmf": {
+  "banana": "CMF"
+ },
+ "cmo": {
+  "pattern": "^\\d{7}$",
+  "banana": "CMO"
+ },
+ "cmpo": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_320": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_321": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_322": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_323": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_324": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_325": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_326": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_327": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_330": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_331": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_333": {
+  "pattern": "^\\d+$"
+ },
+ "co_334": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_335": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_336": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_337": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_338": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_339": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_340": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_341": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_343": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_345": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_346": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_347": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_348": {
+  "pattern": "^\\d+$"
+ },
+ "co_350": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_356": {
+  "pattern": "^\\d+$"
+ },
+ "co_357": {
+  "pattern": "^\\d+$"
+ },
+ "co_358": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_359": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_360": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_365": {
+  "pattern": "^\\d{7}$"
+ },
+ "co_366": {
+  "pattern": "^\\d{7}$"
+ },
+ "cob": {
+  "pattern": "^\\d{7}$",
+  "banana": "COB"
+ },
+ "coconut": {
+  "pattern": "^CNP\\d{7}$"
+ },
+ "codelink": {
+  "pattern": "^GE\\d+$"
+ },
+ "cog": {
+  "pattern": "^COG\\d+$",
+  "synonyms": [
+   "COG_Cluster"
+  ]
+ },
+ "cog.category": {},
+ "cog.pathway": {},
+ "cohd": {},
+ "colao": {
+  "pattern": "^\\d{7}$",
+  "banana": "COLAO"
+ },
+ "colonatlas": {},
+ "combine.specifications": {
+  "pattern": "^\\w+(\\-|\\.|\\w)*$"
+ },
+ "come": {},
+ "complexportal": {
+  "pattern": "^CPX-[0-9]+$",
+  "synonyms": [
+   "ComplexPortal"
+  ]
+ },
+ "comptox": {
+  "pattern": "^DTXSID\\d+$"
+ },
+ "compulyeast": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$"
+ },
+ "conoserver": {
+  "pattern": "^\\d+$"
+ },
+ "conso": {
+  "pattern": "^CONSO\\d{5}$"
+ },
+ "coriell": {
+  "pattern": "^[A-Z]{2}\\d+$"
+ },
+ "corrdb": {
+  "pattern": "^[0-9]+$"
+ },
+ "corum": {
+  "pattern": "^\\d+$"
+ },
+ "cosmic": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "cosmic.cell": {
+  "pattern": "^\\d+$"
+ },
+ "covid19": {
+  "pattern": "^\\w+_COVID19_[-\\w]+$"
+ },
+ "covoc": {
+  "pattern": "^\\d{7}$"
+ },
+ "cp": {},
+ "cpc": {
+  "pattern": "^([A-H,Y]|[A-H, Y]\\d{2}|[A-H, Y]\\d{2}[A-Z]|[A-H, Y]\\d{2}[A-Z]\\d{1,3}|[A-H, Y]\\d{2}[A-Z]\\d{1,3}(\\/)?\\d{2,})$"
+ },
+ "cpga": {
+  "banana": "GRO"
+ },
+ "cpt": {
+  "pattern": "^\\d+$"
+ },
+ "credit": {},
+ "crisprdb": {
+  "pattern": "^[0-9]+$"
+ },
+ "cro": {
+  "pattern": "^\\d{7}$",
+  "banana": "CRO"
+ },
+ "cryoem": {
+  "pattern": "^\\d{7}$"
+ },
+ "cryptodb": {
+  "pattern": "^\\w+$"
+ },
+ "csa": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}$"
+ },
+ "csd": {
+  "pattern": "^[A-Z]{6}(\\d{2})?$"
+ },
+ "csp": {
+  "synonyms": [
+   "CRISP",
+   "CRISP Thesaurus",
+   "CRISP Thesaurus, 2006",
+   "CSP2005"
+  ]
+ },
+ "cst": {
+  "pattern": "^[A-Za-z0-9_-]+$"
+ },
+ "cst.ab": {
+  "pattern": "^\\d+$"
+ },
+ "ctd.chemical": {
+  "pattern": "^[CD]\\d+$"
+ },
+ "ctd.disease": {
+  "pattern": "^D\\d+$"
+ },
+ "ctd.gene": {
+  "pattern": "^\\d+$"
+ },
+ "cteno": {
+  "pattern": "^\\d{7}$",
+  "banana": "CTENO"
+ },
+ "cto": {
+  "pattern": "^\\d{7}$",
+  "banana": "CTO"
+ },
+ "cubedb": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "cvdo": {
+  "pattern": "^\\d{7}$",
+  "banana": "CVDO"
+ },
+ "d1id": {
+  "pattern": "^\\S+$"
+ },
+ "dailymed": {
+  "pattern": "^[A-Za-z0-9-]+$"
+ },
+ "dandi": {
+  "pattern": "^\\d{6}(\\/\\d+\\.\\d+\\.\\d+)?$"
+ },
+ "darc": {
+  "pattern": "^\\d+$"
+ },
+ "dashr": {
+  "pattern": "^(hsa-(let|mir)-\\w+(-\\w+)?)|(piR-\\d+)|(chr\\w+.tRNA\\d+-\\w+)|(chr\\w+.tRNA\\d+-\\w+-tRF\\d)|((SNORD|SNORA|ACA|HBII|HBI|U)(-)?\\w+)|(HY\\d\\+(-L\\d+)?)|((LSU|SSU|5S)(-rRNA_Hsa)?(-L\\d+)?)$"
+ },
+ "dashr.expression": {
+  "pattern": "^(hsa-(let|mir)-\\w+(-\\w+)?)|(piR-\\d+)|(chr\\w+.tRNA\\d+-\\w+)|(chr\\w+.tRNA\\d+-\\w+-tRF\\d)|((SNORD|SNORA|ACA|HBII|HBI|U)(-)?\\w+)|(HY\\d\\+(-L\\d+)?)|((LSU|SSU|5S)(-rRNA_Hsa)?(-L\\d+)?)$"
+ },
+ "datanator.gene": {
+  "pattern": "^K[0-9]+$"
+ },
+ "datanator.metabolite": {
+  "pattern": "^[A-Z\\-]+$"
+ },
+ "datanator.reaction": {
+  "pattern": "^.*?--%3E.*?$"
+ },
+ "datf": {
+  "pattern": "^AT[1-5]G\\d{5}(\\.\\d+)?$"
+ },
+ "dbd": {
+  "pattern": "^\\d+$"
+ },
+ "dbest": {
+  "pattern": "^([A-Z]+)?\\d+(\\.\\d+)?$"
+ },
+ "dbg2introns": {
+  "pattern": "^\\w{1,2}\\.(\\w{1,2}\\.)?[A-Za-z0-9]+$"
+ },
+ "dbgap": {
+  "pattern": "^phs[0-9]{6}(.v\\d+.p\\d+)?$"
+ },
+ "dbmhc": {
+  "pattern": "^\\d+$"
+ },
+ "dbprobe": {
+  "pattern": "^\\d+$"
+ },
+ "dbsnp": {
+  "pattern": "^rs\\d+$"
+ },
+ "dbvar.study": {
+  "synonyms": [
+   "dbvar.studies"
+  ]
+ },
+ "dbvar.variant": {
+  "synonyms": [
+   "dbvar.variants"
+  ]
+ },
+ "dc": {},
+ "dc_cl": {
+  "pattern": "^\\d{7}$",
+  "banana": "DC_CL"
+ },
+ "dcat": {},
+ "dcterms": {
+  "synonyms": [
+   "dc.terms"
+  ]
+ },
+ "dctypes": {},
+ "ddanat": {
+  "pattern": "^\\d{7}$",
+  "banana": "DDANAT"
+ },
+ "ddpheno": {
+  "pattern": "^\\d{7}$",
+  "banana": "DDPHENO"
+ },
+ "decipher": {
+  "pattern": "^\\d+$"
+ },
+ "degradome": {
+  "pattern": "^[AMCST][0-9x][0-9]$"
+ },
+ "depmap": {
+  "pattern": "^ACH-\\d+$"
+ },
+ "depod": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "dermo": {
+  "pattern": "^\\d{7}$"
+ },
+ "dev.ga4ghdos": {
+  "pattern": "^[a-zA-Z0-9\\-:#\\.]+$"
+ },
+ "dg.4503": {
+  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+ },
+ "dg.4dfc": {
+  "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+ },
+ "dg.6vts": {
+  "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+ },
+ "dg.anv0": {
+  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+ },
+ "dg.f82a1a": {
+  "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+ },
+ "dg5b0d": {
+  "pattern": "^[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}$"
+ },
+ "dgrc": {
+  "pattern": "^\\d+$"
+ },
+ "dhba": {
+  "pattern": "^\\d+$"
+ },
+ "dicom": {
+  "pattern": "^\\d+$"
+ },
+ "dictybase": {
+  "synonyms": [
+   "dictyBase"
+  ]
+ },
+ "dictybase.est": {
+  "pattern": "^DDB\\d+$"
+ },
+ "dictybase.gene": {
+  "pattern": "^DDB_G\\d+$"
+ },
+ "did": {
+  "pattern": "^[a-z0-9]+:[A-Za-z0-9.\\-:]+$",
+  "banana": "did"
+ },
+ "dideo": {
+  "pattern": "^\\d{8}$",
+  "banana": "DIDEO"
+ },
+ "dinto": {
+  "banana": "DINTO"
+ },
+ "dip": {
+  "pattern": "^DIP(\\:)?\\-\\d{1,}[ENXS]$"
+ },
+ "discoverx": {},
+ "disdriv": {
+  "pattern": "^\\d+$",
+  "banana": "DISDRIV"
+ },
+ "diseaseclass": {
+  "pattern": "^\\d{7}$"
+ },
+ "diseasesdb": {
+  "pattern": "^\\d+$"
+ },
+ "disprot": {
+  "pattern": "^DP\\d{5}$"
+ },
+ "disprot.region": {
+  "pattern": "^DP\\d{5}r\\d{3}$"
+ },
+ "dlxb": {
+  "pattern": "^[A-Z0-9]{6,7}$"
+ },
+ "dlxc": {
+  "pattern": "^[A-Z0-9]{6,7}$"
+ },
+ "dmba": {
+  "pattern": "^\\d+$"
+ },
+ "doi": {
+  "pattern": "^(doi\\:)?\\d{2}\\.\\d{4}.*$"
+ },
+ "doid": {
+  "pattern": "^\\d+$",
+  "banana": "DOID",
+  "synonyms": [
+   "do"
+  ]
+ },
+ "dommino": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}$"
+ },
+ "door": {
+  "pattern": "^\\d+$"
+ },
+ "doqcs.model": {
+  "pattern": "^\\d+$"
+ },
+ "doqcs.pathway": {
+  "pattern": "^\\d+$"
+ },
+ "dpo": {
+  "banana": "FBcv"
+ },
+ "dpv": {
+  "pattern": "^\\d+$"
+ },
+ "dragondb.allele": {
+  "pattern": "^\\w+$"
+ },
+ "dragondb.dna": {
+  "pattern": "^\\d\\w+$"
+ },
+ "dragondb.locus": {
+  "pattern": "^\\w+$"
+ },
+ "dragondb.protein": {
+  "pattern": "^\\w+$"
+ },
+ "dron": {
+  "pattern": "^\\d{8}$",
+  "banana": "DRON"
+ },
+ "drsc": {
+  "pattern": "^DRSC\\d+$"
+ },
+ "drugbank": {
+  "pattern": "^DB\\d{5}$",
+  "synonyms": [
+   "DRUGBANK_ID",
+   "DrugBank"
+  ]
+ },
+ "drugbank.salt": {
+  "pattern": "^DBSALT\\d{6}$",
+  "synonyms": [
+   "drugbank.target"
+  ]
+ },
+ "drugbankv4.target": {
+  "pattern": "^BE\\d{7}$"
+ },
+ "drugcentral": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "Drug_Central"
+  ]
+ },
+ "dsmz": {},
+ "dto": {
+  "pattern": "^\\d+$"
+ },
+ "duo": {
+  "pattern": "^\\d{7}$",
+  "banana": "DUO"
+ },
+ "eaglei": {},
+ "ebisc": {},
+ "ecacc": {
+  "pattern": "^\\d+$"
+ },
+ "ecao": {
+  "pattern": "^\\d{7}$",
+  "banana": "ECAO"
+ },
+ "eccode": {
+  "pattern": "^\\d{1,2}(((\\.\\d{1,3}){1,3})|(\\.\\d+){2}\\.n\\d{1,3})?$",
+  "synonyms": [
+   "EC",
+   "EC-CODE",
+   "ECCODE",
+   "EC_CODE",
+   "ec-code",
+   "intenz"
+  ]
+ },
+ "ecg": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "ECGOntology"
+  ]
+ },
+ "echobase": {
+  "pattern": "^EB\\d+$"
+ },
+ "ecmdb": {
+  "pattern": "^ECMDB\\d+$",
+  "synonyms": [
+   "ECMDB"
+  ]
+ },
+ "eco": {
+  "pattern": "^\\d{7}$",
+  "banana": "ECO"
+ },
+ "ecocore": {
+  "pattern": "^\\d+$",
+  "banana": "ECOCORE"
+ },
+ "ecocyc": {},
+ "ecogene": {
+  "pattern": "^EG\\d+$"
+ },
+ "ecolexicon": {},
+ "ecoliwiki": {
+  "pattern": "^[A-Za-z0-9-]+$"
+ },
+ "ecto": {
+  "pattern": "^\\d{7}$",
+  "banana": "ECTO"
+ },
+ "ecyano.entity": {
+  "pattern": "^\\d+$"
+ },
+ "ecyano.experiment": {
+  "pattern": "^\\d+$"
+ },
+ "ecyano.model": {
+  "pattern": "^\\d+$"
+ },
+ "ecyano.rule": {
+  "pattern": "^\\d+$"
+ },
+ "edam": {
+  "pattern": "^(data|topic|operation|format)\\_\\d{4}$"
+ },
+ "edda": {},
+ "efo": {
+  "pattern": "^\\d{7}$"
+ },
+ "ega.dataset": {
+  "pattern": "^EGAD\\d{11}$"
+ },
+ "ega.study": {
+  "pattern": "^EGAS\\d{11}$"
+ },
+ "eggnog": {
+  "pattern": "^\\w+$"
+ },
+ "ehda": {
+  "pattern": "^\\d+$",
+  "banana": "EHDA"
+ },
+ "ehdaa": {
+  "pattern": "^\\d+$",
+  "banana": "EHDAA"
+ },
+ "ehdaa2": {
+  "pattern": "^\\d{7}$",
+  "banana": "EHDAA2",
+  "synonyms": [
+   "EHDAA2_RETIRED",
+   "HDAA2",
+   "RETIRED_EHDAA2"
+  ]
+ },
+ "elm": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "emap": {
+  "pattern": "^\\d+$",
+  "banana": "EMAP"
+ },
+ "emapa": {
+  "pattern": "^\\d+$",
+  "banana": "EMAPA",
+  "synonyms": [
+   "EMAPA_RETIRED"
+  ]
+ },
+ "emdb": {
+  "pattern": "^EMD-\\d{4}$"
+ },
+ "emolecules": {
+  "pattern": "^\\d+$"
+ },
+ "empiar": {
+  "pattern": "^\\d+$"
+ },
+ "ena.embl": {
+  "pattern": "^[A-Z]+[0-9]+(\\.\\d+)?$",
+  "synonyms": [
+   "ena"
+  ]
+ },
+ "encode": {
+  "pattern": "^ENC[A-Za-z]{2}[0-9]{3}[A-Za-z]{3}$"
+ },
+ "enm": {
+  "pattern": "^\\d+$"
+ },
+ "ensembl": {
+  "pattern": "^((ENS[FPTG]\\d{11}(\\.\\d+)?)|(FB\\w{2}\\d{7})|(Y[A-Z]{2}\\d{3}[a-zA-Z](\\-[A-Z])?)|([A-Z_a-z0-9]+(\\.)?(t)?(\\d+)?([a-z])?))$",
+  "synonyms": [
+   "Ensembl"
+  ]
+ },
+ "ensembl.bacteria": {
+  "pattern": "^((EB\\w+)|([A-Z0-9]+\\_[A-Z0-9]+))$"
+ },
+ "ensembl.fungi": {
+  "pattern": "^[A-Z-a-z0-9]+$"
+ },
+ "ensembl.metazoa": {
+  "pattern": "^\\w+(\\.)?\\d+$"
+ },
+ "ensembl.plant": {
+  "pattern": "^\\w+(\\.\\d+)?(\\.\\d+)?$"
+ },
+ "ensembl.protist": {
+  "pattern": "^\\w+$"
+ },
+ "ensemblglossary": {
+  "pattern": "^\\d{7}$"
+ },
+ "envipath": {
+  "pattern": "^[\\w^_]{8}-[\\w^_]{4}-[\\w^_]{4}-[\\w^_]{4}-[\\w^_]{12}\\/[\\w-]+\\/[\\w^_]{8}-[\\w^_]{4}-[\\w^_]{4}-[\\w^_]{4}-[\\w^_]{12}$"
+ },
+ "envo": {
+  "pattern": "^\\d{7,8}$",
+  "banana": "ENVO"
+ },
+ "enzo": {
+  "synonyms": [
+   "Enzo Life Sciences"
+  ]
+ },
+ "eo": {
+  "pattern": "^\\d{7}$",
+  "banana": "EO"
+ },
+ "eol": {
+  "pattern": "^\\d{7}$"
+ },
+ "eolife": {
+  "pattern": "^\\d+$"
+ },
+ "epcc": {},
+ "epd": {
+  "pattern": "^[A-Z-_0-9]+$"
+ },
+ "epio": {
+  "pattern": "^\\d{7}$",
+  "banana": "EPIO"
+ },
+ "epo": {
+  "banana": "EPO"
+ },
+ "epso": {
+  "pattern": "^\\d{7}$"
+ },
+ "erm": {
+  "pattern": "^ERM[0-9]{8}$"
+ },
+ "ero": {
+  "pattern": "^\\d{7}$",
+  "banana": "ERO"
+ },
+ "erv": {
+  "pattern": "^[A-Za-z0-9\\-\\_]+$"
+ },
+ "estdab": {
+  "pattern": "^\\d{3}$"
+ },
+ "eu89h": {
+  "pattern": "^[a-z0-9\\-_]+$"
+ },
+ "euclinicaltrials": {
+  "pattern": "^\\d{4}\\-\\d{6}\\-\\d{2}$"
+ },
+ "eupath": {
+  "pattern": "^\\d{7}$",
+  "banana": "EUPATH"
+ },
+ "eurofir": {},
+ "ev": {
+  "banana": "EV"
+ },
+ "evm": {},
+ "exac.gene": {
+  "pattern": "^ENSG\\d{11}$"
+ },
+ "exac.transcript": {
+  "pattern": "^ENST\\d{11}$"
+ },
+ "exac.variant": {
+  "pattern": "^\\d{1,2}\\-\\d+\\-[GATC]\\-[GATC]$"
+ },
+ "exo": {
+  "pattern": "^\\d{7}$",
+  "banana": "ExO",
+  "synonyms": [
+   "ExO"
+  ]
+ },
+ "fabio": {},
+ "facebase": {
+  "pattern": "^FB\\d{8}$"
+ },
+ "fairsharing": {
+  "pattern": "^bsg-[dscp]?\\d{6}$"
+ },
+ "faldo": {},
+ "fao": {
+  "pattern": "^\\d{7}$",
+  "banana": "FAO"
+ },
+ "fbbi": {
+  "pattern": "^\\d+$",
+  "banana": "FBbi",
+  "synonyms": [
+   "FBbi"
+  ]
+ },
+ "fbbt": {
+  "pattern": "^\\d{8}$",
+  "banana": "FBbt",
+  "synonyms": [
+   "FBbt",
+   "FBbt_root"
+  ]
+ },
+ "fbcv": {
+  "pattern": "^\\d{7}$",
+  "banana": "FBcv",
+  "synonyms": [
+   "FBcv"
+  ]
+ },
+ "fbdv": {
+  "pattern": "^\\d{8}$",
+  "banana": "FBdv",
+  "synonyms": [
+   "FBdv"
+  ]
+ },
+ "fbol": {
+  "pattern": "^\\d+$"
+ },
+ "fbql": {
+  "pattern": "^\\d+$"
+ },
+ "fbrf": {
+  "pattern": "^\\d{7}$"
+ },
+ "fbsp": {
+  "pattern": "^\\d{8}$",
+  "banana": "FBSP"
+ },
+ "fbtc": {
+  "pattern": "^\\d{7}$"
+ },
+ "fcb": {
+  "pattern": "^FCB\\d{3}$"
+ },
+ "fcsfree": {},
+ "fideo": {
+  "pattern": "^\\d{8}$",
+  "banana": "FIDEO"
+ },
+ "fishbase.species": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "fishbase"
+  ]
+ },
+ "fix": {
+  "pattern": "^\\d{7}$",
+  "banana": "FIX"
+ },
+ "flopo": {
+  "pattern": "^\\d{7}$",
+  "banana": "FLOPO"
+ },
+ "flowrepository": {
+  "pattern": "^FR\\-FCM\\-\\w{4}$"
+ },
+ "flu": {
+  "pattern": "^\\d{7}$",
+  "banana": "FLU"
+ },
+ "flybase": {
+  "pattern": "^FB\\w{2}\\d{7}$",
+  "synonyms": [
+   "FB",
+   "FlyBase"
+  ]
+ },
+ "flybrain.ndb": {
+  "pattern": "^\\d+$"
+ },
+ "fma": {
+  "pattern": "^\\d+$",
+  "banana": "FMA",
+  "synonyms": [
+   "FMAID",
+   "FMA_RETIRED"
+  ]
+ },
+ "foaf": {},
+ "fobi": {
+  "pattern": "^\\d{6}$",
+  "banana": "FOBI"
+ },
+ "foodb.compound": {
+  "pattern": "^FDB\\d+$",
+  "synonyms": [
+   "foodb"
+  ]
+ },
+ "foodon": {
+  "pattern": "^[0-9]{8}$",
+  "banana": "FOODON"
+ },
+ "fovt": {
+  "pattern": "^\\d{7}$",
+  "banana": "FOVT"
+ },
+ "fplx": {
+  "pattern": "^[a-zA-Z0-9][A-Za-z0-9_]+$",
+  "synonyms": [
+   "famplex"
+  ]
+ },
+ "fsnp": {
+  "pattern": "^rs\\d+$"
+ },
+ "ftt": {
+  "pattern": "^\\d+$"
+ },
+ "funcbase.fly": {
+  "pattern": "^\\d+$"
+ },
+ "funcbase.human": {
+  "pattern": "^\\d+$"
+ },
+ "funcbase.mouse": {
+  "pattern": "^\\d+$"
+ },
+ "funcbase.yeast": {
+  "pattern": "^\\d+$"
+ },
+ "funderregistry": {
+  "pattern": "^\\d{9,9}$"
+ },
+ "fungidb": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "fungorum": {
+  "pattern": "^[1-9]\\d{0,5}$"
+ },
+ "fyeco": {
+  "pattern": "^\\d{7}$"
+ },
+ "fyler": {
+  "pattern": "^\\d+$"
+ },
+ "fypo": {
+  "pattern": "^\\d{7}$",
+  "banana": "FYPO"
+ },
+ "ga4ghdos": {
+  "pattern": "^[a-zA-Z0-9\\-:#/\\.]+$"
+ },
+ "gabi": {
+  "pattern": "^\\w+$"
+ },
+ "galen": {},
+ "gard": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "GARD",
+   "Genetic and Rare Diseases Information Center"
+  ]
+ },
+ "gateway": {
+  "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+ },
+ "gaz": {
+  "pattern": "^\\d{8}$",
+  "banana": "GAZ"
+ },
+ "gbif": {
+  "pattern": "^\\d+$"
+ },
+ "gc": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "gc_id"
+  ]
+ },
+ "gcst": {
+  "pattern": "^GCST\\d{6}\\d*$"
+ },
+ "gdc": {
+  "pattern": "^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$"
+ },
+ "gdsc": {
+  "pattern": "^[0-9]+$"
+ },
+ "gecko": {
+  "pattern": "^\\d{7}$",
+  "banana": "GECKO"
+ },
+ "gemet": {
+  "pattern": "^\\d+$"
+ },
+ "genatlas": {
+  "pattern": "^\\w+$"
+ },
+ "genbank": {},
+ "genecards": {
+  "pattern": "^[A-Za-z-0-9_]+(\\@)?$"
+ },
+ "genedb": {
+  "pattern": "^[\\w\\d\\.-]*$"
+ },
+ "genefarm": {
+  "pattern": "^\\d+$"
+ },
+ "genepio": {
+  "pattern": "^\\d{7}$",
+  "banana": "GENEPIO"
+ },
+ "genetree": {
+  "pattern": "^ENSGT\\d+$"
+ },
+ "genewiki": {
+  "pattern": "^\\d+$"
+ },
+ "geno": {
+  "pattern": "^\\d{7}$",
+  "banana": "GENO"
+ },
+ "genpept": {
+  "pattern": "^\\w{3}\\d{5}(\\.\\d+)?$"
+ },
+ "genprop": {
+  "pattern": "^GenProp\\d+$"
+ },
+ "geo": {
+  "pattern": "^G(PL|SM|SE|DS)\\d+$"
+ },
+ "geogeo": {
+  "pattern": "^\\d{9}$",
+  "banana": "GEO"
+ },
+ "geonames": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "Geomames",
+   "Geonamaes"
+  ]
+ },
+ "geonames.feature": {},
+ "gexo": {},
+ "ghr": {},
+ "giardiadb": {
+  "pattern": "^\\w+$"
+ },
+ "github": {
+  "pattern": "^[a-zA-Z0-9-_]+(/[a-zA-Z0-9-_]+)?$"
+ },
+ "gitlab": {
+  "pattern": "^.*/.*$"
+ },
+ "glida.gpcr": {
+  "pattern": "^[A-Z-_0-9]+$"
+ },
+ "glida.ligand": {
+  "pattern": "^L\\d+$"
+ },
+ "glycoepitope": {
+  "pattern": "^EP\\d{4}$"
+ },
+ "glycomedb": {
+  "pattern": "^\\w+$"
+ },
+ "glyconavi": {
+  "pattern": "^GN_[A-Za-z0-9_:]+$"
+ },
+ "glycopost": {
+  "pattern": "^GPST[0-9]{6}$"
+ },
+ "glygen": {},
+ "glytoucan": {
+  "pattern": "^G[0-9]{5}[A-Z]{2}$"
+ },
+ "gmd": {
+  "pattern": "^([0-9a-fA-F]){8}(-([0-9a-fA-F]){4}){3}-([0-9a-fA-F]){12}$"
+ },
+ "gmd.analyte": {
+  "pattern": "^([0-9a-fA-F]){8}(-([0-9a-fA-F]){4}){3}-([0-9a-fA-F]){12}$"
+ },
+ "gmd.gcms": {
+  "pattern": "^([0-9a-fA-F]){8}(-([0-9a-fA-F]){4}){3}-([0-9a-fA-F]){12}$"
+ },
+ "gmd.profile": {
+  "pattern": "^([0-9a-fA-F]){8}(-([0-9a-fA-F]){4}){3}-([0-9a-fA-F]){12}$"
+ },
+ "gmd.ref": {
+  "pattern": "^([0-9a-fA-F]){8}(-([0-9a-fA-F]){4}){3}-([0-9a-fA-F]){12}$"
+ },
+ "gmelin": {
+  "pattern": "^[1-9][0-9]{3,6}$"
+ },
+ "gno": {
+  "pattern": "^\\d{8}$",
+  "banana": "GNO"
+ },
+ "gnpis": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "go": {
+  "pattern": "^\\d{7}$",
+  "banana": "GO",
+  "synonyms": [
+   "gobp",
+   "gobpid",
+   "gocc",
+   "goccid",
+   "gomf",
+   "gomfid"
+  ]
+ },
+ "go.model": {},
+ "go.ref": {
+  "pattern": "^\\d{7}$",
+  "banana": "GO_REF"
+ },
+ "go.resource": {},
+ "goa": {
+  "pattern": "^(([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9]))|(URS[0-9A-F]{10}(_[0-9]+){0,1})|(EBI-[0-9]+)$"
+ },
+ "goche": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "go.chebi",
+   "go.chemical",
+   "go.chemicals"
+  ]
+ },
+ "goeco": {},
+ "gold": {
+  "pattern": "^[A-Z][a-z][0-9]+$"
+ },
+ "gold.genome": {
+  "pattern": "^(Gi|Gc)\\d+$"
+ },
+ "gold.meta": {
+  "pattern": "^Gm\\d+$"
+ },
+ "google.patent": {
+  "pattern": "^[A-Z]{2,4}\\d+([A-Z])?([0-9])?$",
+  "synonyms": [
+   "patent"
+  ]
+ },
+ "google.scholar": {},
+ "gorel": {
+  "pattern": "^\\d{7}$"
+ },
+ "gpcrdb": {
+  "pattern": "^\\w+$"
+ },
+ "gpmdb": {
+  "pattern": "^GPM\\d+$"
+ },
+ "graingenes.reference": {},
+ "graingenes.symbol": {},
+ "gramene.gene": {
+  "pattern": "^GR\\:\\d+$",
+  "synonyms": [
+   "GR_GENE"
+  ]
+ },
+ "gramene.growthstage": {
+  "pattern": "^\\d{7}$",
+  "banana": "gramene.growthstage:GRO\\"
+ },
+ "gramene.protein": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "GR_PROTEIN"
+  ]
+ },
+ "gramene.qtl": {
+  "pattern": "^\\w+$",
+  "synonyms": [
+   "GR_QTL"
+  ]
+ },
+ "gramene.reference": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "gramene.ref"
+  ]
+ },
+ "gramene.taxonomy": {
+  "pattern": "^GR\\_tax\\:\\d+$"
+ },
+ "grassbase": {
+  "pattern": "^(imp|gen)\\d{5}$"
+ },
+ "greengenes": {
+  "pattern": "^\\d+$"
+ },
+ "grid": {
+  "pattern": "^grid\\.[0-9]+\\.[a-f0-9]{1,2}$"
+ },
+ "grin.taxonomy": {
+  "pattern": "^\\d+$"
+ },
+ "gro": {},
+ "grsdb": {
+  "pattern": "^\\d+$"
+ },
+ "gsfa": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "FAO/WHO_standards"
+  ]
+ },
+ "gsso": {
+  "pattern": "^\\d{6}$",
+  "banana": "GSSO"
+ },
+ "gtex": {
+  "pattern": "^\\w.+$"
+ },
+ "gtr": {
+  "synonyms": [
+   "medgen.gtr"
+  ]
+ },
+ "gudmap": {
+  "pattern": "^[-0-9a-zA-Z]+(@[-0-9a-zA-Z]+)?$"
+ },
+ "gwascentral.marker": {
+  "pattern": "^HGVM\\d+$"
+ },
+ "gwascentral.phenotype": {
+  "pattern": "^HGVPM\\d+$"
+ },
+ "gwascentral.study": {
+  "pattern": "^HGVST\\d+$"
+ },
+ "gxa.expt": {
+  "pattern": "^[AEP]-\\w{4}-\\d+$"
+ },
+ "gxa.gene": {
+  "pattern": "^\\w+$"
+ },
+ "habronattus": {
+  "banana": "HABRONATTUS"
+ },
+ "hamap": {
+  "pattern": "^MF_\\d+$"
+ },
+ "hancestro": {
+  "pattern": "^\\d{4}$",
+  "banana": "HANCESTRO"
+ },
+ "hao": {
+  "pattern": "^\\d{7}$",
+  "banana": "HAO"
+ },
+ "hba": {
+  "pattern": "^\\d+$"
+ },
+ "hcao": {},
+ "hcpcs": {},
+ "hcvdb": {
+  "pattern": "^M\\d{5}$"
+ },
+ "hdr": {
+  "pattern": "^\\d+$"
+ },
+ "hgmd": {
+  "pattern": "^[A-Z_0-9]+$"
+ },
+ "hgnc": {
+  "pattern": "^((HGNC|hgnc):)?\\d{1,5}$"
+ },
+ "hgnc.genefamily": {
+  "pattern": "^[A-Z0-9-]+(#[A-Z0-9-]+)?$",
+  "synonyms": [
+   "GFAM",
+   "HGNC_GROUP",
+   "hgnc.family"
+  ]
+ },
+ "hgnc.genegroup": {
+  "pattern": "^\\d+$"
+ },
+ "hgnc.symbol": {
+  "pattern": "^[A-Za-z-0-9_]+(\\@)?$"
+ },
+ "hinv.locus": {
+  "pattern": "^HIX\\d{7}(\\.\\d+)?$"
+ },
+ "hinv.protein": {
+  "pattern": "^HIP\\d{9}(\\.\\d+)?$"
+ },
+ "hinv.transcript": {
+  "pattern": "^HIT\\d{9}(\\.\\d+)?$"
+ },
+ "hipsci": {},
+ "hivreagentprogram": {},
+ "hmdb": {
+  "pattern": "^HMDB\\d+$",
+  "synonyms": [
+   "HMDB"
+  ]
+ },
+ "hms.lincs.compound": {
+  "synonyms": [
+   "HMS-LINCS",
+   "hmsl_id"
+  ]
+ },
+ "hog": {
+  "pattern": "^\\d{7}$"
+ },
+ "hogenom": {
+  "pattern": "^\\w+$"
+ },
+ "hom": {
+  "pattern": "^\\d{7}$",
+  "banana": "HOM"
+ },
+ "homd.seq": {
+  "pattern": "^SEQF\\d+$"
+ },
+ "homd.taxon": {
+  "pattern": "^\\d+$"
+ },
+ "homologene": {
+  "pattern": "^\\d+$"
+ },
+ "horizon_discovery": {},
+ "hovergen": {
+  "pattern": "^HBG\\d+$"
+ },
+ "hp": {
+  "pattern": "^\\d{7}$",
+  "banana": "HP",
+  "synonyms": [
+   "hpo"
+  ]
+ },
+ "hpa": {
+  "pattern": "^ENSG\\d{11}$"
+ },
+ "hpath": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "MC"
+  ]
+ },
+ "hpm.peptide": {
+  "pattern": "^\\d+$"
+ },
+ "hpm.protein": {
+  "pattern": "^\\d+$"
+ },
+ "hprd": {
+  "pattern": "^\\d+$"
+ },
+ "hpscreg": {
+  "pattern": "^[A-Z]{2,6}(e|i)[A-Za-z0-9]{3}-[A-Z]{1,2}(-[A-Za-z0-9]{1,2})?$"
+ },
+ "hsapdv": {
+  "pattern": "^\\d{7}$",
+  "banana": "HsapDv",
+  "synonyms": [
+   "HsapDv"
+  ]
+ },
+ "hsdb": {
+  "pattern": "^\\d+$"
+ },
+ "hso": {
+  "pattern": "^\\d{7}$",
+  "banana": "HSO"
+ },
+ "hssp": {
+  "pattern": "^\\w{4}$"
+ },
+ "htn": {
+  "pattern": "^\\d{8}$",
+  "banana": "HTN"
+ },
+ "huge": {
+  "pattern": "^KIAA\\d{4}$"
+ },
+ "iao": {
+  "pattern": "^\\d{7}$",
+  "banana": "IAO"
+ },
+ "icd10": {
+  "pattern": "^[A-Z]\\d+(\\.[-\\d+])?$",
+  "synonyms": [
+   "ICD",
+   "ICD-10",
+   "ICD10"
+  ]
+ },
+ "icd10cm": {
+  "synonyms": [
+   "ICD10CM"
+  ]
+ },
+ "icd10pcs": {},
+ "icd11": {
+  "synonyms": [
+   "ICD-11"
+  ]
+ },
+ "icd9": {
+  "synonyms": [
+   "ICD9",
+   "ICD9_2005",
+   "MTHICD9_2006"
+  ]
+ },
+ "icd9cm": {
+  "pattern": "^([\\dA-Z]\\d{2}(\\.\\d{1,3}|))|(\\d{2}(\\.\\d{1,2}|))$",
+  "synonyms": [
+   "IC9CM",
+   "ICD9CM",
+   "ICD9CM_2005",
+   "ICD9CM_2006",
+   "ICDCM_2005"
+  ]
+ },
+ "icdc": {
+  "pattern": "^\\d{6}$"
+ },
+ "icdo": {
+  "pattern": "^[8-9]\\d{3}(/[0-3])?$",
+  "synonyms": [
+   "ICD-O",
+   "ICDO"
+  ]
+ },
+ "iceberg.element": {
+  "pattern": "^\\d+$"
+ },
+ "iceberg.family": {
+  "pattern": "^\\d+$"
+ },
+ "iceo": {
+  "pattern": "^\\d{7}(_\\d)?$",
+  "banana": "ICEO"
+ },
+ "icepo": {
+  "pattern": "^\\d{7}$"
+ },
+ "iclc": {},
+ "ico": {
+  "pattern": "^\\d{7}$",
+  "banana": "ICO"
+ },
+ "ideal": {
+  "pattern": "^IID\\d+$"
+ },
+ "ido": {
+  "pattern": "^[0-9]+$",
+  "banana": "IDO"
+ },
+ "idocovid19": {
+  "pattern": "^\\d{7}$"
+ },
+ "idoden": {
+  "pattern": "^\\d{7}$"
+ },
+ "idomal": {
+  "pattern": "^\\d{7}$",
+  "banana": "IDOMAL"
+ },
+ "idoo": {
+  "pattern": "^[0-9a-zA-Z]+$"
+ },
+ "idot": {
+  "pattern": "^[A-Za-z]+$"
+ },
+ "idpo": {
+  "pattern": "^\\d{5}$"
+ },
+ "idr": {
+  "pattern": "^[0-9]{4}$"
+ },
+ "iedb": {
+  "pattern": "^[0-9]+$"
+ },
+ "iev": {
+  "pattern": "^\\d{7}$",
+  "banana": "IEV"
+ },
+ "igrhcellid": {},
+ "igsn": {
+  "pattern": "^[A-Za-z]{2,4}[A-Za-z0-9.-]{1,71}$"
+ },
+ "igsr": {},
+ "ihw": {
+  "pattern": "^IHW\\d+$"
+ },
+ "illumina.probe": {
+  "pattern": "^ILMN_\\d+$"
+ },
+ "imanis": {},
+ "imdrf": {},
+ "imex": {
+  "pattern": "^IM-\\d+(-?)(\\d+?)$"
+ },
+ "img.gene": {
+  "pattern": "^\\d+$"
+ },
+ "img.taxon": {
+  "pattern": "^\\d+$"
+ },
+ "imgt.hla": {
+  "pattern": "^[A-Z0-9*:]+$",
+  "synonyms": [
+   "IPD-IMGT/HLA"
+  ]
+ },
+ "imgt.ligm": {
+  "pattern": "^M\\d+$"
+ },
+ "imr": {
+  "pattern": "^\\d{7}$",
+  "banana": "IMR"
+ },
+ "inaturalist.taxon": {
+  "pattern": "^[1-9]\\d{0,6}$"
+ },
+ "inchi": {
+  "pattern": "^InChI\\=1S?\\/[A-Za-z0-9\\.]+(\\+[0-9]+)?(\\/[cnpqbtmsih][A-Za-z0-9\\-\\+\\(\\)\\,\\/\\?\\;\\.]+)*$"
+ },
+ "inchikey": {
+  "pattern": "^[A-Z]{14}\\-[A-Z]{10}(\\-[A-Z])$"
+ },
+ "inhand": {},
+ "inn": {
+  "synonyms": [
+   "INN_ID"
+  ]
+ },
+ "ino": {
+  "pattern": "^\\d{7}$",
+  "banana": "INO"
+ },
+ "insdc": {
+  "pattern": "^([A-Z]\\d{5}|[A-Z]{2}\\d{6}|[A-Z]{4}\\d{8}|[A-J][A-Z]{2}\\d{5})(\\.\\d+)?$"
+ },
+ "insdc.cds": {
+  "pattern": "^([A-Z]\\d{5}|[A-Z]{2}\\d{6}|[A-Z]{4}\\d{8}|[A-J][A-Z]{2}\\d{5})(\\.\\d+)?$"
+ },
+ "insdc.gca": {
+  "pattern": "^GC[AF]_[0-9]{9}\\.[0-9]+$"
+ },
+ "insdc.run": {
+  "pattern": "^(E|D|S)RR[0-9]{6,}$"
+ },
+ "insdc.sra": {
+  "pattern": "^[SED]R[APRSXZ]\\d+$"
+ },
+ "intact": {
+  "pattern": "^EBI\\-[0-9]+$"
+ },
+ "intact.molecule": {
+  "pattern": "^EBI\\-[0-9]+$"
+ },
+ "interlex": {
+  "pattern": "^[0-9]+$",
+  "synonyms": [
+   "ILX"
+  ]
+ },
+ "interpro": {
+  "pattern": "^IPR\\d{6}$",
+  "synonyms": [
+   "IP",
+   "IPR",
+   "InterPro"
+  ]
+ },
+ "ird.segment": {
+  "pattern": "^\\w+(\\_)?\\d+(\\.\\d+)?$"
+ },
+ "irefweb": {
+  "pattern": "^\\d+$"
+ },
+ "iro": {
+  "pattern": "^\\d{7}$"
+ },
+ "isbn": {
+  "pattern": "^(ISBN)?(-13|-10)?[:]?[ ]?(\\d{2,3}[ -]?)?\\d{1,5}[ -]?\\d{1,7}[ -]?\\d{1,6}[ -]?(\\d|X)$",
+  "synonyms": [
+   "ISBN-10",
+   "ISBN-13"
+  ]
+ },
+ "isfinder": {
+  "pattern": "^IS\\w+(\\-\\d)?$"
+ },
+ "isni": {
+  "pattern": "^[0-9]{15}[0-9X]{1}$"
+ },
+ "issn": {
+  "pattern": "^\\d{4}-\\d{3}[\\dX]$"
+ },
+ "itis": {
+  "pattern": "^\\d+$"
+ },
+ "ito": {
+  "pattern": "^.+$"
+ },
+ "iuphar.family": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "IUPHARfam"
+  ]
+ },
+ "iuphar.ligand": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "IUPHAR_LIGAND",
+   "IUPHAR_LIGAND_ID"
+  ]
+ },
+ "iuphar.receptor": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "IUPHAR_GPCR",
+   "IUPHARobj"
+  ]
+ },
+ "jax": {
+  "pattern": "^\\d{6}$"
+ },
+ "jaxmice": {
+  "pattern": "^\\d+$"
+ },
+ "jcggdb": {
+  "pattern": "^JCGG-STR\\d{6}$"
+ },
+ "jcm": {
+  "pattern": "^\\d+$"
+ },
+ "jcrb": {},
+ "jcsd": {
+  "pattern": "^J\\d{1,3}(\\.\\d{3})?(\\.\\d{1,3})?[A-Za-z]$"
+ },
+ "jstor": {
+  "pattern": "^\\d+$"
+ },
+ "jws": {
+  "pattern": "^\\w+$"
+ },
+ "kaggle": {
+  "pattern": "^[0-9a-zA-Z\\-]+\\/[0-9a-zA-Z\\-]+$"
+ },
+ "kclb": {},
+ "kegg": {
+  "pattern": "^([CHDEGTMKR]\\d+)|(\\w+:[\\w\\d\\.-]*)|([a-z]{3,5})|(\\w{2,4}\\d{5})$",
+  "synonyms": [
+   "KEGG"
+  ]
+ },
+ "kegg.compound": {
+  "pattern": "^C\\d+$",
+  "synonyms": [
+   "KEGG COMPOUND",
+   "KEGG.COMPOUND"
+  ]
+ },
+ "kegg.dgroup": {
+  "pattern": "^DG\\d+$",
+  "synonyms": [
+   "KEGG_DGROUP",
+   "KEGG_DRUG_GROUP"
+  ]
+ },
+ "kegg.disease": {
+  "pattern": "^H\\d+$"
+ },
+ "kegg.drug": {
+  "pattern": "^D\\d+$",
+  "synonyms": [
+   "KEGG DRUG",
+   "KEGG.DRUG"
+  ]
+ },
+ "kegg.environ": {
+  "pattern": "^(ev\\:)?E\\d+$",
+  "synonyms": [
+   "KEGG.EDRUG"
+  ]
+ },
+ "kegg.enzyme": {},
+ "kegg.genes": {
+  "pattern": "^\\w+:[\\w\\d\\.-]*$"
+ },
+ "kegg.genome": {
+  "pattern": "^(T0\\d+|\\w{3,5})$",
+  "synonyms": [
+   "kegg_genome",
+   "kegg_genomes"
+  ]
+ },
+ "kegg.glycan": {
+  "pattern": "^G\\d+$"
+ },
+ "kegg.ligand": {},
+ "kegg.metagenome": {
+  "pattern": "^T3\\d+$"
+ },
+ "kegg.module": {
+  "pattern": "^([a-z]{3,5}_)?M\\d{5}$"
+ },
+ "kegg.orthology": {
+  "pattern": "^K\\d+$"
+ },
+ "kegg.pathway": {
+  "pattern": "^\\w{2,4}\\d{5}$",
+  "synonyms": [
+   "KEGG-path",
+   "KEGG_PATHWAY"
+  ]
+ },
+ "kegg.rclass": {
+  "pattern": "^RC\\d+$",
+  "synonyms": [
+   "KEGG_RCLASS",
+   "KEGG_REACTION_CLASS"
+  ]
+ },
+ "kegg.reaction": {
+  "pattern": "^R\\d+$",
+  "synonyms": [
+   "KEGG_REACTION"
+  ]
+ },
+ "kerafast": {},
+ "knapsack": {
+  "pattern": "^C\\d{8}$"
+ },
+ "kupo": {
+  "pattern": "^\\d{7}$"
+ },
+ "kyinno": {},
+ "labo": {
+  "pattern": "^\\d{7}$",
+  "banana": "LABO"
+ },
+ "lbo": {
+  "pattern": "^\\d{7}$"
+ },
+ "lei": {
+  "pattern": "^[0-9A-Z]{4}[0-9A-Z]{14}[0-9A-Z]{2}$"
+ },
+ "lepao": {
+  "pattern": "^\\d{7}$",
+  "banana": "LEPAO"
+ },
+ "lgai.cede": {
+  "pattern": "^LGCEDe-S-\\d{9}$"
+ },
+ "lgic": {
+  "pattern": "^\\w+$"
+ },
+ "licebase": {
+  "pattern": "^[A-Za-z0-9\\-\\/]+$"
+ },
+ "ligandbook": {
+  "pattern": "^[0-9]+$"
+ },
+ "ligandbox": {
+  "pattern": "^(HTS|KSH)[0-9]{4}-[0-9]{8}|PDB_[0-9,A-Z]{2,3}|[CD][0-9]{5}$"
+ },
+ "ligandexpo": {
+  "pattern": "^(\\w){3}$"
+ },
+ "ligea": {},
+ "limore": {},
+ "lincs.cell": {
+  "pattern": "^(LCL|LDC|ES|LSC|LPC)-\\d+$",
+  "synonyms": [
+   "LINCS_LDP"
+  ]
+ },
+ "lincs.data": {
+  "pattern": "^[EL]D[SG]-\\d+$"
+ },
+ "lincs.protein": {
+  "pattern": "^\\d+$"
+ },
+ "lincs.smallmolecule": {
+  "pattern": "^LSM-\\d+$",
+  "synonyms": [
+   "lincs"
+  ]
+ },
+ "linguist": {
+  "pattern": "^[a-zA-Z0-9 +#'*]+$"
+ },
+ "lipidbank": {
+  "pattern": "^\\w+\\d+$"
+ },
+ "lipidmaps": {
+  "pattern": "^LM(FA|GL|GP|SP|ST|PR|SL|PK)[0-9]{4}([0-9a-zA-Z]{4,6})?$",
+  "synonyms": [
+   "LIPID MAPS",
+   "LIPID_MAPS_class",
+   "LIPID_MAPS_instance"
+  ]
+ },
+ "lipro": {
+  "banana": "LIPRO"
+ },
+ "lncipedia": {},
+ "loggerhead": {
+  "banana": "LOGGERHEAD"
+ },
+ "loinc": {
+  "synonyms": [
+   "LNC"
+  ]
+ },
+ "lonza": {
+  "pattern": "^\\d+$"
+ },
+ "lotus": {
+  "pattern": "^LTS\\d{7}$"
+ },
+ "lpt": {
+  "pattern": "^\\d+$"
+ },
+ "lrg": {
+  "pattern": "^LRG_\\d+$"
+ },
+ "lspci": {
+  "pattern": "^\\d+$"
+ },
+ "lter": {
+  "pattern": "^\\d+$"
+ },
+ "ma": {
+  "pattern": "^\\d+$",
+  "banana": "MA"
+ },
+ "macie": {
+  "pattern": "^M\\d{4}$"
+ },
+ "maizegdb.locus": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "MaizeGDB"
+  ]
+ },
+ "mamo": {
+  "pattern": "^\\d{7}$",
+  "banana": "MAMO"
+ },
+ "mao": {
+  "banana": "MAO"
+ },
+ "massbank": {
+  "pattern": "^[A-Z]{2}[A-Z0-9][0-9]{5}$"
+ },
+ "massive": {
+  "pattern": "^MSV\\d+$"
+ },
+ "mat": {
+  "pattern": "^\\d{7}$",
+  "banana": "MAT"
+ },
+ "matrixdb": {},
+ "matrixdb.association": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])_.*|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9]_.*)|(GAG_.*)|(MULT_.*)|(PFRAG_.*)|(LIP_.*)|(CAT_.*)$"
+ },
+ "maxo": {
+  "pattern": "^\\d{7}$",
+  "banana": "MAXO"
+ },
+ "mba": {
+  "pattern": "^\\d+$"
+ },
+ "mcc": {},
+ "mco": {
+  "pattern": "^\\d+$",
+  "banana": "MCO"
+ },
+ "mdm": {
+  "pattern": "^\\d+$"
+ },
+ "meddra": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "MEDRA",
+   "MeDRA",
+   "MedDRA",
+   "Medical Dictionary for Regulatory Activities"
+  ]
+ },
+ "medgen": {
+  "pattern": "^[CN]*\\d{4,7}$"
+ },
+ "medlineplus": {
+  "pattern": "^\\d+$"
+ },
+ "merops": {
+  "pattern": "^[SCTAGMNU]\\d{2}\\.([AB]\\d{2}|\\d{3})$"
+ },
+ "merops.family": {
+  "pattern": "^[SCTAGMNU]\\d+$"
+ },
+ "merops.inhibitor": {
+  "pattern": "^I\\d{2}\\.\\d{3}$"
+ },
+ "mesh": {
+  "pattern": "^(C|D)\\d{6,9}$",
+  "synonyms": [
+   "MESH",
+   "MESHA",
+   "MESHC",
+   "MESHCS",
+   "MESHD",
+   "MESHPP",
+   "MESH_DESCRIPTOR_UI",
+   "MESH_SUPPLEMENTAL_RECORD_UI",
+   "MSH"
+  ]
+ },
+ "mesh.2012": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "mesh.2013": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "metabolights": {
+  "pattern": "^MTBLS\\d+$"
+ },
+ "metacyc.compound": {
+  "pattern": "^[A-Za-z0-9+_.%-:]+$",
+  "synonyms": [
+   "MetaCyc"
+  ]
+ },
+ "metacyc.reaction": {
+  "pattern": "^[A-Za-z0-9+_.%-:]+$"
+ },
+ "metanetx.chemical": {
+  "pattern": "^(MNXM\\d+|BIOMASS|WATER)$"
+ },
+ "metanetx.compartment": {
+  "pattern": "^(MNX[CD]\\d+|BOUNDARY|IN|OUT)$"
+ },
+ "metanetx.reaction": {
+  "pattern": "^(MNXR\\d+|EMPTY)$"
+ },
+ "metlin": {
+  "pattern": "^\\d{4}$"
+ },
+ "mex": {
+  "pattern": "^\\d+$"
+ },
+ "mf": {
+  "pattern": "^\\d{7}$",
+  "banana": "MF"
+ },
+ "mfmo": {
+  "pattern": "^\\d{7}$",
+  "banana": "MFMO"
+ },
+ "mfo": {
+  "banana": "MFO"
+ },
+ "mfoem": {
+  "pattern": "^\\d{6}$",
+  "banana": "MFOEM"
+ },
+ "mfomd": {
+  "pattern": "^\\d{7}$",
+  "banana": "MFOMD"
+ },
+ "mge": {
+  "pattern": "^\\d+$",
+  "banana": "mge"
+ },
+ "mgi": {
+  "pattern": "^\\d+$",
+  "banana": "MGI",
+  "synonyms": [
+   "MGD",
+   "MGI"
+  ]
+ },
+ "mgnify.analysis": {
+  "pattern": "^MGYA\\d+$"
+ },
+ "mgnify.proj": {
+  "pattern": "^[A-Z]+[0-9]+$"
+ },
+ "mgnify.samp": {
+  "pattern": "^[A-Z]+[0-9]+$"
+ },
+ "mi": {
+  "pattern": "^\\d{4}$",
+  "banana": "MI",
+  "synonyms": [
+   "PSI-MI"
+  ]
+ },
+ "miaa": {},
+ "miapa": {
+  "pattern": "^\\d{7}$",
+  "banana": "MIAPA"
+ },
+ "micro": {
+  "pattern": "^\\d{7}$",
+  "banana": "MICRO"
+ },
+ "microscope": {
+  "pattern": "^\\d+$"
+ },
+ "microsporidia": {
+  "pattern": "^\\w+$"
+ },
+ "millipore": {},
+ "mimodb": {
+  "pattern": "^\\d+$"
+ },
+ "minid": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "minid.test": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "mint": {
+  "pattern": "^MINT\\-\\d{1,7}$"
+ },
+ "mipmod": {
+  "pattern": "^\\w+$"
+ },
+ "mir": {
+  "pattern": "^\\d{8}$",
+  "banana": "MIR"
+ },
+ "mirbase": {
+  "pattern": "^MI\\d{7}$"
+ },
+ "mirbase.family": {
+  "synonyms": [
+   "MIRBASE_FAMILY"
+  ]
+ },
+ "mirbase.mature": {
+  "pattern": "^MIMAT\\d{7}$",
+  "synonyms": [
+   "MIRBASEM"
+  ]
+ },
+ "mirex": {
+  "pattern": "^\\d+(\\w+)?$"
+ },
+ "miriam": {
+  "pattern": "^[a-z_\\.]+$",
+  "synonyms": [
+   "identifiers.namespace"
+  ]
+ },
+ "miriam.collection": {
+  "pattern": "^MIR:000\\d{5}$"
+ },
+ "miriam.resource": {
+  "pattern": "^MIR:001\\d{5}$"
+ },
+ "mirnao": {
+  "banana": "MIRNAO"
+ },
+ "mirnest": {
+  "pattern": "^MNEST\\d+$"
+ },
+ "miro": {
+  "pattern": "^\\d{8}$",
+  "banana": "MIRO"
+ },
+ "mirtarbase": {
+  "pattern": "^MIRT\\d{6}$"
+ },
+ "mirte": {},
+ "mlc": {
+  "pattern": "^[0-9a-zA-Z\\.\\-\\_]+$"
+ },
+ "mmdb": {
+  "pattern": "^\\d{1,5}$"
+ },
+ "mmmp.biomaps": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "mmmp:biomaps"
+  ]
+ },
+ "mmo": {
+  "pattern": "^\\d{7}$",
+  "banana": "MMO"
+ },
+ "mmp.cat": {
+  "pattern": "^MMP\\d+.\\d+$"
+ },
+ "mmp.db": {
+  "pattern": "^MMP\\d+.\\d+$"
+ },
+ "mmp.fun": {
+  "pattern": "^MMP\\d+.\\d+$"
+ },
+ "mmp.ref": {
+  "pattern": "^MMP\\d+.\\d+$"
+ },
+ "mmrrc": {
+  "pattern": "^\\d+$"
+ },
+ "mmsl": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "MMSL_CODE"
+  ]
+ },
+ "mmusdv": {
+  "pattern": "^\\d{7}$",
+  "banana": "MmusDv",
+  "synonyms": [
+   "MmusDv"
+  ]
+ },
+ "mo": {
+  "pattern": "^\\w+$",
+  "banana": "MO"
+ },
+ "mobidb": {
+  "pattern": "^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$"
+ },
+ "mod": {
+  "pattern": "^\\d{5}$",
+  "banana": "MOD",
+  "synonyms": [
+   "PSI-MOD"
+  ]
+ },
+ "modeldb": {
+  "pattern": "^\\d+$"
+ },
+ "molbase": {
+  "pattern": "^(\\d{1,7}\\-\\d{2}\\-\\d)|([A-Za-z0-9\\+\\-\\_]+)$"
+ },
+ "molbase.sheffield": {
+  "pattern": "^\\d+$"
+ },
+ "molmedb": {
+  "pattern": "^[m,M]{2}[0-9]{5}[0-9]*$"
+ },
+ "mondo": {
+  "pattern": "^\\d{7}$",
+  "banana": "MONDO"
+ },
+ "mop": {
+  "pattern": "^\\d{7}$",
+  "banana": "MOP"
+ },
+ "morpheus": {
+  "pattern": "^M[0-9]{4,}$"
+ },
+ "mp": {
+  "pattern": "^\\d{7}$",
+  "banana": "MP"
+ },
+ "mpath": {
+  "pattern": "^\\d+$",
+  "banana": "MPATH",
+  "synonyms": [
+   "MPATH"
+  ]
+ },
+ "mpid": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "mpidb"
+  ]
+ },
+ "mpio": {
+  "pattern": "^\\d{7}$",
+  "banana": "MPIO"
+ },
+ "mro": {
+  "pattern": "^\\d{7}$",
+  "banana": "MRO"
+ },
+ "ms": {
+  "pattern": "^\\d{7}$",
+  "banana": "MS"
+ },
+ "msigdb": {
+  "synonyms": [
+   "msig"
+  ]
+ },
+ "msio": {
+  "pattern": "^\\d{7}$"
+ },
+ "multicellds": {},
+ "multicellds.cell_line": {
+  "pattern": "^MCDS_L_[a-zA-Z0-9]{1,10}$"
+ },
+ "multicellds.collection": {
+  "pattern": "^MCDS_C_[a-zA-Z0-9]{1,10}$"
+ },
+ "multicellds.snapshot": {
+  "pattern": "^MCDS_S_[a-zA-Z0-9]{1,10}$"
+ },
+ "mw.project": {
+  "pattern": "^PR[0-9]{6}$"
+ },
+ "mw.study": {
+  "pattern": "^ST[0-9]{6}$"
+ },
+ "myco.lepra": {
+  "pattern": "^ML\\w+$"
+ },
+ "myco.marinum": {
+  "pattern": "^MMAR\\_\\d+$"
+ },
+ "myco.smeg": {
+  "pattern": "^MSMEG\\w+$"
+ },
+ "myco.tuber": {
+  "pattern": "^Rv\\d{4}(A|B|c)?$",
+  "synonyms": [
+   "TubercuList"
+  ]
+ },
+ "mycobank": {
+  "pattern": "^\\d+$"
+ },
+ "mzspec": {
+  "pattern": "^.+$",
+  "banana": "mzspec"
+ },
+ "n2t": {},
+ "namerxn": {},
+ "napdi": {
+  "pattern": "^[0-9]+$"
+ },
+ "napp": {
+  "pattern": "^\\d+$"
+ },
+ "narcis": {
+  "pattern": "^oai\\:cwi\\.nl\\:\\d+$"
+ },
+ "nasc": {
+  "pattern": "^(\\w+)?\\d+$"
+ },
+ "nbn": {
+  "pattern": "^urn\\:nbn\\:[A-Za-z_0-9]+\\:([A-Za-z_0-9]+)-[A-Za-z_0-9]+$"
+ },
+ "nbo": {
+  "pattern": "^\\d{7}$",
+  "banana": "NBO"
+ },
+ "nbrc": {
+  "pattern": "^\\d+$"
+ },
+ "ncats.drug": {
+  "synonyms": [
+   "inxight",
+   "inxight-drugs"
+  ]
+ },
+ "ncbi.assembly": {
+  "pattern": "^[a-zA-Z0-9_\\.]+$"
+ },
+ "ncbi.genome": {
+  "pattern": "^\\d+$"
+ },
+ "ncbi.resource": {},
+ "ncbibook": {
+  "pattern": "^NBK\\d+$"
+ },
+ "ncbigene": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "EGID",
+   "EntrezGene",
+   "NCBIGene",
+   "entrez",
+   "entrez gene/locuslink"
+  ]
+ },
+ "ncbiprotein": {
+  "pattern": "^(\\w+\\d+(\\.\\d+)?)|(NP_\\d+)$"
+ },
+ "ncbitaxon": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NCBITaxon",
+   "NCBI_Taxon_ID",
+   "NCBI_taxid",
+   "TAX",
+   "TaxonomyID",
+   "taxid",
+   "taxon",
+   "taxonomy",
+   "uniprot.taxonomy"
+  ]
+ },
+ "ncim": {
+  "pattern": "^C\\d+$"
+ },
+ "ncit": {
+  "pattern": "^C\\d+$",
+  "synonyms": [
+   "NCI",
+   "NCI2004_11_17",
+   "NCIT",
+   "NCIT_Thesaurus",
+   "NCITm",
+   "NCITt",
+   "NCI_Thesaurus",
+   "NCIt",
+   "ncithesaurus"
+  ]
+ },
+ "ncro": {
+  "pattern": "^\\d{7}$",
+  "banana": "NCRO"
+ },
+ "ndc": {
+  "pattern": "^\\d+\\-\\d+\\-\\d+$"
+ },
+ "nddf": {
+  "pattern": "^\\d{6}$"
+ },
+ "ndex": {},
+ "ndfrt": {
+  "synonyms": [
+   "NUI",
+   "ndf-rt"
+  ]
+ },
+ "nemo": {
+  "pattern": "^[a-z]{3}-[a-km-z0-9]{7}$"
+ },
+ "neurolex": {
+  "pattern": "^([Bb]irnlex_|Sao|nlx_|GO_|CogPO|HDO|nifext_)\\d+$"
+ },
+ "neuromorpho": {
+  "pattern": "^\\w+$"
+ },
+ "neuronames": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "neuroname"
+  ]
+ },
+ "neurondb": {
+  "pattern": "^\\d+$"
+ },
+ "neurovault.collection": {
+  "pattern": "^[1-9][0-9]*$"
+ },
+ "neurovault.image": {
+  "pattern": "^[1-9][0-9]*$"
+ },
+ "nextdb": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "nextprot": {
+  "pattern": "^NX_\\w+$",
+  "synonyms": [
+   "NXP"
+  ]
+ },
+ "nextprot.family": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NXPFA"
+  ]
+ },
+ "ngl": {
+  "pattern": "^GLDS-\\d+$"
+ },
+ "nhcdr": {},
+ "niaest": {
+  "pattern": "^\\w\\d{4}\\w\\d{2}(\\-[35])?$"
+ },
+ "nif_cell": {
+  "banana": "NIF_CELL"
+ },
+ "nif_dysfunction": {
+  "banana": "NIF_DYSFUNCTION"
+ },
+ "nif_grossanatomy": {
+  "banana": "NIF_GROSSANATOMY"
+ },
+ "nihreporter.project": {
+  "pattern": "^\\d+$"
+ },
+ "nist": {
+  "synonyms": [
+   "NIST",
+   "NIST Chemistry WebBook"
+  ]
+ },
+ "nlm": {
+  "pattern": "^\\d+$"
+ },
+ "nlxanat": {
+  "pattern": "^\\d{6}$"
+ },
+ "nlxdys": {
+  "pattern": "^\\d+$"
+ },
+ "nmdc": {
+  "pattern": "^[\\w\\-.]{3,}$"
+ },
+ "nmr": {
+  "pattern": "^\\d+$",
+  "banana": "NMR",
+  "synonyms": [
+   "nmrcv"
+  ]
+ },
+ "nmrshiftdb2": {
+  "pattern": "^[0-9]+$"
+ },
+ "nomen": {
+  "pattern": "^\\d{7}$",
+  "banana": "NOMEN"
+ },
+ "noncodev3": {
+  "pattern": "^\\d+$"
+ },
+ "noncodev4.gene": {
+  "pattern": "^NONHSAG\\d{5}$"
+ },
+ "noncodev4.rna": {
+  "pattern": "^NONHSAT\\d{6}$"
+ },
+ "norine": {
+  "pattern": "^NOR\\d+$"
+ },
+ "novus": {},
+ "npass": {
+  "pattern": "^NPC\\d+$"
+ },
+ "npo": {
+  "pattern": "^\\d+$"
+ },
+ "nuclearbd": {
+  "pattern": "^\\w+\\_\\w+$"
+ },
+ "nucleotide": {
+  "pattern": "^[a-zA-Z0-9_\\.]+$"
+ },
+ "oa": {},
+ "oae": {
+  "pattern": "^\\d{7}$",
+  "banana": "OAE"
+ },
+ "oarcs": {
+  "pattern": "^\\d{7}$",
+  "banana": "OARCS"
+ },
+ "oba": {
+  "pattern": "^\\d{7}$",
+  "banana": "OBA"
+ },
+ "obcs": {
+  "pattern": "^\\d{7}$",
+  "banana": "OBCS"
+ },
+ "obi": {
+  "pattern": "^\\d{7}$",
+  "banana": "OBI"
+ },
+ "obib": {
+  "pattern": "^\\d{7}$",
+  "banana": "OBIB"
+ },
+ "obo": {},
+ "oboformat": {},
+ "oboinowl": {
+  "synonyms": [
+   "oio"
+  ]
+ },
+ "occ": {
+  "pattern": "^[a-z][a-z]/[0-9]+$"
+ },
+ "oci": {
+  "pattern": "^[0-9]+-[0-9]+$"
+ },
+ "ocid": {
+  "pattern": "^[0-9]{12}$",
+  "banana": "ocid"
+ },
+ "oclc": {
+  "pattern": "^[0-9]+$"
+ },
+ "odam": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "odc.sci": {
+  "pattern": "^[0-9]*$"
+ },
+ "odc.tbi": {
+  "pattern": "^[0-9]*$"
+ },
+ "odor": {
+  "pattern": "^\\d+$"
+ },
+ "ogg": {
+  "pattern": "^\\d+$",
+  "banana": "OGG"
+ },
+ "ogi": {
+  "pattern": "^\\d{7}$",
+  "banana": "OGI",
+  "synonyms": [
+   "OGI.owl"
+  ]
+ },
+ "ogms": {
+  "pattern": "^\\d{7}$",
+  "banana": "OGMS",
+  "synonyms": [
+   "ogms/OMRE"
+  ]
+ },
+ "ogsf": {
+  "pattern": "^\\d{7}$",
+  "banana": "OGSF"
+ },
+ "ohd": {
+  "pattern": "^\\d{7}$",
+  "banana": "OHD"
+ },
+ "ohmi": {
+  "pattern": "^\\d{7}$",
+  "banana": "OHMI"
+ },
+ "ohpi": {
+  "pattern": "^\\d+$",
+  "banana": "OHPI"
+ },
+ "oid": {
+  "pattern": "^[\\d.]+$"
+ },
+ "olatdv": {
+  "pattern": "^\\d{7}$",
+  "banana": "OlatDv"
+ },
+ "om": {},
+ "oma.grp": {
+  "pattern": "^[A-Z]+$"
+ },
+ "oma.hog": {
+  "pattern": "^[0-9]{7}(\\.[0-9a-z.]+)?(_[0-9]+)?$",
+  "banana": "HOG"
+ },
+ "oma.protein": {
+  "pattern": "^[A-Z0-9]{5}\\d+$"
+ },
+ "omia": {
+  "pattern": "^\\d+$"
+ },
+ "omiabis": {
+  "pattern": "^\\d{7}$",
+  "banana": "OMIABIS"
+ },
+ "omim": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "OMIM",
+   "mim"
+  ]
+ },
+ "omim.ps": {
+  "pattern": "^PS\\d+$",
+  "synonyms": [
+   "MIMPS",
+   "OMIMPS",
+   "PS",
+   "mim.ps"
+  ]
+ },
+ "omit": {
+  "pattern": "^\\d{7}$",
+  "banana": "OMIT",
+  "synonyms": [
+   "OMIT"
+  ]
+ },
+ "omo": {
+  "banana": "OMO"
+ },
+ "omop": {},
+ "omp": {
+  "pattern": "^\\d{7}$",
+  "banana": "OMP"
+ },
+ "omrse": {
+  "pattern": "^\\d{8}$",
+  "banana": "OMRSE"
+ },
+ "oncotree": {},
+ "one": {
+  "pattern": "^\\d{7}$",
+  "banana": "ONE"
+ },
+ "ons": {
+  "pattern": "^\\d{7}$",
+  "banana": "ONS"
+ },
+ "ontoavida": {
+  "pattern": "^\\d{8}$",
+  "banana": "ONTOAVIDA"
+ },
+ "ontoneo": {
+  "pattern": "^\\d{8}$",
+  "banana": "ONTONEO"
+ },
+ "oostt": {
+  "pattern": "^\\d{8}$",
+  "banana": "OOSTT"
+ },
+ "opb": {
+  "pattern": "^\\d+$"
+ },
+ "openalex": {
+  "pattern": "^[WAICV]\\d{2,}$"
+ },
+ "opl": {
+  "pattern": "^\\d{7}$",
+  "banana": "OPL"
+ },
+ "opm": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}$"
+ },
+ "opmi": {
+  "pattern": "^\\d{7}$",
+  "banana": "OPMI"
+ },
+ "orcid": {
+  "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}(\\d|X)$",
+  "synonyms": [
+   "ORCID",
+   "ORCiD"
+  ]
+ },
+ "ordb": {
+  "pattern": "^\\d+$"
+ },
+ "oridb.sacch": {
+  "pattern": "^\\d+$"
+ },
+ "oridb.schizo": {
+  "pattern": "^\\d+$"
+ },
+ "ornaseq": {
+  "pattern": "^\\d{7}$",
+  "banana": "ORNASEQ"
+ },
+ "orphanet": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "ORPHA"
+  ]
+ },
+ "orphanet.ordo": {
+  "pattern": "^C?\\d+$",
+  "synonyms": [
+   "ordo"
+  ]
+ },
+ "orth": {},
+ "orthodb": {
+  "pattern": "^\\w+$"
+ },
+ "oryzabase.gene": {
+  "pattern": "^\\d+$"
+ },
+ "oryzabase.mutant": {
+  "pattern": "^\\d+$"
+ },
+ "oryzabase.reference": {
+  "pattern": "^\\d+$"
+ },
+ "oryzabase.stage": {
+  "pattern": "^\\d+$"
+ },
+ "oryzabase.strain": {
+  "pattern": "^\\d+$"
+ },
+ "otl": {
+  "pattern": "^A[A-Z]+\\d+$"
+ },
+ "ovae": {
+  "pattern": "^\\d{7}$",
+  "banana": "OVAE"
+ },
+ "owl": {},
+ "p3db.protein": {
+  "pattern": "^\\d+$"
+ },
+ "p3db.site": {
+  "pattern": "^\\d+$"
+ },
+ "paleodb": {
+  "pattern": "^\\d+$"
+ },
+ "panorama": {},
+ "panther.family": {
+  "pattern": "^PTHR\\d{5}(\\:SF\\d{1,3})?$"
+ },
+ "panther.node": {
+  "pattern": "^PTN\\d{9}$"
+ },
+ "panther.pathway": {
+  "pattern": "^P\\d{5}$"
+ },
+ "panther.pthcmp": {
+  "pattern": "^(G|P|U|C|S)\\d{5}$"
+ },
+ "pao": {
+  "banana": "PAO"
+ },
+ "pass2": {
+  "pattern": "^\\d+$"
+ },
+ "pathbank": {
+  "pattern": "^(SMP|PW)\\d+$"
+ },
+ "pathwaycommons": {
+  "pattern": "^\\d+$"
+ },
+ "pato": {
+  "pattern": "^\\d{7}$",
+  "banana": "PATO"
+ },
+ "pav": {
+  "pattern": "^[a-z][a-zA-Z]+$"
+ },
+ "paxdb.organism": {
+  "pattern": "^\\d+$"
+ },
+ "paxdb.protein": {
+  "pattern": "^\\d+$"
+ },
+ "pazar": {
+  "pattern": "^TF\\w+$"
+ },
+ "pba": {
+  "pattern": "^\\d+$"
+ },
+ "pcl": {
+  "pattern": "^\\d{7}$",
+  "banana": "PCL"
+ },
+ "pco": {
+  "pattern": "^\\d{7}$",
+  "banana": "PCO"
+ },
+ "pd_st": {
+  "banana": "PD_ST"
+ },
+ "pdb": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}$",
+  "synonyms": [
+   "RCSB_PDB",
+   "pdbe",
+   "pdbj",
+   "wwpdb"
+  ]
+ },
+ "pdb-ccd": {
+  "pattern": "^\\w{1,3}$",
+  "synonyms": [
+   "pdbechem"
+  ]
+ },
+ "pdb.ligand": {
+  "pattern": "^[A-Za-z0-9]+$",
+  "synonyms": [
+   "PDB_CHEM_ID"
+  ]
+ },
+ "pdro": {
+  "pattern": "^\\d{7}$",
+  "banana": "PDRO"
+ },
+ "pdumdv": {
+  "pattern": "^\\d{7}$",
+  "banana": "PdumDv",
+  "synonyms": [
+   "PdumDv"
+  ]
+ },
+ "peco": {
+  "pattern": "^\\d{7}$",
+  "banana": "PECO"
+ },
+ "ped": {
+  "pattern": "^PED\\d{5}$"
+ },
+ "ped.ensemble": {
+  "pattern": "^PED\\d{5}e\\d{3}$"
+ },
+ "peff": {
+  "pattern": "^\\d{7}$"
+ },
+ "peptideatlas": {
+  "pattern": "^PAp[0-9]{8}$"
+ },
+ "peptideatlas.dataset": {
+  "pattern": "^PASS\\d{5}$"
+ },
+ "perkinelmer": {},
+ "peroxibase": {
+  "pattern": "^\\d+$"
+ },
+ "pesticides": {},
+ "pfam": {
+  "pattern": "^PF\\d{5}$",
+  "synonyms": [
+   "PF"
+  ]
+ },
+ "pfam.clan": {
+  "pattern": "^CL\\d+$"
+ },
+ "pfr": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "TDR"
+  ]
+ },
+ "pgdso": {
+  "banana": "PGDSO"
+ },
+ "pgs": {
+  "pattern": "^PGS[0-9]{6}$"
+ },
+ "pgx": {
+  "pattern": "^\\w{3,15}[-_]\\w[\\w.-]{3,128}$",
+  "synonyms": [
+   "Progenetix"
+  ]
+ },
+ "pharmacodb.cell": {},
+ "pharmacodb.dataset": {
+  "pattern": "^\\d+$"
+ },
+ "pharmacodb.tissue": {
+  "pattern": "^\\d+$"
+ },
+ "pharmgkb.disease": {
+  "pattern": "^PA\\d+$"
+ },
+ "pharmgkb.drug": {
+  "pattern": "^PA\\d+$"
+ },
+ "pharmgkb.gene": {
+  "pattern": "^PA\\w+$"
+ },
+ "pharmgkb.pathways": {
+  "pattern": "^PA\\d+$"
+ },
+ "phenolexplorer": {
+  "pattern": "^\\d+$"
+ },
+ "phenx": {
+  "pattern": "^\\d+$"
+ },
+ "phipo": {
+  "pattern": "^\\d{7}$",
+  "banana": "PHIPO"
+ },
+ "phosphopoint.kinase": {
+  "pattern": "^\\w+$"
+ },
+ "phosphopoint.protein": {
+  "pattern": "^\\w+$"
+ },
+ "phosphosite.protein": {
+  "pattern": "^\\d{5}$"
+ },
+ "phosphosite.residue": {
+  "pattern": "^\\d+$"
+ },
+ "phylomedb": {
+  "pattern": "^\\w+$"
+ },
+ "phytozome.locus": {
+  "pattern": "^[A-Za-z0-9]+$",
+  "synonyms": [
+   "JGI Phytozome"
+  ]
+ },
+ "pictar": {
+  "synonyms": [
+   "pictar-vert"
+  ]
+ },
+ "pid.pathway": {
+  "pattern": "^\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b$",
+  "synonyms": [
+   "pid"
+  ]
+ },
+ "pigqtldb": {
+  "pattern": "^\\d+$"
+ },
+ "pina": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$"
+ },
+ "piroplasma": {
+  "pattern": "^TA\\d+$"
+ },
+ "pirsf": {
+  "pattern": "^PIRSF\\d{6}$"
+ },
+ "pkdb": {
+  "pattern": "^PKDB[0-9]{5}$"
+ },
+ "plana": {
+  "pattern": "^\\d{7}$",
+  "banana": "PLANA"
+ },
+ "planp": {
+  "pattern": "^\\d+$",
+  "banana": "PLANP"
+ },
+ "planttfdb": {
+  "pattern": "^[A-Z][a-z]{2}_([A-Za-z]{3}[0-9]{6})|([A-Za-z0-9\\._\\-#]*)$"
+ },
+ "plasmodb": {
+  "pattern": "^\\w+$",
+  "synonyms": [
+   "ApiDB_PlasmoDB"
+  ]
+ },
+ "plo": {
+  "banana": "PLO"
+ },
+ "pmap.cutdb": {
+  "pattern": "^\\d+$"
+ },
+ "pmap.substratedb": {
+  "pattern": "^\\d+$"
+ },
+ "pmc": {
+  "pattern": "^PMC\\d+$",
+  "synonyms": [
+   "PMC",
+   "PMCID"
+  ]
+ },
+ "pmdb": {
+  "pattern": "^PM\\d{7}$"
+ },
+ "pmp": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$"
+ },
+ "pmr": {
+  "pattern": "^[a-z0-9]{32,32}$"
+ },
+ "po": {
+  "pattern": "^\\d+$",
+  "banana": "PO"
+ },
+ "pocketome": {
+  "pattern": "^[A-Za-z_0-9]+$"
+ },
+ "polbase": {
+  "pattern": "^[A-Za-z-0-9]+$"
+ },
+ "pombase": {
+  "pattern": "^S\\w+(\\.)?\\w+(\\.)?$",
+  "synonyms": [
+   "PomBase"
+  ]
+ },
+ "poro": {
+  "pattern": "^\\d{7}$",
+  "banana": "PORO"
+ },
+ "ppdb": {
+  "pattern": "^\\d+$"
+ },
+ "ppo": {
+  "pattern": "^\\d{7}$",
+  "banana": "PPO"
+ },
+ "ppr": {},
+ "pr": {
+  "pattern": "^\\d+$",
+  "banana": "PR",
+  "synonyms": [
+   "PR",
+   "PRO"
+  ]
+ },
+ "prefixcommons": {},
+ "pride": {
+  "pattern": "^\\d+$"
+ },
+ "pride.project": {
+  "pattern": "^P(X|R)D\\d{6}$"
+ },
+ "prints": {
+  "pattern": "^PR\\d{5}$"
+ },
+ "probonto": {
+  "pattern": "^PROB_c\\d+$"
+ },
+ "prodom": {
+  "pattern": "^PD\\d+$"
+ },
+ "proglyc": {
+  "pattern": "^[A-Z]C\\d{1,3}$"
+ },
+ "propreo": {
+  "banana": "PROPREO"
+ },
+ "prosite": {
+  "pattern": "^PS\\d{5}$"
+ },
+ "protclustdb": {
+  "pattern": "^\\w+$"
+ },
+ "proteomicsdb.peptide": {
+  "pattern": "^\\d+$"
+ },
+ "proteomicsdb.protein": {
+  "pattern": "^\\d+$"
+ },
+ "protonet.cluster": {
+  "pattern": "^\\d+$"
+ },
+ "protonet.proteincard": {
+  "pattern": "^\\d+$"
+ },
+ "prov": {},
+ "pscdb": {
+  "pattern": "^\\d+$"
+ },
+ "psdo": {
+  "pattern": "^\\d{7}$",
+  "banana": "PSDO"
+ },
+ "pseudogene": {
+  "synonyms": [
+   "pseudogene.org"
+  ]
+ },
+ "pseudomonas": {
+  "pattern": "^P\\w+$"
+ },
+ "psipar": {
+  "pattern": "^PAR:\\d+$"
+ },
+ "pso": {
+  "pattern": "^\\d{7}$",
+  "banana": "PSO"
+ },
+ "pspub": {},
+ "pubchem.bioassay": {
+  "pattern": "^\\d+$"
+ },
+ "pubchem.compound": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "CID",
+   "DSSTox_CID",
+   "PUBCHEM_CID",
+   "PubChem_Compound_CID",
+   "Pubchem",
+   "pubchem_id"
+  ]
+ },
+ "pubchem.element": {
+  "pattern": "^\\d+$"
+ },
+ "pubchem.substance": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "DSSTox_Generic_SID"
+  ]
+ },
+ "publons.researcher": {
+  "pattern": "^\\d+$"
+ },
+ "pubmed": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "MEDLINE",
+   "PMID",
+   "pmid"
+  ]
+ },
+ "pw": {
+  "pattern": "^\\d{7}$",
+  "banana": "PW"
+ },
+ "px": {
+  "pattern": "^(R)?PXD\\d{6}$"
+ },
+ "pypi": {
+  "pattern": "^[a-zA-Z_][a-zA-Z0-9\\-_]+$"
+ },
+ "qtldb": {
+  "pattern": "^\\d+$"
+ },
+ "qudt": {},
+ "radiomics": {},
+ "rapdb.locus": {
+  "pattern": "^Os\\S+g\\d{7}$",
+  "synonyms": [
+   "irgsp"
+  ]
+ },
+ "rapdb.transcript": {
+  "pattern": "^Os\\S+t\\d{7}-\\d{2}$"
+ },
+ "rbk": {
+  "pattern": "^[-0-9a-zA-Z]+(@[-0-9a-zA-Z]+)?$"
+ },
+ "rbo": {
+  "pattern": "^\\d{8}$",
+  "banana": "RBO"
+ },
+ "rcb": {
+  "pattern": "^RCB\\d+$"
+ },
+ "rdf": {},
+ "rdfs": {},
+ "rdo": {
+  "pattern": "^\\d{7}$"
+ },
+ "re3data": {
+  "pattern": "^r3d\\d{9,9}$"
+ },
+ "reactome": {
+  "pattern": "^R-[A-Z]{3}-\\d+(-\\d+)?(\\.\\d+)?$",
+  "synonyms": [
+   "RE",
+   "REACT"
+  ]
+ },
+ "reaxys": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "Beilstein",
+   "Reaxys"
+  ]
+ },
+ "rebase": {
+  "pattern": "^\\d+$"
+ },
+ "receptome.family": {},
+ "refseq": {
+  "pattern": "^(((AC|AP|NC|NG|NM|NP|NR|NT|NW|XM|XP|XR|YP|ZP)_\\d+)|(NZ\\_[A-Z]{2,4}\\d+))(\\.\\d+)?$",
+  "synonyms": [
+   "REFSEQ_PROT"
+  ]
+ },
+ "reo": {
+  "pattern": "^\\d{7}$"
+ },
+ "repeatsdb.protein": {
+  "pattern": "^[OPQopq][0-9][A-Za-z0-9]{3}[0-9]|[A-Na-nR-Zr-z][0-9]([A-Za-z][A-Za-z0-9]{2}[0-9]){1,2}$"
+ },
+ "repeatsdb.structure": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}[A-Za-z0-9][A-Za-z0-9]?[0-9]?[0-9]?$"
+ },
+ "reproduceme": {},
+ "resid": {
+  "pattern": "^AA\\d{4}$",
+  "banana": "RESID"
+ },
+ "reto": {},
+ "rex": {
+  "pattern": "^\\d{7}$",
+  "banana": "REX"
+ },
+ "rexo": {},
+ "rfam": {
+  "pattern": "^RF\\d{5}$"
+ },
+ "rgd": {
+  "pattern": "^\\d{4,}$",
+  "synonyms": [
+   "RGD"
+  ]
+ },
+ "rgd.qtl": {
+  "pattern": "^\\d+$"
+ },
+ "rgd.strain": {
+  "pattern": "^\\d+$"
+ },
+ "rhea": {
+  "pattern": "^\\d{5}$",
+  "synonyms": [
+   "RHEA"
+  ]
+ },
+ "ricegap": {
+  "pattern": "^LOC\\_Os\\d{1,2}g\\d{5}$"
+ },
+ "ricenetdb.compound": {
+  "pattern": "^OSC\\d{4}$"
+ },
+ "ricenetdb.gene": {
+  "pattern": "^LOC\\_Os\\d{1,2}g\\d{5}\\.\\d$"
+ },
+ "ricenetdb.mirna": {
+  "pattern": "^osa-miR\\d{3,5}[a-z]{0,1}$"
+ },
+ "ricenetdb.protein": {
+  "pattern": "^LOC\\_Os\\d{1,2}g\\d{5}$"
+ },
+ "ricenetdb.reaction": {
+  "pattern": "^OSR\\d{4}$"
+ },
+ "rnacentral": {
+  "pattern": "^URS[0-9A-F]{10}(\\_\\d+)?$",
+  "synonyms": [
+   "LNCRNADB"
+  ]
+ },
+ "rnamod": {
+  "pattern": "^\\d{3}$"
+ },
+ "rnamods": {
+  "pattern": "^\\d{3}$"
+ },
+ "rnao": {
+  "pattern": "^\\d{7}$",
+  "banana": "RNAO"
+ },
+ "ro": {
+  "pattern": "^\\d{7}$",
+  "banana": "RO",
+  "synonyms": [
+   "RO_proposed_relation",
+   "obo_rel",
+   "oborel"
+  ]
+ },
+ "rouge": {
+  "pattern": "^m\\w+$"
+ },
+ "rrid": {
+  "pattern": "^[a-zA-Z]+.+$",
+  "banana": "RRID"
+ },
+ "rs": {
+  "pattern": "^\\d{7}$",
+  "banana": "RS"
+ },
+ "runbiosimulations": {
+  "pattern": "^[0-9a-z]{24,24}$"
+ },
+ "rxno": {
+  "pattern": "^\\d{7}$",
+  "banana": "RXNO"
+ },
+ "rxnorm": {
+  "pattern": "^[0-9]{1,7}$",
+  "synonyms": [
+   "RXCUI"
+  ]
+ },
+ "sabiork.compound": {
+  "pattern": "^\\d+$"
+ },
+ "sabiork.ec": {
+  "pattern": "^((\\d+)|(\\d+\\.\\d+)|(\\d+\\.\\d+\\.\\d+)|(\\d+\\.\\d+\\.\\d+\\.\\d+))$"
+ },
+ "sabiork.kineticrecord": {
+  "pattern": "^\\d+$"
+ },
+ "sabiork.reaction": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "SABIO-RK"
+  ]
+ },
+ "sael": {},
+ "salk": {
+  "pattern": "^\\d{6}$"
+ },
+ "sao": {
+  "banana": "SAO"
+ },
+ "sasbdb": {
+  "pattern": "^[Ss][Aa][Ss][A-Za-z0-9]{3}[0-9]$"
+ },
+ "sbo": {
+  "pattern": "^\\d{7}$",
+  "banana": "SBO"
+ },
+ "scdo": {
+  "pattern": "^\\d{7}$",
+  "banana": "SCDO"
+ },
+ "schem": {
+  "pattern": "^A\\d{4}$"
+ },
+ "scholia.resource": {},
+ "scomp": {
+  "pattern": "^C\\d{4}$"
+ },
+ "scop": {
+  "pattern": "^\\d+$"
+ },
+ "scopus": {
+  "pattern": "^\\d+$"
+ },
+ "scr": {
+  "pattern": "^\\d+$"
+ },
+ "scretf": {
+  "pattern": "^\\w+$"
+ },
+ "sdbs": {
+  "pattern": "^\\d+$"
+ },
+ "sdgio": {
+  "pattern": "^\\d{8}$"
+ },
+ "sdis": {
+  "pattern": "^D\\d{4}$"
+ },
+ "sedml.format": {
+  "pattern": "^[a-z]+(\\..*?)?$"
+ },
+ "sedml.language": {
+  "pattern": "^[a-z]+(\\..*?)?$"
+ },
+ "seed": {
+  "pattern": "^\\w+$"
+ },
+ "seed.compound": {
+  "pattern": "^cpd\\d+$"
+ },
+ "seed.reaction": {
+  "pattern": "^rxn\\d+$"
+ },
+ "sep": {
+  "pattern": "^\\d{5}$",
+  "banana": "SEP"
+ },
+ "sepio": {
+  "pattern": "^\\d{7}$",
+  "banana": "SEPIO"
+ },
+ "sfam": {
+  "pattern": "^F\\d{4}$"
+ },
+ "sgd": {
+  "pattern": "^((S\\d+$)|(Y[A-Z]{2}\\d{3}[a-zA-Z](\\-[A-Z])?))$"
+ },
+ "sgd.pathways": {
+  "pattern": "^PWY\\w{2}\\-\\d{3}$"
+ },
+ "sgn": {
+  "pattern": "^\\d+$"
+ },
+ "sheepqtldb": {
+  "pattern": "^\\d+$"
+ },
+ "sibo": {
+  "pattern": "^\\d{7}$",
+  "banana": "SIBO"
+ },
+ "sider.drug": {
+  "pattern": "^\\d+$"
+ },
+ "sider.effect": {
+  "pattern": "^C\\d+$"
+ },
+ "sigmaaldrich": {},
+ "signaling-gateway": {
+  "pattern": "^A\\d{6}$"
+ },
+ "signor": {
+  "pattern": "^SIGNOR\\-[A-Z]+\\d+$",
+  "synonyms": [
+   "SIGNOR"
+  ]
+ },
+ "signor.relation": {
+  "pattern": "^SIGNOR-\\d+$"
+ },
+ "sio": {
+  "pattern": "^\\d{6}$"
+ },
+ "sisu": {
+  "pattern": "^[0-9]+:[0-9]+$"
+ },
+ "sitex": {
+  "pattern": "^\\d+$"
+ },
+ "skip": {},
+ "skos": {},
+ "slkbase": {
+  "pattern": "^\\d+$"
+ },
+ "smart": {
+  "pattern": "^SM\\d{5}$"
+ },
+ "smid": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "SMID-DB"
+  ]
+ },
+ "smiles": {},
+ "smpdb": {
+  "pattern": "^SMP\\d+$",
+  "synonyms": [
+   "SMP"
+  ]
+ },
+ "snap": {},
+ "snomedct": {
+  "pattern": "^(\\w+)?\\d+$",
+  "synonyms": [
+   "SCTID",
+   "SCTID_2010_1_31",
+   "SNOMECT",
+   "SNOMED",
+   "SNOMEDCT",
+   "SNOMEDCTCT",
+   "SNOMEDCTCT_2018_03_01",
+   "SNOMEDCTCT_2019_03_01",
+   "SNOMEDCT_2005_07_31",
+   "SNOMEDCT_2010_1_31",
+   "SNOMEDCT_2020_03_01",
+   "SNOMEDCT_US",
+   "SNOMEDCT_US_2015_03_01",
+   "SNOMEDCT_US_2016_03_01",
+   "SNOMEDCT_US_2018_03_01",
+   "SNOMEDCT_US_2018_09_01",
+   "SNOMEDCT_US_2019_03_01",
+   "SNOMEDCT_US_2019_09_01",
+   "SNOMEDCT_US_2020_03_01",
+   "SNOMEDCT_US_2020_09_01",
+   "SNOMEDCT_US_2021_03_01",
+   "SNOMEDCT_US_2021_07_31",
+   "SNOMEDCT_US_2021_09_01",
+   "SNOMED_CT",
+   "SNOMED_CT_US_2018_03_01",
+   "SNOWMEDCT",
+   "SNOWMEDCT_US",
+   "SNOWMEDCT_US_2018_03_01"
+  ]
+ },
+ "snornabase": {},
+ "snp2tfbs": {
+  "pattern": "^rs[0-9]+$"
+ },
+ "so": {
+  "pattern": "^\\d{7}$",
+  "banana": "SO"
+ },
+ "sopharm": {
+  "banana": "SOPHARM"
+ },
+ "soybase": {
+  "pattern": "^\\w+(\\-)?\\w+(\\-)?\\w+$"
+ },
+ "span": {},
+ "spd": {
+  "pattern": "^\\d{7}$",
+  "banana": "SPD"
+ },
+ "spdx": {
+  "pattern": "^[0-9A-Za-z\\-.]+$"
+ },
+ "spike.map": {
+  "pattern": "^spike\\d{5}$"
+ },
+ "splash": {
+  "pattern": "^splash\\d[A-Z-a-z0-9]-[A-Za-z0-9]+-[A-Za-z0-9]+$"
+ },
+ "spp": {
+  "pattern": "^10.\\w{4}/\\w{10}$"
+ },
+ "sprint": {
+  "pattern": "^PR\\d{5}$"
+ },
+ "srao": {
+  "pattern": "^\\d{7}$"
+ },
+ "ssbd.dataset": {
+  "pattern": "^\\d+$"
+ },
+ "ssbd.project": {
+  "pattern": "^\\d+$"
+ },
+ "stap": {
+  "pattern": "^[0-9][A-Za-z0-9]{3}$"
+ },
+ "stato": {
+  "pattern": "^\\d{7}$",
+  "banana": "STATO"
+ },
+ "stitch": {
+  "pattern": "^\\w{14}$"
+ },
+ "storedb": {
+  "pattern": "^(STUDY|FILE|DATASET)\\d+$",
+  "banana": "STOREDB"
+ },
+ "string": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])|([0-9][A-Za-z0-9]{3})$"
+ },
+ "sty": {
+  "pattern": "^T\\d{3}$"
+ },
+ "subtilist": {
+  "pattern": "^BG\\d+$"
+ },
+ "subtiwiki": {
+  "pattern": "^BSU\\d{5}$"
+ },
+ "sugarbind": {
+  "pattern": "^[A-Za-z]+\\/[0-9]+$"
+ },
+ "supfam": {
+  "pattern": "^\\w+$"
+ },
+ "sweetrealm": {},
+ "swh": {
+  "pattern": "^[1-9]:(cnt|dir|rel|rev|snp):[0-9a-f]+(;(origin|visit|anchor|path|lines)=\\S+)*$",
+  "banana": "swh"
+ },
+ "swiss-model": {
+  "pattern": "^\\w+$"
+ },
+ "swisslipid": {
+  "pattern": "^\\d+$",
+  "banana": "SLM",
+  "synonyms": [
+   "slm",
+   "swisslipids"
+  ]
+ },
+ "swissregulon": {
+  "pattern": "^[A-Za-z0-9]+$"
+ },
+ "swo": {
+  "pattern": "^\\d{7}$",
+  "banana": "SWO"
+ },
+ "symp": {
+  "pattern": "^\\d{7}$",
+  "banana": "SYMP",
+  "synonyms": [
+   "SYMP"
+  ]
+ },
+ "syoid": {},
+ "t3db": {
+  "pattern": "^T3D\\d+$"
+ },
+ "tads": {
+  "pattern": "^\\d{7}$",
+  "banana": "TADS"
+ },
+ "tahe": {
+  "banana": "TAHE"
+ },
+ "tahh": {
+  "banana": "TAHH"
+ },
+ "tair.gene": {
+  "pattern": "^\\d{7}$"
+ },
+ "tair.locus": {
+  "pattern": "^\\d+$"
+ },
+ "tair.protein": {
+  "pattern": "^\\d{10}$"
+ },
+ "tao": {
+  "pattern": "^\\d{7}$",
+  "banana": "TAO",
+  "synonyms": [
+   "TAO_RETIRED"
+  ]
+ },
+ "tarbase": {
+  "pattern": "^[a-z]{3}\\-(mir|let|lin)\\-\\w+(\\-\\w+\\-\\w+)$"
+ },
+ "taxrank": {
+  "pattern": "^\\d{7}$",
+  "banana": "TAXRANK"
+ },
+ "tcb": {
+  "pattern": "^\\d+$"
+ },
+ "tcdb": {
+  "pattern": "^\\d+(\\.[A-Z])?(\\.\\d+)?(\\.\\d+)?(\\.\\d+)?$",
+  "synonyms": [
+   "TC"
+  ]
+ },
+ "te": {},
+ "tfclass": {},
+ "tgd": {
+  "pattern": "^TTHERM\\_\\d+$"
+ },
+ "tgma": {
+  "pattern": "^\\d{7}$",
+  "banana": "TGMA"
+ },
+ "tgn": {
+  "pattern": "^\\d+$"
+ },
+ "th": {},
+ "thermofisher": {},
+ "tigrfam": {
+  "pattern": "^TIGR\\d+$"
+ },
+ "tkg": {
+  "pattern": "^\\d+$"
+ },
+ "tngb": {
+  "pattern": "^\\d+$"
+ },
+ "to": {
+  "pattern": "^\\d{7}$",
+  "banana": "TO"
+ },
+ "tokue": {},
+ "tol": {
+  "pattern": "^\\d+$"
+ },
+ "topdb": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "topfind": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])$"
+ },
+ "toxoplasma": {
+  "pattern": "^\\w+$"
+ },
+ "trans": {
+  "pattern": "^\\d{7}$",
+  "banana": "TRANS"
+ },
+ "transyt": {
+  "pattern": "^T[A-Z]\\d{7}$"
+ },
+ "treebase": {
+  "pattern": "^TB[1,2]?:[A-Z][a-z]?\\d+$"
+ },
+ "treefam": {
+  "pattern": "^\\w{1,2}\\d+$"
+ },
+ "trichdb": {
+  "pattern": "^\\w+$"
+ },
+ "tritrypdb": {
+  "pattern": "^\\w+(\\.)?\\w+(\\.)?\\w+$"
+ },
+ "ttd.drug": {
+  "pattern": "^DAP\\d+$"
+ },
+ "ttd.target": {
+  "pattern": "^TTDS\\d+$"
+ },
+ "tto": {
+  "pattern": "^\\d+$",
+  "banana": "TTO"
+ },
+ "txpo": {
+  "pattern": "^\\d{7}$",
+  "banana": "TXPO"
+ },
+ "uberon": {
+  "pattern": "^\\d+$",
+  "banana": "UBERON",
+  "synonyms": [
+   "UBERON",
+   "Uber-anatomy ontology",
+   "Uberon"
+  ]
+ },
+ "ubio.namebank": {
+  "pattern": "^\\d+$"
+ },
+ "ubprop": {},
+ "ucsc": {},
+ "umbbd.compound": {
+  "pattern": "^c\\d+$",
+  "synonyms": [
+   "UM-BBD_compID"
+  ]
+ },
+ "umbbd.enzyme": {
+  "pattern": "^e\\d+$",
+  "synonyms": [
+   "UM-BBD_enzymeID"
+  ]
+ },
+ "umbbd.pathway": {
+  "pattern": "^\\w+$",
+  "synonyms": [
+   "UM-BBD_pathwayID"
+  ]
+ },
+ "umbbd.reaction": {
+  "pattern": "^r\\d+$",
+  "synonyms": [
+   "UM-BBD_reactionID"
+  ]
+ },
+ "umbbd.rule": {
+  "pattern": "^bt\\d+$",
+  "synonyms": [
+   "UM-BBD_ruleID"
+  ]
+ },
+ "umls": {
+  "pattern": "^C\\d+$",
+  "synonyms": [
+   "UMLS",
+   "UMLS CUI",
+   "UMLS_CUI",
+   "umls.cui"
+  ]
+ },
+ "umls.aui": {
+  "pattern": "^A\\d+$",
+  "synonyms": [
+   "UMLS_ICD9CM_2005_AUI"
+  ]
+ },
+ "unigene": {
+  "pattern": "^\\d+$"
+ },
+ "unii": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "unimod": {
+  "pattern": "^\\d+$"
+ },
+ "uniparc": {
+  "pattern": "^UPI[A-F0-9]{10}$"
+ },
+ "unipathway.compound": {
+  "pattern": "^UPC\\d{5}$"
+ },
+ "unipathway.reaction": {
+  "pattern": "^UCR\\d{5}$"
+ },
+ "uniprot": {
+  "pattern": "^([A-N,R-Z][0-9]([A-Z][A-Z, 0-9][A-Z, 0-9][0-9]){1,2})|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\.\\d+)?$",
+  "synonyms": [
+   "SwissProt",
+   "UP",
+   "UniProt",
+   "UniProtKB",
+   "Uniprot ID",
+   "uniprot/swiss-prot"
+  ]
+ },
+ "uniprot.chain": {
+  "pattern": "^PRO_[0-9]{10}$",
+  "synonyms": [
+   "UPPRO"
+  ]
+ },
+ "uniprot.disease": {
+  "pattern": "^DI-\\d{5}$",
+  "synonyms": [
+   "DI",
+   "SP_DI"
+  ]
+ },
+ "uniprot.isoform": {
+  "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\-\\d+)$",
+  "synonyms": [
+   "UPISO"
+  ]
+ },
+ "uniprot.journal": {
+  "pattern": "^\\d{4}$"
+ },
+ "uniprot.keyword": {
+  "pattern": "^KW-\\d{4}$",
+  "synonyms": [
+   "SP_KW",
+   "UniProtKB-KW",
+   "uniprot.keyword",
+   "uniprot.kw"
+  ]
+ },
+ "uniprot.location": {
+  "pattern": "^SL-\\d+$",
+  "synonyms": [
+   "SP_SL",
+   "UPLOC",
+   "UniProtKB-SubCell"
+  ]
+ },
+ "uniprot.ptm": {
+  "pattern": "^PTM-\\d{4}$",
+  "synonyms": [
+   "PTM"
+  ]
+ },
+ "uniprot.resource": {
+  "pattern": "^DB-\\d{4}$"
+ },
+ "uniprot.tissue": {
+  "pattern": "^TS-\\d{4}$"
+ },
+ "uniprot.var": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "SP_VAR",
+   "UPVAR",
+   "UniProtKB_VAR"
+  ]
+ },
+ "uniref": {
+  "pattern": "^UniRef(100|90|50)_([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|UPI[A-F0-9]{10})$"
+ },
+ "unirule": {},
+ "unists": {
+  "pattern": "^\\d+$"
+ },
+ "unite": {
+  "pattern": "^UDB\\d{6}$"
+ },
+ "unpd": {},
+ "uo": {
+  "pattern": "^\\d{7}$",
+  "banana": "UO"
+ },
+ "upa": {
+  "pattern": "^(UCR|UCY|UER|ULS|UPA|UPC|UPX)\\d{5}$",
+  "banana": "UPA",
+  "synonyms": [
+   "UPa",
+   "unipathway",
+   "unipathway.pathway"
+  ]
+ },
+ "upheno": {
+  "banana": "UPHENO"
+ },
+ "uspto": {
+  "pattern": "^(D|PP|R|T|H|X|AI)?\\d+$"
+ },
+ "validatordb": {
+  "pattern": "^[A-Za-z0-9\\/]+$"
+ },
+ "vandf": {
+  "pattern": "^\\d+$"
+ },
+ "vario": {
+  "pattern": "^\\d+$",
+  "banana": "VariO"
+ },
+ "vbase2": {
+  "pattern": "^\\w+$"
+ },
+ "vbrc": {
+  "pattern": "^\\d+$"
+ },
+ "vcell": {
+  "pattern": "^\\d{5,}$"
+ },
+ "vectorbase": {
+  "pattern": "^\\D{4}\\d{6}(\\-\\D{2})?$"
+ },
+ "vega": {
+  "synonyms": [
+   "VEGA"
+  ]
+ },
+ "vegbank": {
+  "pattern": "^VB\\.[A-Za-z][A-Za-z]\\..*$"
+ },
+ "vfb": {
+  "pattern": "^[0-9a-zA-Z]{8}$"
+ },
+ "vfdb.gene": {
+  "pattern": "^\\w+$"
+ },
+ "vfdb.genus": {
+  "pattern": "^\\w+$"
+ },
+ "vgnc": {
+  "pattern": "^((VGNC|vgnc):)?\\d{1,9}$"
+ },
+ "vhog": {
+  "pattern": "^\\d{7}$",
+  "banana": "VHOG",
+  "synonyms": [
+   "VHOG_RETIRED"
+  ]
+ },
+ "viaf": {
+  "pattern": "^\\d+$"
+ },
+ "vido": {
+  "pattern": "^\\d{7}$"
+ },
+ "vipr": {
+  "pattern": "^[A-Za-z 0-9]+$"
+ },
+ "viralzone": {
+  "pattern": "^\\d+$"
+ },
+ "virsirna": {
+  "pattern": "^virsi\\d+$"
+ },
+ "vmc": {},
+ "vmhgene": {
+  "pattern": "^[0-9]+\\.[0-9]+$"
+ },
+ "vmhmetabolite": {
+  "pattern": "^[a-zA-Z0-9_\\(\\_\\)\\[\\]]+$"
+ },
+ "vmhreaction": {
+  "pattern": "^[a-zA-Z0-9_\\(\\_\\)\\[\\]]+$"
+ },
+ "vo": {
+  "pattern": "^\\d{7}$",
+  "banana": "VO"
+ },
+ "void": {},
+ "vsao": {
+  "banana": "VSAO",
+  "synonyms": [
+   "VSAO_RETIRED"
+  ]
+ },
+ "vsdb": {
+  "pattern": "^\\d+$"
+ },
+ "vso": {
+  "pattern": "^\\d{7}$"
+ },
+ "vt": {
+  "pattern": "^\\d{7}$",
+  "banana": "VT"
+ },
+ "vto": {
+  "pattern": "^\\d{7}$",
+  "banana": "VTO"
+ },
+ "vuid": {
+  "pattern": "^\\d+$"
+ },
+ "vz": {
+  "pattern": "^\\d+$"
+ },
+ "wb.rnai": {
+  "pattern": "^WBRNAi\\d{8}$"
+ },
+ "wbbt": {
+  "pattern": "^\\d{7}$",
+  "banana": "WBbt",
+  "synonyms": [
+   "WBbt"
+  ]
+ },
+ "wbls": {
+  "pattern": "^\\d{7}$",
+  "banana": "WBls",
+  "synonyms": [
+   "WBls"
+  ]
+ },
+ "wbphenotype": {
+  "pattern": "^\\d{7}$",
+  "banana": "WBPhenotype",
+  "synonyms": [
+   "WBPhenotype"
+  ]
+ },
+ "webelements": {
+  "pattern": "^\\w+$"
+ },
+ "wgs84": {},
+ "wicell": {},
+ "wikidata": {
+  "pattern": "^(Q|P)\\d+$",
+  "synonyms": [
+   "WD_Entity",
+   "wd"
+  ]
+ },
+ "wikidata.property": {
+  "pattern": "^P\\d+$"
+ },
+ "wikigenes": {
+  "pattern": "^\\d+$"
+ },
+ "wikipathways": {
+  "pattern": "^WP\\d{1,5}(\\_r\\d+)?$"
+ },
+ "wikipedia.en": {
+  "pattern": "^[A-Za-z-0-9_]+$",
+  "synonyms": [
+   "wikipedia"
+  ]
+ },
+ "worfdb": {
+  "pattern": "^\\w+(\\.\\d+)$"
+ },
+ "wormbase": {
+  "pattern": "^WB[A-Z][a-z]+\\d+$",
+  "synonyms": [
+   "WB_REF",
+   "wb",
+   "wormbase"
+  ]
+ },
+ "wormpep": {
+  "pattern": "^CE\\d{5}$"
+ },
+ "worms": {
+  "pattern": "^\\d+$"
+ },
+ "wwf.ecoregion": {
+  "pattern": "^AT\\d+$",
+  "synonyms": [
+   "WWF"
+  ]
+ },
+ "xao": {
+  "pattern": "^\\d{7}$",
+  "banana": "XAO"
+ },
+ "xco": {
+  "pattern": "^\\d{7}$",
+  "banana": "XCO"
+ },
+ "xenbase": {
+  "pattern": "^XB\\-\\w+\\-\\d+$"
+ },
+ "ximbio": {
+  "pattern": "^\\d+$"
+ },
+ "xl": {},
+ "xlmod": {
+  "pattern": "^\\d{5}$",
+  "banana": "XLMOD"
+ },
+ "xmetdb": {
+  "pattern": "^\\d+$",
+  "banana": "XMETDB"
+ },
+ "xml": {},
+ "xpo": {
+  "pattern": "^\\d+$",
+  "banana": "XPO"
+ },
+ "xsd": {},
+ "xuo": {},
+ "ydpm": {
+  "pattern": "^Y[A-Z]{2}\\d+[CW]$"
+ },
+ "yeastintron": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "yetfasco": {
+  "pattern": "^\\w+\\_\\d+(\\.\\d+)?$"
+ },
+ "yid": {
+  "pattern": "^[A-Z0-9]+$"
+ },
+ "ymdb": {
+  "pattern": "^YMDB\\d+$"
+ },
+ "ypo": {
+  "banana": "YPO"
+ },
+ "yrcpdr": {
+  "pattern": "^\\d+$"
+ },
+ "zea": {
+  "banana": "ZEA"
+ },
+ "zeco": {
+  "pattern": "^\\d{7}$",
+  "banana": "ZECO"
+ },
+ "zfa": {
+  "pattern": "^\\d{7}$",
+  "banana": "ZFA",
+  "synonyms": [
+   "ZFA_RETIRED"
+  ]
+ },
+ "zfin": {
+  "pattern": "^ZDB\\-\\w+\\-\\d+\\-\\d+$",
+  "synonyms": [
+   "ZFIN"
+  ]
+ },
+ "zfs": {
+  "pattern": "^\\d{7}$",
+  "banana": "ZFS"
+ },
+ "zinc": {
+  "pattern": "^(ZINC)?\\d+$"
+ },
+ "zp": {
+  "pattern": "^\\d+$",
+  "banana": "ZP"
+ }
+}
