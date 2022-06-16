@@ -54,7 +54,7 @@ def test_get_bioregistry_url():
     assert bioregistry_client.get_bioregistry_url('PUBCHEM', '100101') == \
         'https://bioregistry.io/pubchem.compound:100101'
     assert bioregistry_client.get_bioregistry_url('CVCL', 'CVCL_0440') == \
-         'https://bioregistry.io/cellosaurus:0440'
+        'https://bioregistry.io/cellosaurus:0440'
 
 
 def test_ensure_prefix_if_needed():
@@ -65,4 +65,4 @@ def test_ensure_prefix_if_needed():
     assert bioregistry_client.ensure_prefix_if_needed('CHEBI', 'CHEBI:3696') == \
         'CHEBI:3696'
     assert bioregistry_client.ensure_prefix_if_needed('CVCL', '0440') == \
-        'CVCL:CVCL_0440'
+        'CVCL_0440'
