@@ -809,7 +809,7 @@ def update_bioregistry():
         'exports/registry/registry.json'
     res = requests.get(url)
     entries = {}
-    keys = ['pattern', 'banana', 'synonyms']
+    keys = ['pattern', 'banana', 'banana_peel', 'synonyms']
     for prefix, data in res.json().items():
         entries[prefix] = {k: data[k] for k in keys if k in data}
     with open(os.path.join(path, 'bioregistry.json'), 'w') as fh:

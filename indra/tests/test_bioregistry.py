@@ -15,6 +15,9 @@ def test_get_ns_id_from_bioregistry():
         ('CHEBI', 'CHEBI:3696')
     assert bioregistry_client.get_ns_id_from_bioregistry('hgnc', '1097') == \
         ('HGNC', '1097')
+    assert bioregistry_client.get_ns_id_from_bioregistry('cellosaurus',
+                                                         '1234') == \
+        ('CVCL', 'CVCL_1234')
 
 
 def test_get_ns_id_from_bioregistry_curie():
@@ -24,6 +27,8 @@ def test_get_ns_id_from_bioregistry_curie():
         ('CHEBI', 'CHEBI:3696')
     assert bioregistry_client.get_ns_id_from_bioregistry_curie('hgnc:1097') == \
         ('HGNC', '1097')
+    assert bioregistry_client.get_ns_id_from_bioregistry_curie('cellosaurus:0440') == \
+        ('CVCL', 'CVCL_0440')
 
 
 def test_get_bioregistry_prefix():
@@ -41,11 +46,15 @@ def test_get_bioregistry_curie():
         'nextprot.family:01405'
     assert bioregistry_client.get_bioregistry_curie('HGNC', '1097') == \
         'hgnc:1097'
+    assert bioregistry_client.get_bioregistry_curie('CVCL', 'CVCL_1234') == \
+        'cellosaurus:1234'
 
 
 def test_get_bioregistry_url():
     assert bioregistry_client.get_bioregistry_url('PUBCHEM', '100101') == \
         'https://bioregistry.io/pubchem.compound:100101'
+    assert bioregistry_client.get_bioregistry_url('CVCL', 'CVCL_0440') == \
+        'https://bioregistry.io/cellosaurus:0440'
 
 
 def test_ensure_prefix_if_needed():
@@ -55,5 +64,5 @@ def test_ensure_prefix_if_needed():
         'CHEBI:3696'
     assert bioregistry_client.ensure_prefix_if_needed('CHEBI', 'CHEBI:3696') == \
         'CHEBI:3696'
-    assert bioregistry_client.ensure_prefix_if_needed('CLO', '0008395') == \
-        'CLO:0008395'
+    assert bioregistry_client.ensure_prefix_if_needed('CVCL', '0440') == \
+        'CVCL_0440'

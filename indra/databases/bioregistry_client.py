@@ -53,8 +53,11 @@ def get_ns_id_from_bioregistry(bioregistry_prefix, bioregistry_id):
     if not db_ns:
         return None, None
     banana = registry[bioregistry_prefix].get('banana')
+    # There are some non-standard separators but we fall back to the standard
+    # colon unless it's explicitly curated
+    banana_peel = registry[bioregistry_prefix].get('banana_peel', ':')
     if banana:
-        db_id = '%s:%s' % (banana, bioregistry_id)
+        db_id = '%s%s%s' % (banana, banana_peel, bioregistry_id)
     else:
         db_id = bioregistry_id
     return db_ns, db_id
@@ -89,9 +92,12 @@ def get_bioregistry_curie(db_ns, db_id):
     if not prefix:
         return None
     banana = registry[prefix].get('banana')
+    banana_peel = registry[prefix].get('banana_peel', ':')
     if banana:
         if db_id.startswith(banana):
-            db_id = db_id[len(banana) + 1:]
+            # The separator (banana peel) is usually one character long
+            # but there are exceptions where it's an empty string.
+            db_id = db_id[len(banana) + len(banana_peel):]
     return '%s:%s' % (prefix, db_id)
 
 
@@ -109,8 +115,9 @@ def ensure_prefix_if_needed(db_ns, db_id):
     if not prefix:
         return db_id
     banana = registry[prefix].get('banana')
-    if banana and not db_id.startswith(f'{banana}:'):
-        return f'{banana}:{db_id}'
+    banana_peel = registry[prefix].get('banana_peel', ':')
+    if banana and not db_id.startswith(f'{banana}{banana_peel}'):
+        return f'{banana}{banana_peel}{db_id}'
     return db_id
 
 
@@ -124,9 +131,11 @@ def _load_bioregistry():
             pattern = entry['pattern']
             # If there is a banana, we need to add it to the pattern
             if 'banana' in entry:
-                pattern = '^%s:%s' % (entry['banana'],
-                                      pattern[1:] if pattern.startswith('^')
-                                      else pattern)
+                banana_peel = entry.get('banana_peel', ':')
+                pattern = '^%s%s%s' % (entry['banana'],
+                                       banana_peel,
+                                       pattern[1:] if pattern.startswith('^')
+                                       else pattern)
             entry['pattern_compiled'] = re.compile(pattern)
         for synonym in entry.get('synonyms', []):
             synonym_reverse[synonym] = prefix
