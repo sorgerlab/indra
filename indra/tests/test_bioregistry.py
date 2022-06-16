@@ -15,6 +15,9 @@ def test_get_ns_id_from_bioregistry():
         ('CHEBI', 'CHEBI:3696')
     assert bioregistry_client.get_ns_id_from_bioregistry('hgnc', '1097') == \
         ('HGNC', '1097')
+    assert bioregistry_client.get_ns_id_from_bioregistry('cellosaurus',
+                                                         '1234') == \
+        ('CVCL', 'CVCL_1234')
 
 
 def test_get_ns_id_from_bioregistry_curie():
@@ -41,6 +44,8 @@ def test_get_bioregistry_curie():
         'nextprot.family:01405'
     assert bioregistry_client.get_bioregistry_curie('HGNC', '1097') == \
         'hgnc:1097'
+    assert bioregistry_client.get_bioregistry_curie('CVCL', 'CVCL_1234') == \
+        'cellosaurus:1234'
 
 
 def test_get_bioregistry_url():
