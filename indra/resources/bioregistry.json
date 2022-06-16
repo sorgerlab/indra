@@ -9,9 +9,7 @@
   ]
  },
  "4dn.replicate": {},
- "aao": {
-  "banana": "AAO"
- },
+ "aao": {},
  "abcd": {},
  "abm": {},
  "abs": {
@@ -26,19 +24,16 @@
   "pattern": "^[0-9]{5}(-[a-zA-Z0-9-]{0,7})?$|^[0-9]{10}$"
  },
  "adw": {
-  "pattern": "^[A-Z_a-z]+$",
-  "banana": "ADW"
+  "pattern": "^[A-Z_a-z]+$"
  },
  "aeo": {
   "pattern": "^\\d{7}$",
-  "banana": "AEO",
   "synonyms": [
    "AEO_RETIRED"
   ]
  },
  "aero": {
-  "pattern": "^\\d{7}$",
-  "banana": "AERO"
+  "pattern": "^\\d{7}$"
  },
  "affy.probeset": {
   "pattern": "^\\d{4,}((_[asx])?_at)$"
@@ -57,16 +52,17 @@
    "AGRICOLA_ID"
   ]
  },
+ "agrkb": {
+  "pattern": "^[1-9][0-9]{14}$"
+ },
  "agro": {
-  "pattern": "^\\d{8}$",
-  "banana": "AGRO"
+  "pattern": "^\\d{8}$"
  },
  "agrovoc": {
   "pattern": "^[a-z0-9]+$"
  },
  "aism": {
-  "pattern": "^\\d{7}$",
-  "banana": "AISM"
+  "pattern": "^\\d{7}$"
  },
  "allergome": {
   "pattern": "^\\d+$"
@@ -80,8 +76,7 @@
   "pattern": "^EDI_\\d+$"
  },
  "amphx": {
-  "pattern": "^\\d+$",
-  "banana": "AMPHX"
+  "pattern": "^\\d+$"
  },
  "antibodyregistry": {
   "pattern": "^\\d{6}$"
@@ -112,12 +107,10 @@
   "pattern": "^([A-N,R-Z][0-9]([A-Z][A-Z, 0-9][A-Z, 0-9][0-9]){1,2})|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])(\\.\\d+)?$"
  },
  "apo": {
-  "pattern": "^\\d{7}$",
-  "banana": "APO"
+  "pattern": "^\\d{7}$"
  },
  "apollosv": {
-  "pattern": "^\\d{8}$",
-  "banana": "APOLLO_SV"
+  "pattern": "^\\d{8}$"
  },
  "arachnoserver": {
   "pattern": "^AS\\d{6}$"
@@ -131,8 +124,7 @@
   "banana": "ark"
  },
  "aro": {
-  "pattern": "^\\d{7}$",
-  "banana": "ARO"
+  "pattern": "^\\d{7}$"
  },
  "arrayexpress": {
   "pattern": "^[AEP]-\\w{4}-\\d+$"
@@ -185,8 +177,7 @@
   "pattern": "^\\w+$"
  },
  "ato": {
-  "pattern": "^\\d{7}$",
-  "banana": "ATO"
+  "pattern": "^\\d{7}$"
  },
  "atol": {
   "pattern": "^\\d{7}$"
@@ -217,15 +208,12 @@
  "bbtp": {
   "pattern": "^\\b[0-9a-f]{8}\\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\\b[0-9a-f]{12}\\b$"
  },
- "bcgo": {
-  "banana": "BCGO"
- },
+ "bcgo": {},
  "bcio": {
   "pattern": "^\\d{6}$"
  },
  "bco": {
-  "pattern": "^\\d{7}$",
-  "banana": "BCO"
+  "pattern": "^\\d{7}$"
  },
  "bcrc": {
   "pattern": "^\\d+$"
@@ -255,8 +243,7 @@
  },
  "bel": {},
  "bfo": {
-  "pattern": "^\\d{7}$",
-  "banana": "BFO"
+  "pattern": "^\\d{7}$"
  },
  "bgee.family": {
   "pattern": "^(ENSFM|ENSGTV:)\\d+$"
@@ -282,9 +269,7 @@
  "bigg.reaction": {
   "pattern": "^[a-z_A-Z0-9]+$"
  },
- "bila": {
-  "banana": "BILA"
- },
+ "bila": {},
  "bindingdb": {
   "pattern": "^\\w\\d+$"
  },
@@ -319,14 +304,17 @@
   ]
  },
  "biomodels.kisao": {
-  "pattern": "^KISAO_\\d+$",
+  "pattern": "^\\d+$",
   "banana": "KISAO",
+  "banana_peel": "_",
   "synonyms": [
    "kisao"
   ]
  },
  "biomodels.teddy": {
   "pattern": "^\\d+$",
+  "banana": "TEDDY",
+  "banana_peel": "_",
   "synonyms": [
    "teddy"
   ]
@@ -398,9 +386,7 @@
  "bold.taxonomy": {
   "pattern": "^\\d+$"
  },
- "bootstrep": {
-  "banana": "BOOTSTREP"
- },
+ "bootstrep": {},
  "bpdb": {
   "pattern": "^\\d+$"
  },
@@ -420,8 +406,7 @@
   "pattern": "^\\d+$"
  },
  "bspo": {
-  "pattern": "^\\d{7}$",
-  "banana": "BSPO"
+  "pattern": "^\\d{7}$"
  },
  "bto": {
   "pattern": "^\\d{7}$",
@@ -455,8 +440,7 @@
   "pattern": "^\\d+$"
  },
  "caro": {
-  "pattern": "^\\d{7}$",
-  "banana": "CARO"
+  "pattern": "^\\d{7}$"
  },
  "cas": {
   "pattern": "^\\d{1,7}\\-\\d{2}\\-\\d$",
@@ -508,15 +492,13 @@
  },
  "ccrid": {},
  "cdao": {
-  "pattern": "^\\d{7}$",
-  "banana": "CDAO"
+  "pattern": "^\\d{7}$"
  },
  "cdd": {
   "pattern": "^(cd)?\\d{5}$"
  },
  "cdno": {
-  "pattern": "^\\d{7}$",
-  "banana": "CDNO"
+  "pattern": "^\\d{7}$"
  },
  "cdpd": {
   "pattern": "^\\d+$"
@@ -532,7 +514,9 @@
  },
  "cellopub": {},
  "cellosaurus": {
-  "pattern": "^CVCL_[A-Z0-9]{4}$",
+  "pattern": "^[A-Z0-9]{4}$",
+  "banana": "CVCL",
+  "banana_peel": "_",
   "synonyms": [
    "CVCL"
   ]
@@ -542,8 +526,7 @@
   "pattern": "^[0-9]+$"
  },
  "ceph": {
-  "pattern": "^\\d{7}$",
-  "banana": "CEPH"
+  "pattern": "^\\d{7}$"
  },
  "cgd": {
   "pattern": "^CAL\\d{7}$"
@@ -603,8 +586,7 @@
   ]
  },
  "cheminf": {
-  "pattern": "^\\d{6}$",
-  "banana": "CHEMINF"
+  "pattern": "^\\d{6}$"
  },
  "chemspider": {
   "pattern": "^\\d+$",
@@ -616,20 +598,15 @@
  "chickenqtldb": {
   "pattern": "^\\d+$"
  },
- "chiro": {
-  "banana": "CHIRO"
- },
+ "chiro": {},
  "chmo": {
-  "pattern": "^\\d{7}$",
-  "banana": "CHMO"
+  "pattern": "^\\d{7}$"
  },
  "cido": {
-  "pattern": "^\\d{7}$",
-  "banana": "CIDO"
+  "pattern": "^\\d{7}$"
  },
  "cio": {
-  "pattern": "^\\d{7}$",
-  "banana": "CIO"
+  "pattern": "^\\d{7}$"
  },
  "citexplore": {
   "synonyms": [
@@ -647,11 +624,11 @@
   "banana": "CL"
  },
  "clao": {
-  "pattern": "^\\d{7}$",
-  "banana": "CLAO"
+  "pattern": "^\\d{7}$"
  },
  "classyfire": {
   "pattern": "^\\d{7}$",
+  "banana": "C",
   "synonyms": [
    "CHEMONTID"
   ]
@@ -677,25 +654,20 @@
  },
  "clo": {
   "pattern": "^\\d{7}$",
-  "banana": "CLO",
   "synonyms": [
    "CLO"
   ]
  },
  "cls": {},
  "clyh": {
-  "pattern": "^\\d+$",
-  "banana": "CLYH"
+  "pattern": "^\\d+$"
  },
  "cmecs": {
   "pattern": "^\\d+$"
  },
- "cmf": {
-  "banana": "CMF"
- },
+ "cmf": {},
  "cmo": {
-  "pattern": "^\\d{7}$",
-  "banana": "CMO"
+  "pattern": "^\\d{7}$"
  },
  "cmpo": {
   "pattern": "^\\d{7}$"
@@ -797,8 +769,7 @@
   "pattern": "^\\d{7}$"
  },
  "cob": {
-  "pattern": "^\\d{7}$",
-  "banana": "COB"
+  "pattern": "^\\d{7}$"
  },
  "coconut": {
   "pattern": "^CNP\\d{7}$"
@@ -816,8 +787,7 @@
  "cog.pathway": {},
  "cohd": {},
  "colao": {
-  "pattern": "^\\d{7}$",
-  "banana": "COLAO"
+  "pattern": "^\\d{7}$"
  },
  "colonatlas": {},
  "combine.specifications": {
@@ -867,9 +837,7 @@
  "cpc": {
   "pattern": "^([A-H,Y]|[A-H, Y]\\d{2}|[A-H, Y]\\d{2}[A-Z]|[A-H, Y]\\d{2}[A-Z]\\d{1,3}|[A-H, Y]\\d{2}[A-Z]\\d{1,3}(\\/)?\\d{2,})$"
  },
- "cpga": {
-  "banana": "GRO"
- },
+ "cpga": {},
  "cpt": {
   "pattern": "^\\d+$"
  },
@@ -878,8 +846,7 @@
   "pattern": "^[0-9]+$"
  },
  "cro": {
-  "pattern": "^\\d{7}$",
-  "banana": "CRO"
+  "pattern": "^\\d{7}$"
  },
  "cryoem": {
   "pattern": "^\\d{7}$"
@@ -917,19 +884,16 @@
   "pattern": "^\\d+$"
  },
  "cteno": {
-  "pattern": "^\\d{7}$",
-  "banana": "CTENO"
+  "pattern": "^\\d{7}$"
  },
  "cto": {
-  "pattern": "^\\d{7}$",
-  "banana": "CTO"
+  "pattern": "^\\d{7}$"
  },
  "cubedb": {
   "pattern": "^[A-Za-z_0-9]+$"
  },
  "cvdo": {
-  "pattern": "^\\d{7}$",
-  "banana": "CVDO"
+  "pattern": "^\\d{7}$"
  },
  "d1id": {
   "pattern": "^\\S+$"
@@ -994,8 +958,7 @@
  },
  "dc": {},
  "dc_cl": {
-  "pattern": "^\\d{7}$",
-  "banana": "DC_CL"
+  "pattern": "^\\d{7}$"
  },
  "dcat": {},
  "dcterms": {
@@ -1005,12 +968,10 @@
  },
  "dctypes": {},
  "ddanat": {
-  "pattern": "^\\d{7}$",
-  "banana": "DDANAT"
+  "pattern": "^\\d{7}$"
  },
  "ddpheno": {
-  "pattern": "^\\d{7}$",
-  "banana": "DDPHENO"
+  "pattern": "^\\d{7}$"
  },
  "decipher": {
   "pattern": "^\\d+$"
@@ -1073,19 +1034,15 @@
   "banana": "did"
  },
  "dideo": {
-  "pattern": "^\\d{8}$",
-  "banana": "DIDEO"
+  "pattern": "^\\d{8}$"
  },
- "dinto": {
-  "banana": "DINTO"
- },
+ "dinto": {},
  "dip": {
   "pattern": "^DIP(\\:)?\\-\\d{1,}[ENXS]$"
  },
  "discoverx": {},
  "disdriv": {
-  "pattern": "^\\d+$",
-  "banana": "DISDRIV"
+  "pattern": "^\\d+$"
  },
  "diseaseclass": {
   "pattern": "^\\d{7}$"
@@ -1130,9 +1087,7 @@
  "doqcs.pathway": {
   "pattern": "^\\d+$"
  },
- "dpo": {
-  "banana": "FBcv"
- },
+ "dpo": {},
  "dpv": {
   "pattern": "^\\d+$"
  },
@@ -1149,8 +1104,7 @@
   "pattern": "^\\w+$"
  },
  "dron": {
-  "pattern": "^\\d{8}$",
-  "banana": "DRON"
+  "pattern": "^\\d{8}$"
  },
  "drsc": {
   "pattern": "^DRSC\\d+$"
@@ -1182,8 +1136,7 @@
   "pattern": "^\\d+$"
  },
  "duo": {
-  "pattern": "^\\d{7}$",
-  "banana": "DUO"
+  "pattern": "^\\d{7}$"
  },
  "eaglei": {},
  "ebisc": {},
@@ -1191,8 +1144,7 @@
   "pattern": "^\\d+$"
  },
  "ecao": {
-  "pattern": "^\\d{7}$",
-  "banana": "ECAO"
+  "pattern": "^\\d{7}$"
  },
  "eccode": {
   "pattern": "^\\d{1,2}(((\\.\\d{1,3}){1,3})|(\\.\\d+){2}\\.n\\d{1,3})?$",
@@ -1225,8 +1177,7 @@
   "banana": "ECO"
  },
  "ecocore": {
-  "pattern": "^\\d+$",
-  "banana": "ECOCORE"
+  "pattern": "^\\d+$"
  },
  "ecocyc": {},
  "ecogene": {
@@ -1237,8 +1188,7 @@
   "pattern": "^[A-Za-z0-9-]+$"
  },
  "ecto": {
-  "pattern": "^\\d{7}$",
-  "banana": "ECTO"
+  "pattern": "^\\d{7}$"
  },
  "ecyano.entity": {
   "pattern": "^\\d+$"
@@ -1269,16 +1219,13 @@
   "pattern": "^\\w+$"
  },
  "ehda": {
-  "pattern": "^\\d+$",
-  "banana": "EHDA"
+  "pattern": "^\\d+$"
  },
  "ehdaa": {
-  "pattern": "^\\d+$",
-  "banana": "EHDAA"
+  "pattern": "^\\d+$"
  },
  "ehdaa2": {
   "pattern": "^\\d{7}$",
-  "banana": "EHDAA2",
   "synonyms": [
    "EHDAA2_RETIRED",
    "HDAA2",
@@ -1289,12 +1236,10 @@
   "pattern": "^[A-Za-z_0-9]+$"
  },
  "emap": {
-  "pattern": "^\\d+$",
-  "banana": "EMAP"
+  "pattern": "^\\d+$"
  },
  "emapa": {
   "pattern": "^\\d+$",
-  "banana": "EMAPA",
   "synonyms": [
    "EMAPA_RETIRED"
   ]
@@ -1371,12 +1316,9 @@
   "pattern": "^[A-Z-_0-9]+$"
  },
  "epio": {
-  "pattern": "^\\d{7}$",
-  "banana": "EPIO"
+  "pattern": "^\\d{7}$"
  },
- "epo": {
-  "banana": "EPO"
- },
+ "epo": {},
  "epso": {
   "pattern": "^\\d{7}$"
  },
@@ -1384,8 +1326,7 @@
   "pattern": "^ERM[0-9]{8}$"
  },
  "ero": {
-  "pattern": "^\\d{7}$",
-  "banana": "ERO"
+  "pattern": "^\\d{7}$"
  },
  "erv": {
   "pattern": "^[A-Za-z0-9\\-\\_]+$"
@@ -1400,13 +1341,10 @@
   "pattern": "^\\d{4}\\-\\d{6}\\-\\d{2}$"
  },
  "eupath": {
-  "pattern": "^\\d{7}$",
-  "banana": "EUPATH"
+  "pattern": "^\\d{7}$"
  },
  "eurofir": {},
- "ev": {
-  "banana": "EV"
- },
+ "ev": {},
  "evm": {},
  "exac.gene": {
   "pattern": "^ENSG\\d{11}$"
@@ -1419,7 +1357,6 @@
  },
  "exo": {
   "pattern": "^\\d{7}$",
-  "banana": "ExO",
   "synonyms": [
    "ExO"
   ]
@@ -1433,19 +1370,16 @@
  },
  "faldo": {},
  "fao": {
-  "pattern": "^\\d{7}$",
-  "banana": "FAO"
+  "pattern": "^\\d{7}$"
  },
  "fbbi": {
   "pattern": "^\\d+$",
-  "banana": "FBbi",
   "synonyms": [
    "FBbi"
   ]
  },
  "fbbt": {
   "pattern": "^\\d{8}$",
-  "banana": "FBbt",
   "synonyms": [
    "FBbt",
    "FBbt_root"
@@ -1453,14 +1387,12 @@
  },
  "fbcv": {
   "pattern": "^\\d{7}$",
-  "banana": "FBcv",
   "synonyms": [
    "FBcv"
   ]
  },
  "fbdv": {
   "pattern": "^\\d{8}$",
-  "banana": "FBdv",
   "synonyms": [
    "FBdv"
   ]
@@ -1475,8 +1407,7 @@
   "pattern": "^\\d{7}$"
  },
  "fbsp": {
-  "pattern": "^\\d{8}$",
-  "banana": "FBSP"
+  "pattern": "^\\d{8}$"
  },
  "fbtc": {
   "pattern": "^\\d{7}$"
@@ -1486,8 +1417,7 @@
  },
  "fcsfree": {},
  "fideo": {
-  "pattern": "^\\d{8}$",
-  "banana": "FIDEO"
+  "pattern": "^\\d{8}$"
  },
  "fishbase.species": {
   "pattern": "^\\d+$",
@@ -1496,19 +1426,16 @@
   ]
  },
  "fix": {
-  "pattern": "^\\d{7}$",
-  "banana": "FIX"
+  "pattern": "^\\d{7}$"
  },
  "flopo": {
-  "pattern": "^\\d{7}$",
-  "banana": "FLOPO"
+  "pattern": "^\\d{7}$"
  },
  "flowrepository": {
   "pattern": "^FR\\-FCM\\-\\w{4}$"
  },
  "flu": {
-  "pattern": "^\\d{7}$",
-  "banana": "FLU"
+  "pattern": "^\\d{7}$"
  },
  "flybase": {
   "pattern": "^FB\\w{2}\\d{7}$",
@@ -1530,8 +1457,7 @@
  },
  "foaf": {},
  "fobi": {
-  "pattern": "^\\d{6}$",
-  "banana": "FOBI"
+  "pattern": "^\\d{6}$"
  },
  "foodb.compound": {
   "pattern": "^FDB\\d+$",
@@ -1544,8 +1470,7 @@
   "banana": "FOODON"
  },
  "fovt": {
-  "pattern": "^\\d{7}$",
-  "banana": "FOVT"
+  "pattern": "^\\d{7}$"
  },
  "fplx": {
   "pattern": "^[a-zA-Z0-9][A-Za-z0-9_]+$",
@@ -1587,8 +1512,7 @@
   "pattern": "^\\d+$"
  },
  "fypo": {
-  "pattern": "^\\d{7}$",
-  "banana": "FYPO"
+  "pattern": "^\\d{7}$"
  },
  "ga4ghdos": {
   "pattern": "^[a-zA-Z0-9\\-:#/\\.]+$"
@@ -1608,8 +1532,7 @@
   "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
  },
  "gaz": {
-  "pattern": "^\\d{8}$",
-  "banana": "GAZ"
+  "pattern": "^\\d{8}$"
  },
  "gbif": {
   "pattern": "^\\d+$"
@@ -1630,8 +1553,7 @@
   "pattern": "^[0-9]+$"
  },
  "gecko": {
-  "pattern": "^\\d{7}$",
-  "banana": "GECKO"
+  "pattern": "^\\d{7}$"
  },
  "gemet": {
   "pattern": "^\\d+$"
@@ -1650,8 +1572,7 @@
   "pattern": "^\\d+$"
  },
  "genepio": {
-  "pattern": "^\\d{7}$",
-  "banana": "GENEPIO"
+  "pattern": "^\\d{7}$"
  },
  "genetree": {
   "pattern": "^ENSGT\\d+$"
@@ -1660,8 +1581,7 @@
   "pattern": "^\\d+$"
  },
  "geno": {
-  "pattern": "^\\d{7}$",
-  "banana": "GENO"
+  "pattern": "^\\d{7}$"
  },
  "genpept": {
   "pattern": "^\\w{3}\\d{5}(\\.\\d+)?$"
@@ -1670,11 +1590,13 @@
   "pattern": "^GenProp\\d+$"
  },
  "geo": {
-  "pattern": "^G(PL|SM|SE|DS)\\d+$"
+  "pattern": "^G(PL|SM|SE|DS)\\d+$",
+  "banana_peel": "_"
  },
  "geogeo": {
   "pattern": "^\\d{9}$",
-  "banana": "GEO"
+  "banana": "GEO",
+  "banana_peel": "_"
  },
  "geonames": {
   "pattern": "^\\d+$",
@@ -1736,8 +1658,7 @@
   "pattern": "^[1-9][0-9]{3,6}$"
  },
  "gno": {
-  "pattern": "^\\d{8}$",
-  "banana": "GNO"
+  "pattern": "^\\d{8}$"
  },
  "gnpis": {
   "pattern": "^[A-Za-z0-9]+$"
@@ -1807,7 +1728,7 @@
  },
  "gramene.growthstage": {
   "pattern": "^\\d{7}$",
-  "banana": "gramene.growthstage:GRO\\"
+  "banana": "GRO"
  },
  "gramene.protein": {
   "pattern": "^\\d+$",
@@ -1882,19 +1803,15 @@
  "gxa.gene": {
   "pattern": "^\\w+$"
  },
- "habronattus": {
-  "banana": "HABRONATTUS"
- },
+ "habronattus": {},
  "hamap": {
   "pattern": "^MF_\\d+$"
  },
  "hancestro": {
-  "pattern": "^\\d{4}$",
-  "banana": "HANCESTRO"
+  "pattern": "^\\d{4}$"
  },
  "hao": {
-  "pattern": "^\\d{7}$",
-  "banana": "HAO"
+  "pattern": "^\\d{7}$"
  },
  "hba": {
   "pattern": "^\\d+$"
@@ -1957,8 +1874,7 @@
   "pattern": "^\\w+$"
  },
  "hom": {
-  "pattern": "^\\d{7}$",
-  "banana": "HOM"
+  "pattern": "^\\d{7}$"
  },
  "homd.seq": {
   "pattern": "^SEQF\\d+$"
@@ -2003,7 +1919,6 @@
  },
  "hsapdv": {
   "pattern": "^\\d{7}$",
-  "banana": "HsapDv",
   "synonyms": [
    "HsapDv"
   ]
@@ -2012,22 +1927,19 @@
   "pattern": "^\\d+$"
  },
  "hso": {
-  "pattern": "^\\d{7}$",
-  "banana": "HSO"
+  "pattern": "^\\d{7}$"
  },
  "hssp": {
   "pattern": "^\\w{4}$"
  },
  "htn": {
-  "pattern": "^\\d{8}$",
-  "banana": "HTN"
+  "pattern": "^\\d{8}$"
  },
  "huge": {
   "pattern": "^KIAA\\d{4}$"
  },
  "iao": {
-  "pattern": "^\\d{7}$",
-  "banana": "IAO"
+  "pattern": "^\\d{7}$"
  },
  "icd10": {
   "pattern": "^[A-Z]\\d+(\\.[-\\d+])?$",
@@ -2082,23 +1994,20 @@
   "pattern": "^\\d+$"
  },
  "iceo": {
-  "pattern": "^\\d{7}(_\\d)?$",
-  "banana": "ICEO"
+  "pattern": "^\\d{7}(_\\d)?$"
  },
  "icepo": {
   "pattern": "^\\d{7}$"
  },
  "iclc": {},
  "ico": {
-  "pattern": "^\\d{7}$",
-  "banana": "ICO"
+  "pattern": "^\\d{7}$"
  },
  "ideal": {
   "pattern": "^IID\\d+$"
  },
  "ido": {
-  "pattern": "^[0-9]+$",
-  "banana": "IDO"
+  "pattern": "^[0-9]+$"
  },
  "idocovid19": {
   "pattern": "^\\d{7}$"
@@ -2107,8 +2016,7 @@
   "pattern": "^\\d{7}$"
  },
  "idomal": {
-  "pattern": "^\\d{7}$",
-  "banana": "IDOMAL"
+  "pattern": "^\\d{7}$"
  },
  "idoo": {
   "pattern": "^[0-9a-zA-Z]+$"
@@ -2126,8 +2034,7 @@
   "pattern": "^[0-9]+$"
  },
  "iev": {
-  "pattern": "^\\d{7}$",
-  "banana": "IEV"
+  "pattern": "^\\d{7}$"
  },
  "igrhcellid": {},
  "igsn": {
@@ -2161,8 +2068,7 @@
   "pattern": "^M\\d+$"
  },
  "imr": {
-  "pattern": "^\\d{7}$",
-  "banana": "IMR"
+  "pattern": "^\\d{7}$"
  },
  "inaturalist.taxon": {
   "pattern": "^[1-9]\\d{0,6}$"
@@ -2180,8 +2086,7 @@
   ]
  },
  "ino": {
-  "pattern": "^\\d{7}$",
-  "banana": "INO"
+  "pattern": "^\\d{7}$"
  },
  "insdc": {
   "pattern": "^([A-Z]\\d{5}|[A-Z]{2}\\d{6}|[A-Z]{4}\\d{8}|[A-J][A-Z]{2}\\d{5})(\\.\\d+)?$"
@@ -2384,8 +2289,7 @@
  },
  "kyinno": {},
  "labo": {
-  "pattern": "^\\d{7}$",
-  "banana": "LABO"
+  "pattern": "^\\d{7}$"
  },
  "lbo": {
   "pattern": "^\\d{7}$"
@@ -2394,8 +2298,7 @@
   "pattern": "^[0-9A-Z]{4}[0-9A-Z]{14}[0-9A-Z]{2}$"
  },
  "lepao": {
-  "pattern": "^\\d{7}$",
-  "banana": "LEPAO"
+  "pattern": "^\\d{7}$"
  },
  "lgai.cede": {
   "pattern": "^LGCEDe-S-\\d{9}$"
@@ -2449,13 +2352,9 @@
    "LIPID_MAPS_instance"
   ]
  },
- "lipro": {
-  "banana": "LIPRO"
- },
+ "lipro": {},
  "lncipedia": {},
- "loggerhead": {
-  "banana": "LOGGERHEAD"
- },
+ "loggerhead": {},
  "loinc": {
   "synonyms": [
    "LNC"
@@ -2494,11 +2393,10 @@
  },
  "mamo": {
   "pattern": "^\\d{7}$",
-  "banana": "MAMO"
+  "banana": "MAMO",
+  "banana_peel": "_"
  },
- "mao": {
-  "banana": "MAO"
- },
+ "mao": {},
  "massbank": {
   "pattern": "^[A-Z]{2}[A-Z0-9][0-9]{5}$"
  },
@@ -2506,24 +2404,21 @@
   "pattern": "^MSV\\d+$"
  },
  "mat": {
-  "pattern": "^\\d{7}$",
-  "banana": "MAT"
+  "pattern": "^\\d{7}$"
  },
  "matrixdb": {},
  "matrixdb.association": {
   "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])_.*|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9]_.*)|(GAG_.*)|(MULT_.*)|(PFRAG_.*)|(LIP_.*)|(CAT_.*)$"
  },
  "maxo": {
-  "pattern": "^\\d{7}$",
-  "banana": "MAXO"
+  "pattern": "^\\d{7}$"
  },
  "mba": {
   "pattern": "^\\d+$"
  },
  "mcc": {},
  "mco": {
-  "pattern": "^\\d+$",
-  "banana": "MCO"
+  "pattern": "^\\d+$"
  },
  "mdm": {
   "pattern": "^\\d+$"
@@ -2600,23 +2495,17 @@
   "pattern": "^\\d+$"
  },
  "mf": {
-  "pattern": "^\\d{7}$",
-  "banana": "MF"
+  "pattern": "^\\d{7}$"
  },
  "mfmo": {
-  "pattern": "^\\d{7}$",
-  "banana": "MFMO"
+  "pattern": "^\\d{7}$"
  },
- "mfo": {
-  "banana": "MFO"
- },
+ "mfo": {},
  "mfoem": {
-  "pattern": "^\\d{6}$",
-  "banana": "MFOEM"
+  "pattern": "^\\d{6}$"
  },
  "mfomd": {
-  "pattern": "^\\d{7}$",
-  "banana": "MFOMD"
+  "pattern": "^\\d{7}$"
  },
  "mge": {
   "pattern": "^\\d+$",
@@ -2648,12 +2537,10 @@
  },
  "miaa": {},
  "miapa": {
-  "pattern": "^\\d{7}$",
-  "banana": "MIAPA"
+  "pattern": "^\\d{7}$"
  },
  "micro": {
-  "pattern": "^\\d{7}$",
-  "banana": "MICRO"
+  "pattern": "^\\d{7}$"
  },
  "microscope": {
   "pattern": "^\\d+$"
@@ -2710,15 +2597,12 @@
  "miriam.resource": {
   "pattern": "^MIR:001\\d{5}$"
  },
- "mirnao": {
-  "banana": "MIRNAO"
- },
+ "mirnao": {},
  "mirnest": {
   "pattern": "^MNEST\\d+$"
  },
  "miro": {
-  "pattern": "^\\d{8}$",
-  "banana": "MIRO"
+  "pattern": "^\\d{8}$"
  },
  "mirtarbase": {
   "pattern": "^MIRT\\d{6}$"
@@ -2737,8 +2621,7 @@
   ]
  },
  "mmo": {
-  "pattern": "^\\d{7}$",
-  "banana": "MMO"
+  "pattern": "^\\d{7}$"
  },
  "mmp.cat": {
   "pattern": "^MMP\\d+.\\d+$"
@@ -2763,14 +2646,12 @@
  },
  "mmusdv": {
   "pattern": "^\\d{7}$",
-  "banana": "MmusDv",
   "synonyms": [
    "MmusDv"
   ]
  },
  "mo": {
-  "pattern": "^\\w+$",
-  "banana": "MO"
+  "pattern": "^\\w+$"
  },
  "mobidb": {
   "pattern": "^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$"
@@ -2795,12 +2676,10 @@
   "pattern": "^[m,M]{2}[0-9]{5}[0-9]*$"
  },
  "mondo": {
-  "pattern": "^\\d{7}$",
-  "banana": "MONDO"
+  "pattern": "^\\d{7}$"
  },
  "mop": {
-  "pattern": "^\\d{7}$",
-  "banana": "MOP"
+  "pattern": "^\\d{7}$"
  },
  "morpheus": {
   "pattern": "^M[0-9]{4,}$"
@@ -2811,7 +2690,6 @@
  },
  "mpath": {
   "pattern": "^\\d+$",
-  "banana": "MPATH",
   "synonyms": [
    "MPATH"
   ]
@@ -2823,18 +2701,17 @@
   ]
  },
  "mpio": {
-  "pattern": "^\\d{7}$",
-  "banana": "MPIO"
+  "pattern": "^\\d{7}$"
  },
  "mro": {
-  "pattern": "^\\d{7}$",
-  "banana": "MRO"
+  "pattern": "^\\d{7}$"
  },
  "ms": {
   "pattern": "^\\d{7}$",
   "banana": "MS"
  },
  "msigdb": {
+  "pattern": "^M\\d+$",
   "synonyms": [
    "msig"
   ]
@@ -2898,8 +2775,7 @@
   "pattern": "^urn\\:nbn\\:[A-Za-z_0-9]+\\:([A-Za-z_0-9]+)-[A-Za-z_0-9]+$"
  },
  "nbo": {
-  "pattern": "^\\d{7}$",
-  "banana": "NBO"
+  "pattern": "^\\d{7}$"
  },
  "nbrc": {
   "pattern": "^\\d+$"
@@ -2965,8 +2841,7 @@
   ]
  },
  "ncro": {
-  "pattern": "^\\d{7}$",
-  "banana": "NCRO"
+  "pattern": "^\\d{7}$"
  },
  "ndc": {
   "pattern": "^\\d+\\-\\d+\\-\\d+$"
@@ -2985,7 +2860,11 @@
   "pattern": "^[a-z]{3}-[a-km-z0-9]{7}$"
  },
  "neurolex": {
-  "pattern": "^([Bb]irnlex_|Sao|nlx_|GO_|CogPO|HDO|nifext_)\\d+$"
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLX",
+   "nlx"
+  ]
  },
  "neuromorpho": {
   "pattern": "^\\w+$"
@@ -3027,14 +2906,20 @@
  "niaest": {
   "pattern": "^\\w\\d{4}\\w\\d{2}(\\-[35])?$"
  },
- "nif_cell": {
-  "banana": "NIF_CELL"
+ "nif.cell": {},
+ "nif.dysfunction": {},
+ "nif.ext": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NIFEXT"
+  ]
  },
- "nif_dysfunction": {
-  "banana": "NIF_DYSFUNCTION"
- },
- "nif_grossanatomy": {
-  "banana": "NIF_GROSSANATOMY"
+ "nif.grossanatomy": {},
+ "nif.std": {
+  "pattern": "^BAMSC\\d+$",
+  "synonyms": [
+   "NIFSTD"
+  ]
  },
  "nihreporter.project": {
   "pattern": "^\\d+$"
@@ -3048,11 +2933,77 @@
  "nlm": {
   "pattern": "^\\d+$"
  },
- "nlxanat": {
-  "pattern": "^\\d{6}$"
- },
- "nlxdys": {
+ "nlx.anat": {
   "pattern": "^\\d+$"
+ },
+ "nlx.br": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXBR"
+  ]
+ },
+ "nlx.cell": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXCELL"
+  ]
+ },
+ "nlx.chem": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXCHEM"
+  ]
+ },
+ "nlx.dys": {
+  "pattern": "^\\d+$"
+ },
+ "nlx.func": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXFUNC"
+  ]
+ },
+ "nlx.inv": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXINV"
+  ]
+ },
+ "nlx.mol": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXMOL"
+  ]
+ },
+ "nlx.oen": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXOEN"
+  ]
+ },
+ "nlx.org": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXORG"
+  ]
+ },
+ "nlx.qual": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXQUAL"
+  ]
+ },
+ "nlx.res": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXRES"
+  ]
+ },
+ "nlx.sub": {
+  "pattern": "^\\d+$",
+  "synonyms": [
+   "NLXSUB"
+  ]
  },
  "nmdc": {
   "pattern": "^[\\w\\-.]{3,}$"
@@ -3068,8 +3019,7 @@
   "pattern": "^[0-9]+$"
  },
  "nomen": {
-  "pattern": "^\\d{7}$",
-  "banana": "NOMEN"
+  "pattern": "^\\d{7}$"
  },
  "noncodev3": {
   "pattern": "^\\d+$"
@@ -3098,28 +3048,24 @@
  },
  "oa": {},
  "oae": {
-  "pattern": "^\\d{7}$",
-  "banana": "OAE"
+  "pattern": "^\\d{7}$"
  },
  "oarcs": {
-  "pattern": "^\\d{7}$",
-  "banana": "OARCS"
+  "pattern": "^\\d{7}$"
  },
  "oba": {
-  "pattern": "^\\d{7}$",
-  "banana": "OBA"
+  "pattern": "^\\d{7}$"
  },
  "obcs": {
-  "pattern": "^\\d{7}$",
-  "banana": "OBCS"
+  "pattern": "^\\d{7}$"
  },
  "obi": {
   "pattern": "^\\d{7}$",
-  "banana": "OBI"
+  "banana": "OBI",
+  "banana_peel": ":"
  },
  "obib": {
-  "pattern": "^\\d{7}$",
-  "banana": "OBIB"
+  "pattern": "^\\d{7}$"
  },
  "obo": {},
  "oboformat": {},
@@ -3154,45 +3100,37 @@
   "pattern": "^\\d+$"
  },
  "ogg": {
-  "pattern": "^\\d+$",
-  "banana": "OGG"
+  "pattern": "^\\d+$"
  },
  "ogi": {
   "pattern": "^\\d{7}$",
-  "banana": "OGI",
   "synonyms": [
    "OGI.owl"
   ]
  },
  "ogms": {
   "pattern": "^\\d{7}$",
-  "banana": "OGMS",
   "synonyms": [
    "ogms/OMRE"
   ]
  },
  "ogsf": {
-  "pattern": "^\\d{7}$",
-  "banana": "OGSF"
+  "pattern": "^\\d{7}$"
  },
  "ohd": {
-  "pattern": "^\\d{7}$",
-  "banana": "OHD"
+  "pattern": "^\\d{7}$"
  },
  "ohmi": {
-  "pattern": "^\\d{7}$",
-  "banana": "OHMI"
+  "pattern": "^\\d{7}$"
  },
  "ohpi": {
-  "pattern": "^\\d+$",
-  "banana": "OHPI"
+  "pattern": "^\\d+$"
  },
  "oid": {
   "pattern": "^[\\d.]+$"
  },
  "olatdv": {
-  "pattern": "^\\d{7}$",
-  "banana": "OlatDv"
+  "pattern": "^\\d{7}$"
  },
  "om": {},
  "oma.grp": {
@@ -3209,8 +3147,7 @@
   "pattern": "^\\d+$"
  },
  "omiabis": {
-  "pattern": "^\\d{7}$",
-  "banana": "OMIABIS"
+  "pattern": "^\\d{7}$"
  },
  "omim": {
   "pattern": "^\\d+$",
@@ -3230,60 +3167,50 @@
  },
  "omit": {
   "pattern": "^\\d{7}$",
-  "banana": "OMIT",
   "synonyms": [
    "OMIT"
   ]
  },
- "omo": {
-  "banana": "OMO"
- },
+ "omo": {},
  "omop": {},
  "omp": {
-  "pattern": "^\\d{7}$",
-  "banana": "OMP"
+  "pattern": "^\\d{7}$"
  },
  "omrse": {
-  "pattern": "^\\d{8}$",
-  "banana": "OMRSE"
+  "pattern": "^\\d{8}$"
  },
  "oncotree": {},
  "one": {
-  "pattern": "^\\d{7}$",
-  "banana": "ONE"
+  "pattern": "^\\d{7}$"
  },
  "ons": {
-  "pattern": "^\\d{7}$",
-  "banana": "ONS"
+  "pattern": "^\\d{7}$"
  },
  "ontoavida": {
-  "pattern": "^\\d{8}$",
-  "banana": "ONTOAVIDA"
+  "pattern": "^\\d{8}$"
  },
  "ontoneo": {
-  "pattern": "^\\d{8}$",
-  "banana": "ONTONEO"
+  "pattern": "^\\d{8}$"
  },
  "oostt": {
-  "pattern": "^\\d{8}$",
-  "banana": "OOSTT"
+  "pattern": "^\\d{8}$"
  },
  "opb": {
-  "pattern": "^\\d+$"
+  "pattern": "^\\d+$",
+  "banana": "OPB",
+  "banana_peel": "_"
  },
  "openalex": {
   "pattern": "^[WAICV]\\d{2,}$"
  },
  "opl": {
-  "pattern": "^\\d{7}$",
-  "banana": "OPL"
+  "pattern": "^\\d{7}$"
  },
  "opm": {
   "pattern": "^[0-9][A-Za-z0-9]{3}$"
  },
  "opmi": {
-  "pattern": "^\\d{7}$",
-  "banana": "OPMI"
+  "pattern": "^\\d{7}$"
  },
  "orcid": {
   "pattern": "^\\d{4}-\\d{4}-\\d{4}-\\d{3}(\\d|X)$",
@@ -3302,8 +3229,7 @@
   "pattern": "^\\d+$"
  },
  "ornaseq": {
-  "pattern": "^\\d{7}$",
-  "banana": "ORNASEQ"
+  "pattern": "^\\d{7}$"
  },
  "orphanet": {
   "pattern": "^\\d+$",
@@ -3313,6 +3239,8 @@
  },
  "orphanet.ordo": {
   "pattern": "^C?\\d+$",
+  "banana": "Orphanet",
+  "banana_peel": "_",
   "synonyms": [
    "ordo"
   ]
@@ -3340,8 +3268,7 @@
   "pattern": "^A[A-Z]+\\d+$"
  },
  "ovae": {
-  "pattern": "^\\d{7}$",
-  "banana": "OVAE"
+  "pattern": "^\\d{7}$"
  },
  "owl": {},
  "p3db.protein": {
@@ -3366,9 +3293,7 @@
  "panther.pthcmp": {
   "pattern": "^(G|P|U|C|S)\\d{5}$"
  },
- "pao": {
-  "banana": "PAO"
- },
+ "pao": {},
  "pass2": {
   "pattern": "^\\d+$"
  },
@@ -3398,16 +3323,12 @@
   "pattern": "^\\d+$"
  },
  "pcl": {
-  "pattern": "^\\d{7}$",
-  "banana": "PCL"
+  "pattern": "^\\d{7}$"
  },
  "pco": {
-  "pattern": "^\\d{7}$",
-  "banana": "PCO"
+  "pattern": "^\\d{7}$"
  },
- "pd_st": {
-  "banana": "PD_ST"
- },
+ "pd_st": {},
  "pdb": {
   "pattern": "^[0-9][A-Za-z0-9]{3}$",
   "synonyms": [
@@ -3430,19 +3351,16 @@
   ]
  },
  "pdro": {
-  "pattern": "^\\d{7}$",
-  "banana": "PDRO"
+  "pattern": "^\\d{7}$"
  },
  "pdumdv": {
   "pattern": "^\\d{7}$",
-  "banana": "PdumDv",
   "synonyms": [
    "PdumDv"
   ]
  },
  "peco": {
-  "pattern": "^\\d{7}$",
-  "banana": "PECO"
+  "pattern": "^\\d{7}$"
  },
  "ped": {
   "pattern": "^PED\\d{5}$"
@@ -3479,9 +3397,7 @@
    "TDR"
   ]
  },
- "pgdso": {
-  "banana": "PGDSO"
- },
+ "pgdso": {},
  "pgs": {
   "pattern": "^PGS[0-9]{6}$"
  },
@@ -3517,8 +3433,7 @@
   "pattern": "^\\d+$"
  },
  "phipo": {
-  "pattern": "^\\d{7}$",
-  "banana": "PHIPO"
+  "pattern": "^\\d{7}$"
  },
  "phosphopoint.kinase": {
   "pattern": "^\\w+$"
@@ -3568,12 +3483,10 @@
   "pattern": "^PKDB[0-9]{5}$"
  },
  "plana": {
-  "pattern": "^\\d{7}$",
-  "banana": "PLANA"
+  "pattern": "^\\d{7}$"
  },
  "planp": {
-  "pattern": "^\\d+$",
-  "banana": "PLANP"
+  "pattern": "^\\d+$"
  },
  "planttfdb": {
   "pattern": "^[A-Z][a-z]{2}_([A-Za-z]{3}[0-9]{6})|([A-Za-z0-9\\._\\-#]*)$"
@@ -3584,9 +3497,7 @@
    "ApiDB_PlasmoDB"
   ]
  },
- "plo": {
-  "banana": "PLO"
- },
+ "plo": {},
  "pmap.cutdb": {
   "pattern": "^\\d+$"
  },
@@ -3626,15 +3537,13 @@
   ]
  },
  "poro": {
-  "pattern": "^\\d{7}$",
-  "banana": "PORO"
+  "pattern": "^\\d{7}$"
  },
  "ppdb": {
   "pattern": "^\\d+$"
  },
  "ppo": {
-  "pattern": "^\\d{7}$",
-  "banana": "PPO"
+  "pattern": "^\\d{7}$"
  },
  "ppr": {},
  "pr": {
@@ -3664,9 +3573,7 @@
  "proglyc": {
   "pattern": "^[A-Z]C\\d{1,3}$"
  },
- "propreo": {
-  "banana": "PROPREO"
- },
+ "propreo": {},
  "prosite": {
   "pattern": "^PS\\d{5}$"
  },
@@ -3690,8 +3597,7 @@
   "pattern": "^\\d+$"
  },
  "psdo": {
-  "pattern": "^\\d{7}$",
-  "banana": "PSDO"
+  "pattern": "^\\d{7}$"
  },
  "pseudogene": {
   "synonyms": [
@@ -3705,8 +3611,7 @@
   "pattern": "^PAR:\\d+$"
  },
  "pso": {
-  "pattern": "^\\d{7}$",
-  "banana": "PSO"
+  "pattern": "^\\d{7}$"
  },
  "pspub": {},
  "pubchem.bioassay": {
@@ -3771,8 +3676,7 @@
   "pattern": "^[-0-9a-zA-Z]+(@[-0-9a-zA-Z]+)?$"
  },
  "rbo": {
-  "pattern": "^\\d{8}$",
-  "banana": "RBO"
+  "pattern": "^\\d{8}$"
  },
  "rcb": {
   "pattern": "^RCB\\d+$"
@@ -3820,13 +3724,11 @@
  },
  "reproduceme": {},
  "resid": {
-  "pattern": "^AA\\d{4}$",
-  "banana": "RESID"
+  "pattern": "^AA\\d{4}$"
  },
  "reto": {},
  "rex": {
-  "pattern": "^\\d{7}$",
-  "banana": "REX"
+  "pattern": "^\\d{7}$"
  },
  "rexo": {},
  "rfam": {
@@ -3881,12 +3783,12 @@
   "pattern": "^\\d{3}$"
  },
  "rnao": {
-  "pattern": "^\\d{7}$",
-  "banana": "RNAO"
+  "pattern": "^\\d{7}$"
  },
  "ro": {
   "pattern": "^\\d{7}$",
   "banana": "RO",
+  "banana_peel": "_",
   "synonyms": [
    "RO_proposed_relation",
    "obo_rel",
@@ -3901,15 +3803,13 @@
   "banana": "RRID"
  },
  "rs": {
-  "pattern": "^\\d{7}$",
-  "banana": "RS"
+  "pattern": "^\\d{7}$"
  },
  "runbiosimulations": {
   "pattern": "^[0-9a-z]{24,24}$"
  },
  "rxno": {
-  "pattern": "^\\d{7}$",
-  "banana": "RXNO"
+  "pattern": "^\\d{7}$"
  },
  "rxnorm": {
   "pattern": "^[0-9]{1,7}$",
@@ -3936,9 +3836,7 @@
  "salk": {
   "pattern": "^\\d{6}$"
  },
- "sao": {
-  "banana": "SAO"
- },
+ "sao": {},
  "sasbdb": {
   "pattern": "^[Ss][Aa][Ss][A-Za-z0-9]{3}[0-9]$"
  },
@@ -3947,8 +3845,7 @@
   "banana": "SBO"
  },
  "scdo": {
-  "pattern": "^\\d{7}$",
-  "banana": "SCDO"
+  "pattern": "^\\d{7}$"
  },
  "schem": {
   "pattern": "^A\\d{4}$"
@@ -3994,12 +3891,10 @@
   "pattern": "^rxn\\d+$"
  },
  "sep": {
-  "pattern": "^\\d{5}$",
-  "banana": "SEP"
+  "pattern": "^\\d{5}$"
  },
  "sepio": {
-  "pattern": "^\\d{7}$",
-  "banana": "SEPIO"
+  "pattern": "^\\d{7}$"
  },
  "sfam": {
   "pattern": "^F\\d{4}$"
@@ -4017,8 +3912,7 @@
   "pattern": "^\\d+$"
  },
  "sibo": {
-  "pattern": "^\\d{7}$",
-  "banana": "SIBO"
+  "pattern": "^\\d{7}$"
  },
  "sider.drug": {
   "pattern": "^\\d+$"
@@ -4040,7 +3934,9 @@
   "pattern": "^SIGNOR-\\d+$"
  },
  "sio": {
-  "pattern": "^\\d{6}$"
+  "pattern": "^\\d{6}$",
+  "banana": "SIO",
+  "banana_peel": "_"
  },
  "sisu": {
   "pattern": "^[0-9]+:[0-9]+$"
@@ -4111,16 +4007,13 @@
   "pattern": "^\\d{7}$",
   "banana": "SO"
  },
- "sopharm": {
-  "banana": "SOPHARM"
- },
+ "sopharm": {},
  "soybase": {
   "pattern": "^\\w+(\\-)?\\w+(\\-)?\\w+$"
  },
  "span": {},
  "spd": {
-  "pattern": "^\\d{7}$",
-  "banana": "SPD"
+  "pattern": "^\\d{7}$"
  },
  "spdx": {
   "pattern": "^[0-9A-Za-z\\-.]+$"
@@ -4150,8 +4043,7 @@
   "pattern": "^[0-9][A-Za-z0-9]{3}$"
  },
  "stato": {
-  "pattern": "^\\d{7}$",
-  "banana": "STATO"
+  "pattern": "^\\d{7}$"
  },
  "stitch": {
   "pattern": "^\\w{14}$"
@@ -4159,6 +4051,15 @@
  "storedb": {
   "pattern": "^(STUDY|FILE|DATASET)\\d+$",
   "banana": "STOREDB"
+ },
+ "storedb.dataset": {
+  "pattern": "^\\d+$"
+ },
+ "storedb.file": {
+  "pattern": "^\\d+$"
+ },
+ "storedb.study": {
+  "pattern": "^\\d+$"
  },
  "string": {
   "pattern": "^([A-N,R-Z][0-9][A-Z][A-Z, 0-9][A-Z, 0-9][0-9])|([O,P,Q][0-9][A-Z, 0-9][A-Z, 0-9][A-Z, 0-9][0-9])|([0-9][A-Za-z0-9]{3})$"
@@ -4198,12 +4099,10 @@
   "pattern": "^[A-Za-z0-9]+$"
  },
  "swo": {
-  "pattern": "^\\d{7}$",
-  "banana": "SWO"
+  "pattern": "^\\d{7}$"
  },
  "symp": {
   "pattern": "^\\d{7}$",
-  "banana": "SYMP",
   "synonyms": [
    "SYMP"
   ]
@@ -4213,27 +4112,25 @@
   "pattern": "^T3D\\d+$"
  },
  "tads": {
-  "pattern": "^\\d{7}$",
-  "banana": "TADS"
- },
- "tahe": {
-  "banana": "TAHE"
- },
- "tahh": {
-  "banana": "TAHH"
- },
- "tair.gene": {
   "pattern": "^\\d{7}$"
+ },
+ "tahe": {},
+ "tahh": {},
+ "tair.gene": {
+  "pattern": "^\\d{7}$",
+  "banana": "Gene",
+  "banana_peel": ":"
  },
  "tair.locus": {
   "pattern": "^\\d+$"
  },
  "tair.protein": {
-  "pattern": "^\\d{10}$"
+  "pattern": "^\\d{10}$",
+  "banana": "AASequence",
+  "banana_peel": ":"
  },
  "tao": {
   "pattern": "^\\d{7}$",
-  "banana": "TAO",
   "synonyms": [
    "TAO_RETIRED"
   ]
@@ -4242,8 +4139,7 @@
   "pattern": "^[a-z]{3}\\-(mir|let|lin)\\-\\w+(\\-\\w+\\-\\w+)$"
  },
  "taxrank": {
-  "pattern": "^\\d{7}$",
-  "banana": "TAXRANK"
+  "pattern": "^\\d{7}$"
  },
  "tcb": {
   "pattern": "^\\d+$"
@@ -4260,8 +4156,7 @@
   "pattern": "^TTHERM\\_\\d+$"
  },
  "tgma": {
-  "pattern": "^\\d{7}$",
-  "banana": "TGMA"
+  "pattern": "^\\d{7}$"
  },
  "tgn": {
   "pattern": "^\\d+$"
@@ -4278,8 +4173,7 @@
   "pattern": "^\\d+$"
  },
  "to": {
-  "pattern": "^\\d{7}$",
-  "banana": "TO"
+  "pattern": "^\\d{7}$"
  },
  "tokue": {},
  "tol": {
@@ -4295,8 +4189,7 @@
   "pattern": "^\\w+$"
  },
  "trans": {
-  "pattern": "^\\d{7}$",
-  "banana": "TRANS"
+  "pattern": "^\\d{7}$"
  },
  "transyt": {
   "pattern": "^T[A-Z]\\d{7}$"
@@ -4320,12 +4213,10 @@
   "pattern": "^TTDS\\d+$"
  },
  "tto": {
-  "pattern": "^\\d+$",
-  "banana": "TTO"
+  "pattern": "^\\d+$"
  },
  "txpo": {
-  "pattern": "^\\d{7}$",
-  "banana": "TXPO"
+  "pattern": "^\\d{7}$"
  },
  "uberon": {
   "pattern": "^\\d+$",
@@ -4491,16 +4382,13 @@
  },
  "upa": {
   "pattern": "^(UCR|UCY|UER|ULS|UPA|UPC|UPX)\\d{5}$",
-  "banana": "UPA",
   "synonyms": [
    "UPa",
    "unipathway",
    "unipathway.pathway"
   ]
  },
- "upheno": {
-  "banana": "UPHENO"
- },
+ "upheno": {},
  "uspto": {
   "pattern": "^(D|PP|R|T|H|X|AI)?\\d+$"
  },
@@ -4548,7 +4436,6 @@
  },
  "vhog": {
   "pattern": "^\\d{7}$",
-  "banana": "VHOG",
   "synonyms": [
    "VHOG_RETIRED"
   ]
@@ -4579,12 +4466,10 @@
   "pattern": "^[a-zA-Z0-9_\\(\\_\\)\\[\\]]+$"
  },
  "vo": {
-  "pattern": "^\\d{7}$",
-  "banana": "VO"
+  "pattern": "^\\d{7}$"
  },
  "void": {},
  "vsao": {
-  "banana": "VSAO",
   "synonyms": [
    "VSAO_RETIRED"
   ]
@@ -4596,12 +4481,10 @@
   "pattern": "^\\d{7}$"
  },
  "vt": {
-  "pattern": "^\\d{7}$",
-  "banana": "VT"
+  "pattern": "^\\d{7}$"
  },
  "vto": {
-  "pattern": "^\\d{7}$",
-  "banana": "VTO"
+  "pattern": "^\\d{7}$"
  },
  "vuid": {
   "pattern": "^\\d+$"
@@ -4614,21 +4497,18 @@
  },
  "wbbt": {
   "pattern": "^\\d{7}$",
-  "banana": "WBbt",
   "synonyms": [
    "WBbt"
   ]
  },
  "wbls": {
   "pattern": "^\\d{7}$",
-  "banana": "WBls",
   "synonyms": [
    "WBls"
   ]
  },
  "wbphenotype": {
   "pattern": "^\\d{7}$",
-  "banana": "WBPhenotype",
   "synonyms": [
    "WBPhenotype"
   ]
@@ -4684,12 +4564,10 @@
   ]
  },
  "xao": {
-  "pattern": "^\\d{7}$",
-  "banana": "XAO"
+  "pattern": "^\\d{7}$"
  },
  "xco": {
-  "pattern": "^\\d{7}$",
-  "banana": "XCO"
+  "pattern": "^\\d{7}$"
  },
  "xenbase": {
   "pattern": "^XB\\-\\w+\\-\\d+$"
@@ -4699,8 +4577,7 @@
  },
  "xl": {},
  "xlmod": {
-  "pattern": "^\\d{5}$",
-  "banana": "XLMOD"
+  "pattern": "^\\d{5}$"
  },
  "xmetdb": {
   "pattern": "^\\d+$",
@@ -4708,8 +4585,7 @@
  },
  "xml": {},
  "xpo": {
-  "pattern": "^\\d+$",
-  "banana": "XPO"
+  "pattern": "^\\d+$"
  },
  "xsd": {},
  "xuo": {},
@@ -4728,22 +4604,16 @@
  "ymdb": {
   "pattern": "^YMDB\\d+$"
  },
- "ypo": {
-  "banana": "YPO"
- },
+ "ypo": {},
  "yrcpdr": {
   "pattern": "^\\d+$"
  },
- "zea": {
-  "banana": "ZEA"
- },
+ "zea": {},
  "zeco": {
-  "pattern": "^\\d{7}$",
-  "banana": "ZECO"
+  "pattern": "^\\d{7}$"
  },
  "zfa": {
   "pattern": "^\\d{7}$",
-  "banana": "ZFA",
   "synonyms": [
    "ZFA_RETIRED"
   ]
@@ -4755,14 +4625,12 @@
   ]
  },
  "zfs": {
-  "pattern": "^\\d{7}$",
-  "banana": "ZFS"
+  "pattern": "^\\d{7}$"
  },
  "zinc": {
   "pattern": "^(ZINC)?\\d+$"
  },
  "zp": {
-  "pattern": "^\\d+$",
-  "banana": "ZP"
+  "pattern": "^\\d+$"
  }
 }
