@@ -60,5 +60,3 @@ def test_ensure_prefix_if_needed():
         'CHEBI:3696'
     assert bioregistry_client.ensure_prefix_if_needed('CHEBI', 'CHEBI:3696') == \
         'CHEBI:3696'
-    assert bioregistry_client.ensure_prefix_if_needed('CLO', '0008395') == \
-        'CLO:0008395'
