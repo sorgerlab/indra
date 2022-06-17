@@ -477,27 +477,21 @@ class BiopaxProcessor(object):
         # One gene coding for many proteins
         elif nhgnc_ids == 1 and nup_ids > 1:
             for up_id in xrefs['UP']:
-                agent = get_standard_agent(name, {'UP': up_id}, mods=mcs)
+                agent = get_standard_agent(name, _refs_from_up_id(up_id),
+                                           mods=mcs)
                 agents.append(agent)
         # This is secretly a family, i.e., we have more than one
         # gene/protein IDs and so we can go by one of the ID sets and
         # standardize from there
         elif nhgnc_ids > 1 and nhgnc_ids == nup_ids:
             for up_id in xrefs['UP']:
-                agent = get_standard_agent(name, {'UP': up_id}, mods=mcs)
+                agent = get_standard_agent(name, _refs_from_up_id(up_id),
+                                           mods=mcs)
                 agents.append(agent)
         # Otherwise it's just a regular Agent
         else:
             agent = get_standard_agent(name, clean_up_xrefs(xrefs), mods=mcs)
             agents.append(agent)
-        # Since there are so many cases above, we fix UP / UPISO issues
-        # in a single loop here
-        for agent in agents:
-            up_id = agent.db_refs.get('UP')
-            if up_id is not None and '-' in up_id:
-                base_id = up_id.split('-')[0]
-                agent.db_refs['UP'] = base_id
-                agent.db_refs['UPISO'] = up_id
 
         # There is a potential here that an Agent name was set to None
         # if both the display name and the standard name are missing.
@@ -982,6 +976,16 @@ def sanitize_hgnc_ids(raw_hgnc_ids):
     return list(hgnc_ids)
 
 
+def _refs_from_up_id(up_id):
+    """Get the refs from the up_id"""
+    if '-' in up_id:
+        base_id = up_id.split('-')[0]
+        db_refs = {'UP': base_id, 'UPISO': up_id}
+    else:
+        db_refs = {'UP': up_id}
+    return db_refs
+
+
 def clean_up_xrefs(xrefs):
     db_refs = {}
     for k, v in xrefs.items():
@@ -990,6 +994,8 @@ def clean_up_xrefs(xrefs):
                 db_refs[k] = list(v)[0]
         else:
             db_refs[k] = v
+        if k == 'UP':
+            db_refs.update(_refs_from_up_id(db_refs[k]))
     return db_refs
 
 

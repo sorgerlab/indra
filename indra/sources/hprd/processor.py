@@ -166,7 +166,7 @@ class HprdProcessor(object):
                 if ag is not None:
                     agents.append(ag)
             # Make sure we got some agents!
-            if not agents:
+            if not agents or len(agents) < 2:
                 continue
             # Get evidence info from first member of complex
             row0 = this_cplx.iloc[0]

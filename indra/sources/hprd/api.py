@@ -1,6 +1,10 @@
+__all__ = ['process_archive', 'process_flat_files']
+
+import requests
+import tarfile
 import pandas as pd
-from collections import namedtuple
-from protmapper.uniprot_client import load_fasta_sequences
+from protmapper.uniprot_client import load_fasta_sequences, \
+    load_fasta_sequence_lines
 from indra.sources.hprd.processor import HprdProcessor
 
 _hprd_id_cols = ['HPRD_ID', 'HGNC_SYMBOL', 'REFSEQ_GENE', 'REFSEQ_PROTEIN',
@@ -19,9 +23,42 @@ _ppi_cols = ['HGNC_SYMBOL_A', 'HPRD_ID_A', 'REFSEQ_PROTEIN_A',
              'EVIDENCE', 'PMIDS']
 
 
+file_mappings = {
+    'id_mappings_file': 'HPRD_ID_MAPPINGS.txt',
+    'complexes_file': 'PROTEIN_COMPLEXES.txt',
+    'ptm_file': 'POST_TRANSLATIONAL_MODIFICATIONS.txt',
+    'ppi_file': 'BINARY_PROTEIN_PROTEIN_INTERACTIONS.txt',
+    'seq_file': 'PROTEIN_SEQUENCES.txt',
+}
+
+
+def process_archive(fname):
+    """Get INDRA Statements from HPRD data in a single tar.gz file.
+
+    The latest release, HPRD_FLAT_FILES_041310.tar.gz can be downloaded from
+    http://hprd.org/download after registration.
+
+    Parameters
+    ----------
+    fname : str
+        Path to HPRD tar.gz file.
+
+    Returns
+    -------
+    HprdProcessor
+        An HprdProcessor object which contains a list of extracted INDRA
+        Statements in its statements attribute.
+    """
+    with tarfile.open(fname, "r:gz") as fh:
+        prefix = fh.next().name.split('/')[0]
+        files = {k: fh.extractfile(prefix + '/' + v) for k, v in
+                 file_mappings.items()}
+        return process_flat_files(**files)
+
+
 def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
                        ppi_file=None, seq_file=None, motif_window=7):
-    """Get INDRA Statements from HPRD data.
+    """Get INDRA Statements from HPRD data in individual files.
 
     Of the arguments, `id_mappings_file` is required, and at least one of
     `complexes_file`, `ptm_file`, and `ppi_file` must also be given.  If
@@ -94,7 +131,14 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
         ptm_df = pd.read_csv(ptm_file, delimiter='\t', names=_ptm_cols,
                              dtype='str', na_values='-')
         # Load protein sequences as a dict keyed by RefSeq ID
-        seq_dict = load_fasta_sequences(seq_file, id_index=2)
+        # If this comes from a tar.gz archive directly, we need to get the
+        # lines first and decode them, otherwise we can cal a function
+        # that expects a standalone file path
+        if hasattr(seq_file, 'readlines'):
+            lines = [l.decode('utf-8') for l in seq_file.readlines()]
+            seq_dict = load_fasta_sequence_lines(lines, id_index=2)
+        else:
+            seq_dict = load_fasta_sequences(seq_file, id_index=2)
     # Load the PPI data into dataframe
     ppi_df = None
     if ppi_file:

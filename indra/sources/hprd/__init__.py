@@ -24,4 +24,4 @@ This module is designed to process the text files obtained from the first
 link listed above.
 """
 from .processor import HprdProcessor
-from .api import process_flat_files
+from .api import *
