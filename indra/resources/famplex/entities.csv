@@ -125,6 +125,7 @@ CD8
 CDC25
 CDK
 CDK1_2
+CDK_activating_kinase_complex
 CDKN
 CDKN1
 CDKN2
@@ -194,7 +195,9 @@ DAPK
 DDR
 Death_receptor
 Deoxyribonucleoside_kinases
+DESI
 Desmoglein
+Desumoylase
 Deubiquitinase
 DGC
 DGK
@@ -482,6 +485,7 @@ NDRG
 Neurexins
 Neuropeptide_receptor
 Neuropeptides
+Neuropilins
 NFAT
 NFE
 NFkappaB
@@ -499,6 +503,7 @@ NRG_1_2
 NRG_3_4
 NTRK
 OGT_family
+Opioid_receptor
 OR
 OR1
 OR10
@@ -652,6 +657,7 @@ SCAR
 SCD
 SCN
 SCNN
+SENP
 SERCA
 SERPINB
 SGC
@@ -704,6 +710,7 @@ THR
 Thrombin_antithrombin
 TIAM
 TIF_IB
+TIM22_complex
 TK
 TLR
 TN
