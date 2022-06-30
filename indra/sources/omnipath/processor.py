@@ -1,4 +1,6 @@
 from __future__ import unicode_literals
+
+import copy
 import logging
 from indra.statements.validate import validate_text_refs
 from indra.ontology.standardize import standardize_agent_name
@@ -130,7 +132,9 @@ class OmniPathProcessor(object):
                     activation = True if lr_entry['consensus_stimulation'] else \
                         False
                     ligrec_stmts.append(self._get_ligrec_regs(
-                        lr_entry['source'], lr_entry['target'], evidence,
+                        lr_entry['source'], lr_entry['target'],
+                        # Make sure we decouple evidences from the above
+                        copy.deepcopy(evidence),
                         activation=activation))
                 elif lr_entry['consensus_stimulation'] and \
                         lr_entry['consensus_inhibition']:
