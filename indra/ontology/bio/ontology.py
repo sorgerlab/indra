@@ -19,13 +19,13 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.26'
+    version = '1.27'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido', 'mondo', 'eccode',
     ]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def initialize(self, rebuild=False):
         if rebuild or not os.path.exists(CACHE_FILE):
@@ -589,8 +589,8 @@ class BioOntology(IndraOntology):
         super().add_nodes_from(nodes_for_adding, **attr)
 
     def add_edges_from(self, ebunch_to_add, **attr):
-        for source, target, _ in ebunch_to_add:
-            for label in [source, target]:
+        for edge_info in ebunch_to_add:
+            for label in edge_info[:2]:
                 self.assert_valid_node(label)
         super().add_edges_from(ebunch_to_add, **attr)
 
