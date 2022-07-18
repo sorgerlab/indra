@@ -53,8 +53,8 @@ if __name__ == '__main__':
         print(ns, len(problems_ns))
 
 
-    # Next, find cycles in the isa/partof subgraph meaning circilar hierarchical
-    # relationships.
+    # Next, find cycles in the isa/partof subgraph meaning circular
+    # hierarchical relationships.
     hierarchy = [(e[0], e[1]) for e in bio_ontology.edges(data=True) if
                  e[2]['type'] in {'isa', 'partof'}]
     hierarchyg = bio_ontology.edge_subgraph(hierarchy)
