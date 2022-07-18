@@ -1,3 +1,4 @@
+from unittest import skip
 from indra.statements import Agent
 from indra.ontology.bio import bio_ontology
 from indra.databases import go_client, hgnc_client
@@ -314,6 +315,7 @@ def test_name_lookup_obsolete():
         ('HGNC', '403')
 
 
+@skip('CHEBI partof relations currently excluded')
 def test_chebi_refinements():
     assert bio_ontology.partof('CHEBI', 'CHEBI:136692',
                                'CHEBI', 'CHEBI:365')
