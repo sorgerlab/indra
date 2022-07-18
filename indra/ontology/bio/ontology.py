@@ -278,10 +278,34 @@ class BioOntology(IndraOntology):
         reverse_rel = {
             'has_part',
         }
+
+        exceptions = {
+            # Some (non-physical entity) GO terms have a has_part relationship
+            # that creates cycles in the isa/partof subgraph. One example is
+            # signaling receptor binding (GO:GO:0005102)-[partof]-
+            #      pheromone activity (GO:GO:0005186)
+            # where the first is actually a more generic term compared to the
+            # second. The semantics of these are different from typical partof
+            # relations in INDRA so we exclude them.
+            'GO': ('has_part', lambda x: x['type'] != 'cellular_component'),
+            # Similarly, CHEBI partof/isa relations have cycles, for example,
+            # molybdate (CHEBI:CHEBI:36264)-[partof]-
+            #     sodium molybdate (anhydrous) (CHEBI:CHEBI:75215)
+            # sodium molybdate (anhydrous) (CHEBI:CHEBI:75215)-[partof]-
+            #     sodium molybdate tetrahydrate (CHEBI:CHEBI:132099)
+            # sodium molybdate tetrahydrate (CHEBI:CHEBI:132099)-[isa]-
+            #     molybdate (CHEBI:CHEBI:36264)
+            # For simplicity, we exclude all has_part (i.e., reverse partof)
+            # relations coming from CHEBI.
+            'CHEBI': ('has_part', lambda x: True),
+        }
+
         for ns in self.ontology_namespaces:
             oc = obo_client.OntologyClient(prefix=ns)
+            ns_exceptions = exceptions.get(ns.upper())
             for db_id, entry in oc.entries.items():
                 for rel, targets in entry.get('relations', {}).items():
+
                     # Skip unknown relation types
                     mapped_rel = rel_mappings.get(rel)
                     if not mapped_rel:
@@ -290,6 +314,13 @@ class BioOntology(IndraOntology):
                         source_label = db_id
                     else:
                         source_label = self.label(ns.upper(), db_id)
+
+                    # Here we check if there is an exception condition defined
+                    # on the inclusion of these relations
+                    if ns_exceptions and rel == ns_exceptions[0]:
+                        if ns_exceptions[1](self.nodes[source_label]):
+                            continue
+
                     for target in targets:
                         if ':' in target and not target.startswith(ns.upper()):
                             target_label = target
