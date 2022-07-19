@@ -31,8 +31,8 @@ class IndraOntology(networkx.DiGraph):
     version = None
     name = None
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._initialized = False
         self.name_to_grounding = {}
         self.transitive_closure = set()

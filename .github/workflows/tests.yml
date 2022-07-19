@@ -63,6 +63,7 @@ jobs:
         #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
+        python -m gilda.resources
         # Get INDRA World
         git clone https://github.com/indralab/indra_world.git
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar

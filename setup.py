@@ -9,11 +9,11 @@ with open(readme_path, 'r', encoding='utf-8') as fh:
 
 
 def main():
-    install_list = ['pysb>=1.3.0,<=1.9.1', 'objectpath',
+    install_list = ['pysb>=1.3.0', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas<1.3', 'ndex2==2.0.1', 'jinja2',
                     'markupsafe<2.1.0',
-                    'protmapper>=0.0.27', 'obonet', 'sympy==1.3',
+                    'protmapper>=0.0.27', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
 
     extras_require = {
@@ -21,7 +21,7 @@ def main():
                       'trips_offline': ['pykqml'],
                       'reach_offline': ['cython', 'pyjnius==1.1.4'],
                       'eidos_offline': ['cython', 'pyjnius==1.1.4'],
-                      'hypothesis': ['gilda'],
+                      'hypothesis': ['gilda>=0.10.2'],
                       'geneways': ['stemming', 'nltk<3.6'],
                       'bel': ['pybel>=0.15.0,<0.16.0'],
                       'sbml': ['python-libsbml'],
@@ -29,7 +29,7 @@ def main():
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
                       'explanation': ['kappy==4.1.2', 'paths-graph'],
-                      'grounding': ['adeft', 'gilda'],
+                      'grounding': ['adeft', 'gilda>=0.10.2'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
                       # Utilities

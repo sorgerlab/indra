@@ -15,7 +15,18 @@ def plot_problem(problem):
     plt.show()
 
 
+def print_cycle(cycle):
+    for n1, n2 in zip(cycle, cycle[1:] + cycle[:1]):
+        print('%s (%s)-[%s]-%s (%s)' % (
+            bio_ontology.get_name(*bio_ontology.get_ns_id(n1)), n1,
+            bio_ontology.edges[n1, n2]['type'],
+            bio_ontology.get_name(*bio_ontology.get_ns_id(n2)), n2
+            )
+        )
+
 if __name__ == '__main__':
+    # First, find strongly connected components in the xref graph where
+    # a given namespace appears more than once.
     bio_ontology.initialize()
     xrefs = [(e[0], e[1]) for e in bio_ontology.edges(data=True) if
              e[2]['type'] == 'xref']
@@ -40,3 +51,14 @@ if __name__ == '__main__':
 
     for ns, problems_ns in problems_by_ns.items():
         print(ns, len(problems_ns))
+
+
+    # Next, find cycles in the isa/partof subgraph meaning circular
+    # hierarchical relationships.
+    hierarchy = [(e[0], e[1]) for e in bio_ontology.edges(data=True) if
+                 e[2]['type'] in {'isa', 'partof'}]
+    hierarchyg = bio_ontology.edge_subgraph(hierarchy)
+    cycles = networkx.simple_cycles(hierarchyg)
+    for cycle in cycles:
+        print('---')
+        print_cycle(cycle)
