@@ -111,8 +111,10 @@ class BiogridProcessor(object):
                 agent_b = self._make_agent(bg_row.symbol_b, bg_row.entrez_b,
                                            bg_row.swissprot_b, bg_row.trembl_b)
             else:
-                agent_a = self._make_agent(bg_row.symbol_a, None, None, None)
-                agent_b = self._make_agent(bg_row.symbol_b, None, None, None)
+                agent_a = self._make_agent(bg_row.syst_name_a, bg_row.entrez_a,
+                                           None, None)
+                agent_b = self._make_agent(bg_row.syst_name_b, bg_row.entrez_b,
+                                           None, None)
 
             # Skip any agents with neither HGNC grounding or string name
             if agent_a is None or agent_b is None:
