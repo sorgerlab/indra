@@ -17,9 +17,9 @@ biogrid_file_url = ('https://downloads.thebiogrid.org/Download/BioGRID/'
                     'Latest-Release/BIOGRID-ALL-LATEST.tab3.zip')
 
 
-# The explanation for each column of the tsv file is here:
+# The explanation for each column of the tab3 tsv file is here:
 # https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_3.0
-columns = ['biogrid_int_id',
+_columns_v3 = ['biogrid_int_id',
            'entrez_a', 'entrez_b',
            'biogrid_a', 'biogrid_b',
            'syst_name_a', 'syst_name_b',
@@ -32,7 +32,22 @@ columns = ['biogrid_int_id',
            'qualifications', 'tags', 'source_db',
            'swissprot_a', 'trembl_a', 'refseq_a',
            'swissprot_b', 'trembl_b', 'refseq_b']
-_BiogridRow = namedtuple('BiogridRow', columns)
+
+
+# The explanation for each column of the tab2 tsv file is here:
+# https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
+_columns_v2 = ['biogrid_int_id',
+           'entrez_a', 'entrez_b',
+           'biogrid_a', 'biogrid_b',
+           'syst_name_a', 'syst_name_b',
+           'symbol_a', 'symbol_b',
+           'syn_a', 'syn_b',
+           'exp_system', 'exp_system_type',
+           'author', 'publication',
+           'organism_a', 'organism_b',
+           'throughput', 'score', 'modification',
+           'phenotypes', 'qualifications', 'tags',
+           'source_db']
 
 
 class BiogridProcessor(object):
@@ -46,6 +61,8 @@ class BiogridProcessor(object):
     physical_only : boolean
         If True, only physical interactions are included (e.g., genetic
         interactions are excluded). If False, all interactions are included).
+    tab_version : int
+        Which BioGRID .tab file version to use, 2 or 3. Default is 3 (current).
 
     Attributes
     ----------
@@ -55,9 +72,16 @@ class BiogridProcessor(object):
         Indicates whether only physical interactions were included during
         statement processing.
     """
-    def __init__(self, biogrid_file=None, physical_only=True):
+    def __init__(self, biogrid_file=None, physical_only=True, tab_version=3):
         self.statements = []
         self.physical_only = physical_only
+
+        if tab_version not in (2, 3):
+            raise ValueError('tab_version must be 2 or 3.')
+        # Use the appropriate set of columns based on the version
+        self._columns = _columns_v3 if tab_version == 3 else _columns_v2
+        # Define a namedtuple for the BioGrid row based on the given version
+        BiogridRow = namedtuple('BiogridRow', self._columns)
 
         # If a path to the file is included, process it, skipping the header
         if biogrid_file:
@@ -73,16 +97,23 @@ class BiogridProcessor(object):
             # There are some extra columns that we don't need to take and
             # thereby save space in annotations
             filt_row = [None if item == '-' else item
-                        for item in row][:len(columns)]
-            bg_row = _BiogridRow(*filt_row)
+                        for item in row][:len(self._columns)]
+
+            bg_row = BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
             if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
             # Ground agents
-            agent_a = self._make_agent(bg_row.symbol_a, bg_row.entrez_a,
-                                       bg_row.swissprot_a, bg_row.trembl_a)
-            agent_b = self._make_agent(bg_row.symbol_b, bg_row.entrez_b,
-                                       bg_row.swissprot_b, bg_row.trembl_b)
+            # Version 3 contains additional identifiers beyond HGNC
+            if tab_version == 3:
+                agent_a = self._make_agent(bg_row.symbol_a, bg_row.entrez_a,
+                                           bg_row.swissprot_a, bg_row.trembl_a)
+                agent_b = self._make_agent(bg_row.symbol_b, bg_row.entrez_b,
+                                           bg_row.swissprot_b, bg_row.trembl_b)
+            else:
+                agent_a = self._make_agent(bg_row.symbol_a, None, None, None)
+                agent_b = self._make_agent(bg_row.symbol_b, None, None, None)
+
             # Skip any agents with neither HGNC grounding or string name
             if agent_a is None or agent_b is None:
                 continue
