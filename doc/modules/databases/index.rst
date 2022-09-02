@@ -137,3 +137,7 @@ Biolookup client (:py:mod:`indra.databases.biolookup_client`)
 .. automodule:: indra.databases.biolookup_client
     :members:
 
+MONDO client (:py:mod:`indra.databases.mondo_client`)
+-----------------------------------------------------
+.. automodule:: indra.databases.mondo_client
+    :members:
