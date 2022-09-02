@@ -246,6 +246,11 @@ Gyori B.M., Bachman J.A., Subramanian K., Muhlich J.L., Galescu L., Sorger P.K.
 assembly](http://msb.embopress.org/content/13/11/954) (2017),
 Molecular Systems Biology, 13, 954.
 
+Bachman J.A., Gyori B.M., Sorger P.K.
+[Automated assembly of molecular mechanisms at scale from text mining and
+curated databases](https://doi.org/10.1101/2022.08.30.505688) (2022),
+bioRxiv preprint
+
 ## Installation
 
 For detailed installation instructions,
