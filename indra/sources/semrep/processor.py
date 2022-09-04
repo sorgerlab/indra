@@ -6,6 +6,7 @@ from indra.statements import *
 
 
 class SemRepXmlProcessor:
+    """Processor for XML output from SemRep."""
     def __init__(self, tree, use_gilda_grounding=False,
                  predicate_mappings=None):
         self.tree = tree
@@ -16,6 +17,7 @@ class SemRepXmlProcessor:
             else default_predicate_mappings
 
     def process_statements(self):
+        """Extract all Statements from an XML tree."""
         for doc in self.tree.findall('Document'):
             for utterance in doc.findall('Utterance'):
                 for predication in utterance.findall('Predication'):
@@ -24,6 +26,7 @@ class SemRepXmlProcessor:
                         self.statements.append(stmt)
 
     def extract_predication(self, predication, utterance):
+        """Extract a Statement from a single predication."""
         subj = predication.find('Subject')
         obj = predication.find('Object')
         pred = predication.find('Predicate')
@@ -54,6 +57,7 @@ class SemRepXmlProcessor:
         }
 
     def get_agent_from_entity(self, entity):
+        """Return an Agent from an entity."""
         # Note: entities can be negated ("negated") and have a semantic type
         # (semtype) and score (score)
         # <Entity id="Dtest.txt.E8" cui="C3192263" name="Vemurafenib"
