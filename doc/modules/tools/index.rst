@@ -13,6 +13,12 @@ Fix common invalidities in Statements (:py:mod:`indra.tools.fix_invalidities`)
 .. automodule:: indra.tools.fix_invalidities
     :members:
 
+Analyze ontology graph for issues (:py:mod:`indra.tools.analyze_ontology`)
+--------------------------------------------------------------------------
+
+.. automodule:: indra.tools.analyze_ontology
+    :members:
+
 Annotate websites with INDRA through hypothes.is (:py:mod:`indra.tools.hypothesis_annotator`)
 ---------------------------------------------------------------------------------------------
 
