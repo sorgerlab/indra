@@ -10,8 +10,8 @@ def test_lookup_curie():
 
 
 def test_lookup():
-    res = biolookup_client.lookup('FPLX', 'ERK')
-    assert res['name'] == 'ERK', res
+    res = biolookup_client.lookup('HGNC', '1097')
+    assert res['name'] == 'BRAF', res
 
 
 def test_get_name():
