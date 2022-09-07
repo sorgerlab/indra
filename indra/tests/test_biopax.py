@@ -108,3 +108,10 @@ def assert_source_sub_id(stmts):
         for ev in stmt.evidence:
             assert 'source_sub_id' in ev.annotations
             assert ev.annotations['source_sub_id']
+
+
+def test_valid_agent():
+    agent = bpc.get_standard_agent('x', {'HGNC': '1097', 'EGID': '---'})
+    assert agent.name == 'BRAF'
+    assert agent.db_refs.get('EGID') != '---'
+    assert agent.db_refs['HGNC'] == '1097'

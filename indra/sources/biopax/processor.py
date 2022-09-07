@@ -10,8 +10,9 @@ from pybiopax import model_to_owl_file
 
 from indra.statements import *
 from indra.util import flatten
-from indra.statements.validate import print_validation_report
-from indra.ontology.standardize import get_standard_agent
+from indra.statements.validate import print_validation_report, \
+    assert_valid_db_refs, validate_id
+from indra.ontology.standardize import standardize_name_db_refs
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
     parse_identifiers_url
 
@@ -987,6 +988,19 @@ def _refs_from_up_id(up_id):
     else:
         db_refs = {'UP': up_id}
     return db_refs
+
+
+def get_standard_agent(name, db_refs, **kwargs):
+    standard_name, db_refs = standardize_name_db_refs(db_refs)
+    # We remove any invalid entries here, e.g.,
+    # "---" which comes up in Pathway Commons
+    for k, v in copy.copy(db_refs).items():
+        if not validate_id(k, v):
+            db_refs.pop(k)
+    if standard_name:
+        name = standard_name
+    assert_valid_db_refs(db_refs)
+    return Agent(name, db_refs=db_refs, **kwargs)
 
 
 def clean_up_xrefs(xrefs):
