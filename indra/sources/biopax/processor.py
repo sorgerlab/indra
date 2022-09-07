@@ -466,24 +466,27 @@ class BiopaxProcessor(object):
         xrefs = BiopaxProcessor._get_processed_xrefs(bpe)
 
         # We now need to harmonize UP and HGNC
-        # Case 1. Multiple genes coding for one protein
         nhgnc_ids = len(xrefs.get('HGNC', {}))
         nup_ids = len(xrefs.get('UP', {}))
-        # One protein coded by many genes
-        if nhgnc_ids > 1 and nup_ids == 1:
+        # One protein coded by many genes, including the special case where
+        # there aren't any UniProt IDs given
+        if nhgnc_ids > 1 and nup_ids <= 1:
             for hgnc_id in xrefs['HGNC']:
                 agent = get_standard_agent(name, {'HGNC': hgnc_id}, mods=mcs)
                 agents.append(agent)
-        # One gene coding for many proteins
-        elif nhgnc_ids == 1 and nup_ids > 1:
+        # One gene coding for many proteins, including the case where
+        # a HGNC ID is missing and we only have UniProt IDs
+        elif nhgnc_ids <= 1 and nup_ids > 1:
             for up_id in xrefs['UP']:
                 agent = get_standard_agent(name, _refs_from_up_id(up_id),
                                            mods=mcs)
                 agents.append(agent)
         # This is secretly a family, i.e., we have more than one
         # gene/protein IDs and so we can go by one of the ID sets and
-        # standardize from there
-        elif nhgnc_ids > 1 and nhgnc_ids == nup_ids:
+        # standardize from there. Usually the number of HGNC and UniProt IDs
+        # are the same but there are exceptions where there are e.g., 3
+        # UniProt IDs but only 2 of them have corresponding HGNC IDs.
+        elif nhgnc_ids > 1 and nup_ids > 1:
             for up_id in xrefs['UP']:
                 agent = get_standard_agent(name, _refs_from_up_id(up_id),
                                            mods=mcs)
