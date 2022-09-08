@@ -218,7 +218,7 @@ def get_rat_id(hgnc_id):
     Parameters
     ----------
     hgnc_id : str
-        The HGNC ID to be converted. Example: ""
+        The HGNC ID to be converted. Example: "1097"
 
     Returns
     -------
@@ -236,7 +236,7 @@ def get_mouse_id(hgnc_id):
     Parameters
     ----------
     hgnc_id : str
-        The HGNC ID to be converted. Example: ""
+        The HGNC ID to be converted. Example: "1097"
 
     Returns
     -------
