@@ -189,7 +189,7 @@ def get_hgnc_from_mouse(mgi_id):
     hgnc_id : str
         The HGNC ID corresponding to the given MGI ID.
     """
-    if mgi_id.startswith('MGI:'):
+    if mgi_id and mgi_id.startswith('MGI:'):
         mgi_id = mgi_id[4:]
     return mouse_map.get(mgi_id)
 
@@ -207,7 +207,7 @@ def get_hgnc_from_rat(rgd_id):
     hgnc_id : str
         The HGNC ID corresponding to the given RGD ID.
     """
-    if rgd_id.startswith('RGD:'):
+    if rgd_id and rgd_id.startswith('RGD:'):
         rgd_id = rgd_id[4:]
     return rat_map.get(rgd_id)
 
