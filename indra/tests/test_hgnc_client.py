@@ -101,3 +101,8 @@ def test_ec_code():
     assert "41022" not in hgnc_client.get_hgncs_from_enzyme('2.4.1.228')
     assert "2.4.1.228" in hgnc_client.get_enzymes('18149')
     assert "18149" in hgnc_client.get_hgncs_from_enzyme("2.4.1.228")
+
+
+def test_mgi_name_conversion():
+    assert hgnc_client.get_hgnc_id_from_mgi_name('Braf') == '1097'
+    assert hgnc_client.get_hgnc_name_from_mgi_name('Braf') == 'BRAF'
