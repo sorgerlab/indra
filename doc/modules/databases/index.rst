@@ -141,3 +141,8 @@ MONDO client (:py:mod:`indra.databases.mondo_client`)
 -----------------------------------------------------
 .. automodule:: indra.databases.mondo_client
     :members:
+
+MGI client (:py:mod:`indra.databases.mgi_client`)
+-------------------------------------------------
+.. automodule:: indra.databases.mgi_client
+    :members:
