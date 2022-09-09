@@ -189,7 +189,7 @@ def get_hgnc_from_mouse(mgi_id):
     hgnc_id : str
         The HGNC ID corresponding to the given MGI ID.
     """
-    if mgi_id.startswith('MGI:'):
+    if mgi_id and mgi_id.startswith('MGI:'):
         mgi_id = mgi_id[4:]
     return mouse_map.get(mgi_id)
 
@@ -207,7 +207,7 @@ def get_hgnc_from_rat(rgd_id):
     hgnc_id : str
         The HGNC ID corresponding to the given RGD ID.
     """
-    if rgd_id.startswith('RGD:'):
+    if rgd_id and rgd_id.startswith('RGD:'):
         rgd_id = rgd_id[4:]
     return rat_map.get(rgd_id)
 
@@ -371,6 +371,52 @@ def get_hgncs_from_enzyme(ec_code: str) -> Set[str]:
         A set of HGNC identifiers
     """
     return enzyme_to_hgncs.get(ec_code, set())
+
+
+def get_hgnc_id_from_mgi_name(mgi_name: str) -> Union[str, None]:
+    """Return a HGNC ID for the human gene homologous to the given mouse gene.
+
+    The mouse gene name provided as input is assumed to be an MGI
+    official symbol.
+
+    Parameters
+    ----------
+    mgi_name :
+        The MGI symbol of a mouse gene.
+
+    Returns
+    -------
+    :
+        The HGNC ID of the corresponding human gene or None if not available.
+    """
+    from indra.databases import mgi_client
+    mgi_id = mgi_client.get_id_from_name(mgi_name)
+    if mgi_id:
+        return get_hgnc_from_mouse(mgi_id)
+    return None
+
+
+def get_hgnc_name_from_mgi_name(mgi_name: str) -> Union[str, None]:
+    """Return a HGNC name for the human gene homologous to the given mouse gene.
+
+    The mouse gene name provided as input is assumed to be an MGI
+    official symbol.
+
+    Parameters
+    ----------
+    mgi_name :
+        The MGI symbol of a mouse gene.
+
+    Returns
+    -------
+    :
+        The HGNC symbol of the corresponding human gene or None if not
+        available.
+    """
+    hgnc_id = get_hgnc_id_from_mgi_name(mgi_name)
+    if hgnc_id:
+        return get_hgnc_name(hgnc_id)
+    return None
 
 
 def _read_hgnc_maps():

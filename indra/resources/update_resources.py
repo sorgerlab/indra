@@ -971,6 +971,22 @@ def update_ec_code():
     PyOboClient.update_by_prefix("ec-code", indra_prefix='eccode')
 
 
+def update_mgi():
+    url = "http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt"
+    df = pandas.read_csv(url, sep='\t')
+    # MGI contains entries for various non-gene regions like enhancers
+    df = df[df['Feature Type'].str.contains('gene')]
+    df = df[['MGI Accession ID', 'Marker Symbol',
+             'Marker Synonyms (pipe-separated)']]
+    df['MGI Accession ID'] = df['MGI Accession ID'].str.replace('MGI:', '')
+    df.rename(columns={'MGI Accession ID': 'ID',
+                       'Marker Symbol': 'symbol',
+                       'Marker Synonyms (pipe-separated)': 'synonyms'},
+              inplace=True)
+    fname = os.path.join(path, 'mgi_entries.tsv')
+    df.to_csv(fname, index=None, sep='\t')
+
+
 def main():
     update_famplex()
     update_famplex_map()
@@ -1001,6 +1017,7 @@ def main():
     update_lspci()
     update_pubchem_mesh_map()
     update_ec_code()
+    update_mgi()
 
 
 if __name__ == '__main__':
