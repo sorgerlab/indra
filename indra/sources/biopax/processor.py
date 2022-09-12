@@ -68,7 +68,6 @@ class BiopaxProcessor(object):
         self.eliminate_exact_duplicates()
         print_validation_report(self.statements)
 
-
     def save_model(self, file_name):
         """Save the BioPAX model object in an OWL file.
 
@@ -158,9 +157,21 @@ class BiopaxProcessor(object):
         """Find matching entities between two lists of simple entities."""
         matches = []
         for inp, outp in itertools.product(left_simple, right_simple):
+            # If these are the exact same object instances, then they are
+            # trivially matching. This covers 'complex' and 'complex_named'
+            # physical entity types as well.
+            if inp.uid == outp.uid:
+                matches.append((inp, outp))
+                continue
+            # Otherwise we need to check what types of entities we are dealing
+            # with and proceed depending on the type
             inp_type = infer_pe_type(inp)
             outp_type = infer_pe_type(outp)
             if inp_type != outp_type:
+                continue
+            # Here we don't go deeper - if the complex is not handled by the
+            # uid-based match above, we don't consider it a match.
+            elif inp_type in {'complex', 'complex_named'}:
                 continue
             elif inp_type == 'family':
                 input_ers = {mpe.entity_reference.uid
@@ -177,9 +188,6 @@ class BiopaxProcessor(object):
             elif not isinstance(inp, (bp.SimplePhysicalEntity, bp.Complex)) or \
                     not isinstance(outp, (bp.SimplePhysicalEntity, bp.Complex)):
                 continue
-            elif inp_type == 'complex_named':
-                if inp.uid == outp.uid:
-                    matches.append((inp, outp))
             elif inp_type == 'complex_family':
                 inp_members = flatten([expand_complex(m)
                                       for m in expand_family(inp)])
@@ -226,8 +234,8 @@ class BiopaxProcessor(object):
             ev = self._get_evidence(conversion)
             for inp, outp in self.find_matching_left_right(conversion):
                 for inp_simple, outp_simple in \
-                        zip(expand_family(inp),
-                            expand_family(outp)):
+                        self.find_matching_entities(expand_family(inp),
+                                                    expand_family(outp)):
                     gained_mods, lost_mods, activity_change = \
                         self.feature_delta(inp_simple, outp_simple)
                     inp_agents = \
@@ -246,8 +254,8 @@ class BiopaxProcessor(object):
                 # which we need to capture
                 _, _, overall_activity_change = self.feature_delta(inp, outp)
                 for inp_simple, outp_simple in \
-                        zip(expand_family(inp),
-                            expand_family(outp)):
+                        self.find_matching_entities(expand_family(inp),
+                                                    expand_family(outp)):
                     gained_mods, lost_mods, activity_change = \
                         self.feature_delta(inp_simple, outp_simple)
                     activity_change = activity_change if activity_change else \
@@ -264,6 +272,9 @@ class BiopaxProcessor(object):
                 activity_change, ev in self._conversion_state_iter():
             for mods, is_gain in ((gained_mods, True), (lost_mods, False)):
                 for mod in mods:
+                    # We skip generic / unspecified modifications
+                    if mod.mod_type == 'modification':
+                        continue
                     stmt_class = modtype_to_modclass[mod.mod_type]
                     if not is_gain:
                         stmt_class = modclass_to_inverse[stmt_class]
