@@ -153,10 +153,10 @@ class BiopaxProcessor(object):
         return BiopaxProcessor.find_matching_entities(left_simple, right_simple)
 
     @staticmethod
-    def find_matching_entities(left_simple, right_simple):
-        """Find matching entities between two lists of simple entities."""
+    def find_matching_entities(left_entities, right_entities):
+        """Find matching entities between two lists of entities."""
         matches = []
-        for inp, outp in itertools.product(left_simple, right_simple):
+        for inp, outp in itertools.product(left_entities, right_entities):
             # If these are the exact same object instances, then they are
             # trivially matching. This covers 'complex' and 'complex_named'
             # physical entity types as well.
