@@ -1,10 +1,10 @@
 __all__ = ['process_pc_neighborhood', 'process_pc_pathsbetween',
            'process_pc_pathsfromto', 'process_owl', 'process_owl_str',
-           'process_model']
+           'process_owl_gz', 'process_model']
 
 import itertools
 from pybiopax import model_from_owl_file, model_from_owl_str, \
-    model_from_pc_query
+    model_from_pc_query, model_from_owl_gz
 from .processor import BiopaxProcessor
 
 default_databases = ['wp', 'smpdb', 'reconx', 'reactome', 'psp', 'pid',
@@ -173,6 +173,23 @@ def process_owl(owl_filename, encoding=None):
         A BiopaxProcessor containing the obtained BioPAX model in bp.model.
     """
     model = model_from_owl_file(owl_filename, encoding=encoding)
+    return process_model(model)
+
+
+def process_owl_gz(owl_gz_filename):
+    """Returns a BiopaxProcessor for a gzipped BioPAX OWL file.
+
+    Parameters
+    ----------
+    owl_gz_filename : str
+        The name of the gzipped OWL file to process.
+
+    Returns
+    -------
+    bp : BiopaxProcessor
+        A BiopaxProcessor containing the obtained BioPAX model in bp.model.
+    """
+    model = model_from_owl_gz(owl_gz_filename)
     return process_model(model)
 
 
