@@ -18,9 +18,11 @@ def process_human_events():
     network_file = pystow.ensure('evex', name='Homo_sapiens.tar.gz',
                                  url=human_network)
     with tarfile.open(network_file, 'r:gz') as fh:
-        table = fh.extractfile('EVEX_relations_9606.tab')
-        df = pandas.read_csv(table, sep='\t')
-    ep = EvexProcessor(df, standoff_index)
+        relations_file = fh.extractfile('EVEX_relations_9606.tab')
+        articles_file = fh.extractfile('EVEX_articles_9606.tab')
+        relations_df = pandas.read_csv(relations_file, sep='\t')
+        articles_df = pandas.read_csv(articles_file, sep='\t')
+    ep = EvexProcessor(relations_df, articles_df, standoff_index)
     ep.process_statements()
     return ep
 
