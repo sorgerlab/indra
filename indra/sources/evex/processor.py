@@ -1,8 +1,11 @@
-import tarfile
-import tqdm
+from io import TextIOWrapper
 import csv
-from indra.statements import *
+from dataclasses import dataclass, field
+import tarfile
+from typing import Any, Dict
+import tqdm
 from indra.ontology.standardize import get_standard_agent
+from indra.statements import *
 
 type_mappings = {
     'Binding': Complex,
@@ -89,7 +92,6 @@ class EvexProcessor:
             breakpoint()
         standoff = EvexStandoff(standoff_file, key)
 
-
     def build_article_lookup(self):
         article_lookup = {}
         for row in self.articles_table.itertuples():
@@ -108,16 +110,28 @@ class EvexProcessor:
 class EvexStandoff:
     def __init__(self, standoff_file, key):
         with tarfile.open(standoff_file, 'r:gz') as fh:
-            self.ann_file = fh.extractfile('%s_%s.ann' % key)
-            self.txt_file = fh.extractfile('%s_%s.txt' % key)
+            self.ann_file = TextIOWrapper(fh.extractfile('%s_%s.ann' % key),
+                                          encoding='utf-8')
+            self.txt_file = TextIOWrapper(fh.extractfile('%s_%s.txt' % key),
+                                          encoding='utf-8')
+            self.text_lines = self.txt_file.readlines()
             self.elements = process_annotations(self.ann_file)
+        self.line_offsets = [0]
+        for idx, line in enumerate(self.text_lines[:-1]):
+            self.line_offsets.append(self.line_offsets[idx] + len(line))
+
+    def get_sentence_for_offset(self, offset):
+        for idx in range(len(self.line_offsets)):
+            if self.line_offsets[idx+1] > offset:
+                return self.text_lines[idx].strip()
+
+    def find_regulation(self):
+        pass
 
 
 def process_annotations(ann_file):
     elements = {}
-    import io
-    decoded = io.TextIOWrapper(ann_file, encoding="utf-8")
-    reader = csv.reader(decoded, delimiter='\t')
+    reader = csv.reader(ann_file, delimiter='\t')
     for row in reader:
         uid = row[0]
         assert len(row) == 2 or len(row) == 3
@@ -129,22 +143,22 @@ def process_annotations(ann_file):
         elif parts[0] == 'Reference':
             ref_ns, ref_id = parts[2].split(':', maxsplit=1)
             elements[parts[1]].references[ref_ns] = ref_id
-        elif parts[0] in standoff_relation_types:
-            relation = Relation(uid, parts[0], int(parts[1]), int(parts[2]),
-                                value)
-            elements[uid] = relation
+        elif parts[0] in standoff_event_types:
+            event = Event(uid, parts[0], int(parts[1]), int(parts[2]), value)
+            elements[uid] = event
         elif parts[0] == 'Confidence':
             if len(row) == 3:
                 elements[parts[1]].confidence_val = float(value)
             else:
-                elements[parts[1]].confidence_level = parts[1]
+                elements[parts[1]].confidence_level = parts[2]
         elif len(row) == 2:
             if ':' in parts[0]:
-                relation_type, parent_id = parts[0].split(':')
-                parent = elements[parent_id]
+                event_type, parent_id = parts[0].split(':')
+                event = elements[parent_id]
+                assert event_type == event.event_type
             elif parts[0] in {'Subunit-Complex', 'Protein-Component'}:
-                relation_type = parts[0]
-                parent = None
+                event_type = parts[0]
+                event = None
             else:
                 assert False, row
 
@@ -153,45 +167,46 @@ def process_annotations(ann_file):
                 role, arg_uid = element.split(':')
                 if role in arguments:
                     if not isinstance(arguments[role], list):
-                        arguments[role] = [arguments[role][0]]
+                        arguments[role] = [arguments[role]]
                     arguments[role].append(elements[arg_uid])
-            regulation = Regulation(uid, parent, arguments)
+                else:
+                    arguments[role] = elements[arg_uid]
+            regulation = Regulation(uid, event, arguments)
             elements[uid] = regulation
         else:
             assert False, row
     return elements
 
 
+@dataclass
 class Entity:
-    def __init__(self, uid, entity_type, start, end, text, references=None):
-        self.uid = uid
-        self.type = entity_type
-        self.start = start
-        self.end = end
-        self.text = text
-        self.references = references if references else {}
+    uid: str
+    entity_type: str
+    start: int
+    end: int
+    text: str
+    references: Dict[str, str] = field(default_factory=dict)
 
 
-class Relation:
-    def __init__(self, uid, relation_type, start, end, text):
-        self.uid = uid
-        self.relation_type = relation_type
-        self.start = start
-        self.end = end
-        self.text = text
+@dataclass
+class Event:
+    uid: str
+    event_type: str
+    start: int
+    end: int
+    text: str
 
 
+@dataclass
 class Regulation:
-    def __init__(self, uid, parent, arguments, confidence_val=None,
-                 confidence_level=None):
-        self.uid = uid
-        self.parent = parent
-        self.arguments = arguments
-        self.confidence_val = confidence_val
-        self.confidence_level = confidence_level
+    uid: str
+    event: Event
+    arguments: Dict[str, Any]
+    confidence_val: float = None
+    confidence_level: str = None
 
 
-standoff_relation_types = {
+standoff_event_types = {
     'Binding',
     'Phosphorylation',
     'Dephosphorylation',
