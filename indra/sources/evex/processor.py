@@ -1,11 +1,14 @@
-from io import TextIOWrapper
 import csv
 from dataclasses import dataclass, field
+from io import TextIOWrapper
+import logging
 import tarfile
 from typing import Any, Dict
 import tqdm
 from indra.ontology.standardize import get_standard_agent
 from indra.statements import *
+
+logger = logging.getLogger(__name__)
 
 type_mappings = {
     'Binding': Complex,
@@ -48,6 +51,8 @@ class EvexProcessor:
         for row in tqdm.tqdm(self.relations_table.itertuples(),
                              total=len(self.relations_table),
                              desc='Processing Evex relations'):
+            # FIXME: look at refined polarity and flip Statement polarity
+            # if necessary
             stmt_type = type_mappings.get(row.refined_type)
             if not stmt_type:
                 continue
@@ -91,6 +96,7 @@ class EvexProcessor:
         else:
             breakpoint()
         standoff = EvexStandoff(standoff_file, key)
+        return
 
     def build_article_lookup(self):
         article_lookup = {}
@@ -165,16 +171,32 @@ def process_annotations(ann_file):
             arguments = {}
             for element in parts[1:]:
                 role, arg_uid = element.split(':')
+
+                # Some regulations are defined out of order, we need a
+                # placeholder for these elements that can be resolved later
+                element_obj = elements.get(arg_uid, Unresolved(arg_uid))
+
                 if role in arguments:
                     if not isinstance(arguments[role], list):
                         arguments[role] = [arguments[role]]
-                    arguments[role].append(elements[arg_uid])
+                    arguments[role].append(element_obj)
                 else:
-                    arguments[role] = elements[arg_uid]
+                    arguments[role] = element_obj
             regulation = Regulation(uid, event, arguments)
             elements[uid] = regulation
         else:
             assert False, row
+
+    # We now need to resolve Unresolved regulation references. At this point
+    # it's enough if we take them from the elements dict since they would
+    # now be resolved at that level.
+    for uid, element in elements.items():
+        if isinstance(element, Regulation):
+            if isinstance(element.event, Unresolved):
+                element.event = elements[element.event.uid]
+            for k, v in element.arguments.items():
+                if isinstance(v, Unresolved):
+                    element.arguments[k] = elements[v.uid]
     return elements
 
 
@@ -206,11 +228,18 @@ class Regulation:
     confidence_level: str = None
 
 
+@dataclass
+class Unresolved:
+    uid: str
+
+
 standoff_event_types = {
     'Binding',
+    'Acetylation',
     'Phosphorylation',
     'Dephosphorylation',
     'Methylation',
+    'Ubiquitination',
     'Regulation',
     'Positive_regulation',
     'Negative_regulation',
