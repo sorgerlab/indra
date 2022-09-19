@@ -71,7 +71,7 @@ class EvexProcessor:
             text_refs = {article_prefix: article_id}
             pmid = article_id if article_prefix == 'PMID' else None
 
-            text = self.get_text_for_event(row.general_event_id,
+            text = self.get_text_for_event(row,
                                            article_prefix,
                                            article_id)
 
@@ -85,7 +85,7 @@ class EvexProcessor:
                 stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
             self.statements.append(stmt)
 
-    def get_text_for_event(self, event_id, article_prefix, article_id):
+    def get_text_for_event(self, row, article_prefix, article_id):
         key = (
             'pmc' if article_prefix == 'PMCID' else 'pubmed',
             article_id[3:] if article_prefix == 'PMCID' else article_id
@@ -93,9 +93,10 @@ class EvexProcessor:
         standoff_file = self.standoff_index.get(key)
         if not standoff_file:
             return None
-        else:
-            breakpoint()
         standoff = EvexStandoff(standoff_file, key)
+        if row.refined_type == 'Regulation of expression':
+            regs = standoff.find_regulations(row.source_entrezgene_id,
+                                             row.target_entrezgene_id)
         return
 
     def build_article_lookup(self):
@@ -131,8 +132,20 @@ class EvexStandoff:
             if self.line_offsets[idx+1] > offset:
                 return self.text_lines[idx].strip()
 
-    def find_regulation(self):
-        pass
+    def find_regulations(self, cause_entrez_id, theme_entrez_id):
+        regs = []
+        for uid, element in self.elements.items():
+            if isinstance(element, Regulation):
+                cause = element.arguments.get('Cause')
+                theme = element.arguments.get('Theme')
+                if cause and theme:
+                    if isinstance(theme, Regulation):
+                        theme = theme.arguments['Theme']
+                    assert isinstance(theme, Entity)
+                    if cause_entrez_id == cause.references.get('EG') and \
+                            theme_entrez_id == theme.references.get('EG'):
+                        regs.append(element)
+        return regs
 
 
 def process_annotations(ann_file):
@@ -209,6 +222,9 @@ class Entity:
     text: str
     references: Dict[str, str] = field(default_factory=dict)
 
+    def get_type(self):
+        return self.entity_type
+
 
 @dataclass
 class Event:
@@ -218,6 +234,9 @@ class Event:
     end: int
     text: str
 
+    def get_type(self):
+        return self.event_type
+
 
 @dataclass
 class Regulation:
@@ -226,6 +245,27 @@ class Regulation:
     arguments: Dict[str, Any]
     confidence_val: float = None
     confidence_level: str = None
+
+    def to_graph(self):
+        from networkx import DiGraph
+        g = DiGraph()
+        add_subgraph(g, self)
+        return g
+
+    def draw(self, fname):
+        import networkx
+        ag = networkx.nx_agraph.to_agraph(self.to_graph())
+        ag.draw(fname, prog='dot')
+
+
+def add_subgraph(g, obj):
+    g.add_node(obj.uid, type='Regulation')
+    for k, v in obj.arguments.items():
+        if isinstance(v, Regulation):
+            add_subgraph(g, v)
+        else:
+            g.add_node(v.uid, type=v.get_type())
+        g.add_edge(obj.uid, v.uid, type=k)
 
 
 @dataclass
