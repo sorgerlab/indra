@@ -28,6 +28,7 @@ def process_human_events():
 
 
 def build_standoff_index():
+    """Build an index of publications in standoff bulk archive files."""
     index = {}
     for fname in tqdm.tqdm(glob.glob(os.path.join(
                                      pystow.join('evex').as_posix(), 'batch*')),
@@ -59,5 +60,7 @@ def download_evex():
                          for node in soup.find_all('a')
                          if node.get('href').startswith('batch')]
         for downloadable in downloadables:
+            if 'pubmed' not in downloadable:
+                continue
             fname = downloadable.split('/')[-1]
             pystow.ensure('evex', name=fname, url=downloadable)
