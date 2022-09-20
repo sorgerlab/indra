@@ -139,8 +139,10 @@ class EvexStandoff:
                 cause = element.arguments.get('Cause')
                 theme = element.arguments.get('Theme')
                 if cause and theme:
-                    if isinstance(theme, Regulation):
+                    while isinstance(theme, Regulation):
                         theme = theme.arguments['Theme']
+                    while isinstance(cause, Regulation):
+                        cause = cause.arguments['Cause']
                     assert isinstance(theme, Entity)
                     if cause_entrez_id == cause.references.get('EG') and \
                             theme_entrez_id == theme.references.get('EG'):
@@ -166,10 +168,18 @@ def process_annotations(ann_file):
             event = Event(uid, parts[0], int(parts[1]), int(parts[2]), value)
             elements[uid] = event
         elif parts[0] == 'Confidence':
-            if len(row) == 3:
+            # Negation confidence
+            if isinstance(parts[1], Negation):
+                elements[parts[1]].confidence = float(value)
+            # Regulation confidence value
+            elif len(row) == 3:
                 elements[parts[1]].confidence_val = float(value)
+            # Regulation confidence level
             else:
                 elements[parts[1]].confidence_level = parts[2]
+        elif parts[0] == 'Negation':
+            elements[uid] = Negation(uid)
+            elements[parts[1]].negation = elements[uid]
         elif len(row) == 2:
             if ':' in parts[0]:
                 event_type, parent_id = parts[0].split(':')
@@ -214,6 +224,12 @@ def process_annotations(ann_file):
 
 
 @dataclass
+class Negation:
+    uid: str
+    confidence: float = None
+
+
+@dataclass
 class Entity:
     uid: str
     entity_type: str
@@ -245,6 +261,7 @@ class Regulation:
     arguments: Dict[str, Any]
     confidence_val: float = None
     confidence_level: str = None
+    negation: Negation = None
 
     def to_graph(self):
         from networkx import DiGraph
