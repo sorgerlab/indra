@@ -134,9 +134,10 @@ class EvexStandoff:
             self.line_offsets.append(self.line_offsets[idx] + len(line))
 
     def get_sentence_for_offset(self, offset):
-        for idx in range(len(self.line_offsets)):
+        for idx in range(len(self.line_offsets) - 1):
             if self.line_offsets[idx+1] > offset:
                 return self.text_lines[idx].strip()
+        return len(self.line_offsets) - 1
 
     def find_regulations(self, cause_entrez_id, theme_entrez_id):
         regs = []
@@ -150,9 +151,11 @@ class EvexStandoff:
 
 def process_annotations(ann_file):
     elements = {}
-    reader = csv.reader(ann_file, delimiter='\t')
+    reader = csv.reader(ann_file, delimiter='\t', quotechar=None)
     for row in reader:
         uid = row[0]
+        if 'Reference T227G ENSF:2546' in str(row):
+            breakpoint()
         assert len(row) == 2 or len(row) == 3
         value = row[2] if len(row) == 3 else None
         parts = row[1].split()
@@ -178,6 +181,9 @@ def process_annotations(ann_file):
         elif parts[0] == 'Negation':
             elements[uid] = Negation(uid)
             elements[parts[1]].negation = elements[uid]
+        elif parts[0] == 'Speculation':
+            elements[uid] = Speculation(uid)
+            elements[parts[1]].speculation = elements[uid]
         elif len(row) == 2:
             if ':' in parts[0]:
                 event_type, parent_id = parts[0].split(':')
@@ -206,7 +212,8 @@ def process_annotations(ann_file):
             regulation = Regulation(uid, event, arguments)
             elements[uid] = regulation
         else:
-            assert False, row
+            print(row)
+            break
 
     # We now need to resolve Unresolved regulation references. At this point
     # it's enough if we take them from the elements dict since they would
@@ -223,6 +230,12 @@ def process_annotations(ann_file):
 
 @dataclass
 class Negation:
+    uid: str
+    confidence: float = None
+
+
+@dataclass
+class Speculation:
     uid: str
     confidence: float = None
 
@@ -260,6 +273,7 @@ class Regulation:
     confidence_val: float = None
     confidence_level: str = None
     negation: Negation = None
+    speculation: Speculation = None
 
     def to_graph(self):
         from networkx import DiGraph
@@ -302,10 +316,19 @@ class Unresolved:
 standoff_event_types = {
     'Binding',
     'Acetylation',
+    'Deacetylation',
     'Phosphorylation',
     'Dephosphorylation',
+    'DNA_methylation',
+    'DNA_demethylation',
+    'Glycosylation',
+    'Deglycosylation',
+    'Hydroxylation',
+    'Dehydroxylation',
     'Methylation',
+    'Demethylation',
     'Ubiquitination',
+    'Deubiquitination',
     'Regulation',
     'Positive_regulation',
     'Negative_regulation',
@@ -313,4 +336,5 @@ standoff_event_types = {
     'Catalysis',
     'Transcription',
     'Localization',
+    'Protein_catabolism',
 }
