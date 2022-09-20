@@ -46,6 +46,7 @@ class EvexProcessor:
         self.article_lookup = self.build_article_lookup()
         self.standoff_index = standoff_index
         self.statements = []
+        self.standoff_cache = {}
 
     def process_statements(self):
         for row in tqdm.tqdm(self.relations_table.itertuples(),
@@ -91,10 +92,13 @@ class EvexProcessor:
             'pmc' if article_prefix == 'PMCID' else 'pubmed',
             article_id[3:] if article_prefix == 'PMCID' else article_id
         )
+        if key in self.standoff_cache:
+            return self.standoff_cache[key]
         standoff_file = self.standoff_index.get(key)
         if not standoff_file:
             return None
         standoff = EvexStandoff(standoff_file, key)
+        self.standoff_cache[key] = standoff
         return standoff
 
     @staticmethod
@@ -154,8 +158,6 @@ def process_annotations(ann_file):
     reader = csv.reader(ann_file, delimiter='\t', quotechar=None)
     for row in reader:
         uid = row[0]
-        if 'Reference T227G ENSF:2546' in str(row):
-            breakpoint()
         assert len(row) == 2 or len(row) == 3
         value = row[2] if len(row) == 3 else None
         parts = row[1].split()
