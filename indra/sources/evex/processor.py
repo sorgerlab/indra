@@ -56,14 +56,12 @@ class EvexProcessor:
             stmt_type = type_mappings.get(row.refined_type)
             if not stmt_type:
                 continue
-            subj_agent = get_standard_agent(
-                'EGID:%s' % str(row.source_entrezgene_id),
-                db_refs={'EGID': str(row.source_entrezgene_id)}
-            )
-            obj_agent = get_standard_agent(
-                'EGID:%s' % str(row.target_entrezgene_id),
-                db_refs={'EGID': str(row.target_entrezgene_id)}
-            )
+            source_id = str(row.source_entrezgene_id)
+            target_id = str(row.target_entrezgene_id)
+            subj_agent = get_standard_agent('EGID:%s' % source_id,
+                                            db_refs={'EGID': source_id})
+            obj_agent = get_standard_agent('EGID:%s' % target_id,
+                                           db_refs={'EGID': target_id})
 
             article_prefix, article_id = \
                 self.article_lookup.get(row.general_event_id)
@@ -71,13 +69,16 @@ class EvexProcessor:
             text_refs = {article_prefix: article_id}
             pmid = article_id if article_prefix == 'PMID' else None
 
-            text = self.get_text_for_event(row,
-                                           article_prefix,
-                                           article_id)
+            st = self.get_standoff_for_event(row, article_prefix, article_id)
+            if st:
+                text = self.get_text_from_standoff(st, source_id, target_id)
+            else:
+                text = None
 
             ev = Evidence(source_api='evex',
                           pmid=pmid,
-                          text_refs=text_refs)
+                          text_refs=text_refs,
+                          text=text)
 
             if stmt_type == Complex:
                 stmt = Complex([subj_agent, obj_agent], evidence=[ev])
@@ -85,7 +86,7 @@ class EvexProcessor:
                 stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
             self.statements.append(stmt)
 
-    def get_text_for_event(self, row, article_prefix, article_id):
+    def get_standoff_for_event(self, row, article_prefix, article_id):
         key = (
             'pmc' if article_prefix == 'PMCID' else 'pubmed',
             article_id[3:] if article_prefix == 'PMCID' else article_id
@@ -94,10 +95,15 @@ class EvexProcessor:
         if not standoff_file:
             return None
         standoff = EvexStandoff(standoff_file, key)
-        if row.refined_type == 'Regulation of expression':
-            regs = standoff.find_regulations(row.source_entrezgene_id,
-                                             row.target_entrezgene_id)
-        return
+        return standoff
+
+    @staticmethod
+    def get_text_from_standoff(standoff, source_id, target_id):
+        regs = standoff.find_regulations(source_id, target_id)
+        # FIXME: implement more sophisticated matching
+        if len(regs) != 1:
+            return None
+        return standoff.get_sentence_for_offset(regs[0].event.start)
 
     def build_article_lookup(self):
         article_lookup = {}
@@ -136,17 +142,9 @@ class EvexStandoff:
         regs = []
         for uid, element in self.elements.items():
             if isinstance(element, Regulation):
-                cause = element.arguments.get('Cause')
-                theme = element.arguments.get('Theme')
-                if cause and theme:
-                    while isinstance(theme, Regulation):
-                        theme = theme.arguments['Theme']
-                    while isinstance(cause, Regulation):
-                        cause = cause.arguments['Cause']
-                    assert isinstance(theme, Entity)
-                    if cause_entrez_id == cause.references.get('EG') and \
-                            theme_entrez_id == theme.references.get('EG'):
-                        regs.append(element)
+                entrez_ids = element.find_entrez_ids()
+                if {cause_entrez_id, theme_entrez_id} == entrez_ids:
+                    regs.append(element)
         return regs
 
 
@@ -274,6 +272,17 @@ class Regulation:
         ag = networkx.nx_agraph.to_agraph(self.to_graph())
         ag.draw(fname, prog='dot')
 
+    def find_entrez_ids(self):
+        entrez_ids = set()
+        for k, v in self.arguments.items():
+            if isinstance(v, Regulation):
+                entrez_ids |= v.find_entrez_ids()
+            elif isinstance(v, Entity):
+                entrez_id = v.references.get('EG')
+                if entrez_id:
+                    entrez_ids.add(entrez_id)
+        return entrez_ids
+
 
 def add_subgraph(g, obj):
     g.add_node(obj.uid, type='Regulation')
@@ -301,6 +310,7 @@ standoff_event_types = {
     'Positive_regulation',
     'Negative_regulation',
     'Gene_expression',
+    'Catalysis',
     'Transcription',
     'Localization',
 }
