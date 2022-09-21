@@ -4,6 +4,7 @@ from io import TextIOWrapper
 import logging
 import tarfile
 from typing import Any, Dict
+import networkx
 import tqdm
 from indra.ontology.standardize import get_standard_agent
 from indra.statements import *
@@ -47,6 +48,20 @@ class EvexProcessor:
         self.standoff_index = standoff_index
         self.statements = []
         self.standoff_cache = {}
+        self.provenance_stats = {
+            'file_missing': set(),
+            'reg_number_not_one': {},
+        }
+
+    def print_provenance_stats(self):
+        from collections import Counter
+        print('Standoff files not found for %s relations' %
+              len(self.provenance_stats['file_missing']))
+        print('Regulation numbers other than one found:')
+        reg_nums = Counter(
+            self.provenance_stats['reg_number_not_one'].values()).most_common()
+        for num, cnt in reg_nums:
+            print('- %s: %s' % (num, cnt))
 
     def process_statements(self):
         for row in tqdm.tqdm(self.relations_table.itertuples(),
@@ -96,16 +111,20 @@ class EvexProcessor:
             return self.standoff_cache[key]
         standoff_file = self.standoff_index.get(key)
         if not standoff_file:
+            self.provenance_stats['file_missing'].add(key)
             return None
         standoff = EvexStandoff(standoff_file, key)
         self.standoff_cache[key] = standoff
         return standoff
 
-    @staticmethod
-    def get_text_from_standoff(standoff, source_id, target_id):
+    def get_text_from_standoff(self, standoff, source_id, target_id):
         regs = standoff.find_regulations(source_id, target_id)
         # FIXME: implement more sophisticated matching
         if len(regs) != 1:
+            self.provenance_stats['reg_number_not_one'][
+                (standoff.key, source_id, target_id)] = len(regs)
+            standoff.save_potential_regulations(source_id, target_id,
+                                                key=standoff.key)
             return None
         return standoff.get_sentence_for_offset(regs[0].event.start)
 
@@ -126,6 +145,7 @@ class EvexProcessor:
 
 class EvexStandoff:
     def __init__(self, standoff_file, key):
+        self.key = key
         with tarfile.open(standoff_file, 'r:gz') as fh:
             self.ann_file = TextIOWrapper(fh.extractfile('%s_%s.ann' % key),
                                           encoding='utf-8')
@@ -150,6 +170,27 @@ class EvexStandoff:
                 entrez_ids = element.find_entrez_ids()
                 if {cause_entrez_id, theme_entrez_id} == entrez_ids:
                     regs.append(element)
+        return regs
+
+    def save_potential_regulations(self, cause_entrez_id, theme_entrez_id, key):
+        import pystow
+        file_key = '_'.join(list(key) + [cause_entrez_id, theme_entrez_id])
+        fname = pystow.join('evex', 'debug', name='%s.pdf' % file_key)
+        regs = []
+        for uid, element in self.elements.items():
+            if isinstance(element, Regulation):
+                entrez_ids = element.find_entrez_ids()
+                if {cause_entrez_id, theme_entrez_id} <= entrez_ids:
+                    regs.append(element)
+        if not regs:
+            return []
+        graphs = [reg.to_graph() for reg in regs]
+        graph = networkx.compose_all(graphs)
+        ag = networkx.nx_agraph.to_agraph(graph)
+        graph_label = 'Source: %s, Target: %s' % (cause_entrez_id,
+                                                  theme_entrez_id)
+        ag.graph_attr['label'] = graph_label
+        ag.draw(fname, prog='dot')
         return regs
 
 
@@ -284,7 +325,6 @@ class Regulation:
         return g
 
     def draw(self, fname):
-        import networkx
         ag = networkx.nx_agraph.to_agraph(self.to_graph())
         ag.draw(fname, prog='dot')
 
@@ -301,13 +341,26 @@ class Regulation:
 
 
 def add_subgraph(g, obj):
-    g.add_node(obj.uid, type='Regulation')
+    label = '{ID | %s} | {event_type | %s}' % (obj.uid, obj.event.get_type())
+    if obj.negation:
+        label += '| {negated | %s}' % True
+    g.add_node(obj.uid, type='Regulation',
+               shape='record',
+               label=label)
     for k, v in obj.arguments.items():
         if isinstance(v, Regulation):
             add_subgraph(g, v)
         else:
-            g.add_node(v.uid, type=v.get_type())
-        g.add_edge(obj.uid, v.uid, type=k)
+            label = '{ID | %s} | {type | %s} | {text | %s}' % \
+                (v.uid, v.get_type(), v.text)
+            if isinstance(v, Entity):
+                egid = v.references.get('EG')
+                if egid:
+                    label += '| {entrez_id | %s}' % egid
+            g.add_node(v.uid,
+                       shape='record',
+                       label=label)
+        g.add_edge(obj.uid, v.uid, label=k)
 
 
 @dataclass
