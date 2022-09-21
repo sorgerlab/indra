@@ -1,5 +1,6 @@
 import os
 import glob
+import pickle
 import tarfile
 import requests
 import pandas
@@ -27,8 +28,12 @@ def process_human_events():
     return ep
 
 
-def build_standoff_index():
+def build_standoff_index(cached=True):
     """Build an index of publications in standoff bulk archive files."""
+    cache_file = pystow.join('evex', name='standoff_index.pkl')
+    if cached and cache_file.exists():
+        with open(cache_file, 'rb') as fh:
+            return pickle.load(fh)
     index = {}
     for fname in tqdm.tqdm(glob.glob(os.path.join(
                                      pystow.join('evex').as_posix(), 'batch*')),
@@ -39,6 +44,9 @@ def build_standoff_index():
                    for name in names if name.endswith('ann')}
             for paper_id in ids:
                 index[paper_id] = fname
+    if cached:
+        with open(cache_file, 'wb') as fh:
+            pickle.dump(index, fh)
     return index
 
 
@@ -60,7 +68,5 @@ def download_evex():
                          for node in soup.find_all('a')
                          if node.get('href').startswith('batch')]
         for downloadable in downloadables:
-            if 'pubmed' not in downloadable:
-                continue
             fname = downloadable.split('/')[-1]
             pystow.ensure('evex', name=fname, url=downloadable)
