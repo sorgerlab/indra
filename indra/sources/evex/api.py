@@ -1,5 +1,6 @@
 import os
 import glob
+import logging
 import pickle
 import tarfile
 import requests
@@ -8,6 +9,8 @@ import pystow
 import tqdm
 
 from .processor import EvexProcessor
+
+logger = logging.getLogger(__name__)
 
 human_network = 'http://evexdb.org/download/network-format/Metazoa/' \
     'Homo_sapiens.tar.gz'
@@ -32,18 +35,23 @@ def build_standoff_index(cached=True):
     """Build an index of publications in standoff bulk archive files."""
     cache_file = pystow.join('evex', name='standoff_index.pkl')
     if cached and cache_file.exists():
+        logger.info('Loading standoff index from %s' % cache_file.as_posix())
         with open(cache_file, 'rb') as fh:
             return pickle.load(fh)
     index = {}
     for fname in tqdm.tqdm(glob.glob(os.path.join(
                                      pystow.join('evex').as_posix(), 'batch*')),
                            desc='Building standoff index'):
-        with tarfile.open(fname, 'r:gz') as fh:
-            names = fh.getnames()
-            ids = {tuple(os.path.splitext(name)[0].split('_')[:2])
-                   for name in names if name.endswith('ann')}
-            for paper_id in ids:
-                index[paper_id] = fname
+        try:
+            with tarfile.open(fname, 'r:gz') as fh:
+                names = fh.getnames()
+        except tarfile.ReadError:
+            logger.error('Could not read tarfile %s' % fname)
+            continue
+        ids = {tuple(os.path.splitext(name)[0].split('_')[:2])
+               for name in names if name.endswith('ann')}
+        for paper_id in ids:
+            index[paper_id] = fname
     if cached:
         with open(cache_file, 'wb') as fh:
             pickle.dump(index, fh)
