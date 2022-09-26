@@ -67,9 +67,13 @@ class EvexProcessor:
             regs = standoff.find_potential_regulations(source_id, target_id)
             for reg in regs:
                 source_paths = reg.paths_to_entrez_id(source_id)
-                print(list(source_paths))
+                source_annotated_paths = [standoff.annotate_path(source_path)
+                                          for source_path in source_paths]
+                print(source_annotated_paths)
                 target_paths = reg.paths_to_entrez_id(target_id)
-                print(list(target_paths))
+                target_annotated_paths = [standoff.annotate_path(target_path)
+                                          for target_path in target_paths]
+                print(target_annotated_paths)
 
             if len(regs) != 1:
                 self.provenance_stats['reg_number_not_one'][
@@ -173,6 +177,14 @@ class EvexStandoff:
         ag.graph_attr['label'] = label
         ag.draw(fname, prog='dot')
         return regs
+
+    def annotate_path(self, path_nodes):
+        root = self.elements[path_nodes[0]]
+        path_info = [root.event.get_type()]
+        for source, target in zip(path_nodes[:-1], path_nodes[1:]):
+            path_info.append(root.graph.edges[(source, target)]['label'])
+            path_info.append(self.elements[target].event.event_type)
+        return path_info
 
 
 def process_annotations(ann_file):
@@ -367,8 +379,11 @@ class Regulation:
     def paths_to_entrez_id(self, entrez_id):
         """Find a path from the root to a given Entrez ID."""
         uids = self.entrez_uid_mappings.get(entrez_id)
+        paths = []
         for uid in uids:
             path_nodes = networkx.shortest_path(self.graph, self.uid, uid)
+            paths.append(path_nodes)
+        return paths
 
 
 def add_subgraph(g, obj):
