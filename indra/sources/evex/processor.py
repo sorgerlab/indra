@@ -1,4 +1,5 @@
 import csv
+from collections import defaultdict
 from dataclasses import dataclass, field
 from io import TextIOWrapper
 import logging
@@ -10,34 +11,6 @@ from indra.ontology.standardize import get_standard_agent
 from indra.statements import *
 
 logger = logging.getLogger(__name__)
-
-type_mappings = {
-    'Binding': Complex,
-    'Catalysis of DNA methylation': Methylation,
-    'Catalysis of acetylation': Acetylation,
-    'Catalysis of glycosylation': Glycosylation,
-    'Catalysis of hydroxylation': Hydroxylation,
-    'Catalysis of methylation': Methylation,
-    'Catalysis of phosphorylation': Phosphorylation,
-    'Catalysis of ubiquitination': Ubiquitination,
-    'Indirect_catalysis of acetylation': Acetylation,
-    'Indirect_catalysis of methylation': Methylation,
-    'Indirect_catalysis of ubiquitination': Ubiquitination,
-    'Indirect_regulation': None,
-    'Indirect_regulation of binding': None,
-    'Indirect_regulation of catabolism': None,
-    'Indirect_regulation of expression': IncreaseAmount,
-    'Indirect_regulation of localization': None,
-    'Indirect_regulation of phosphorylation': Phosphorylation,
-    'Indirect_regulation of transcription': IncreaseAmount,
-    'Regulation': None,
-    'Regulation of binding': None,
-    'Regulation of catabolism': None,
-    'Regulation of expression': IncreaseAmount,
-    'Regulation of localization': None,
-    'Regulation of phosphorylation': Phosphorylation,
-    'Regulation of transcription': IncreaseAmount,
-}
 
 
 class EvexProcessor:
@@ -69,9 +42,11 @@ class EvexProcessor:
                              desc='Processing Evex relations'):
             # FIXME: look at refined polarity and flip Statement polarity
             # if necessary
-            stmt_type = type_mappings.get(row.refined_type)
-            if not stmt_type:
+            pol_idx = 0 if row.refined_polarity else 1
+            stmt_types = type_indra_mappings.get(row.refined_type)
+            if not stmt_types:
                 continue
+            stmt_type = stmt_types[pol_idx]
             source_id = str(row.source_entrezgene_id)
             target_id = str(row.target_entrezgene_id)
             subj_agent = get_standard_agent('EGID:%s' % source_id,
@@ -85,11 +60,26 @@ class EvexProcessor:
             text_refs = {article_prefix: article_id}
             pmid = article_id if article_prefix == 'PMID' else None
 
-            st = self.get_standoff_for_event(row, article_prefix, article_id)
-            if st:
-                text = self.get_text_from_standoff(st, source_id, target_id)
-            else:
+            standoff = self.get_standoff_for_event(row, article_prefix,
+                                                   article_id)
+            regs = standoff.find_potential_regulations(source_id, target_id)
+            for reg in regs:
+                source_paths = reg.paths_to_entrez_id(source_id)
+                print(source_paths)
+                target_paths = reg.paths_to_entrez_id(target_id)
+                print(target_paths)
+
+            if len(regs) != 1:
+                self.provenance_stats['reg_number_not_one'][
+                    (standoff.key, source_id, target_id)] = len(regs)
+                label = '\n'.join(['%s: %s' % (k, getattr(row, k))
+                                   for k in self.relations_table.columns])
+                standoff.save_potential_regulations(source_id, target_id,
+                                                    key=standoff.key,
+                                                    label=label)
                 text = None
+            else:
+                text = standoff.get_sentence_for_offset(regs[0].event.start)
 
             ev = Evidence(source_api='evex',
                           pmid=pmid,
@@ -116,17 +106,6 @@ class EvexProcessor:
         standoff = EvexStandoff(standoff_file, key)
         self.standoff_cache[key] = standoff
         return standoff
-
-    def get_text_from_standoff(self, standoff, source_id, target_id):
-        regs = standoff.find_regulations(source_id, target_id)
-        # FIXME: implement more sophisticated matching
-        if len(regs) != 1:
-            self.provenance_stats['reg_number_not_one'][
-                (standoff.key, source_id, target_id)] = len(regs)
-            standoff.save_potential_regulations(source_id, target_id,
-                                                key=standoff.key)
-            return None
-        return standoff.get_sentence_for_offset(regs[0].event.start)
 
     def build_article_lookup(self):
         article_lookup = {}
@@ -163,33 +142,33 @@ class EvexStandoff:
                 return self.text_lines[idx].strip()
         return len(self.line_offsets) - 1
 
-    def find_regulations(self, cause_entrez_id, theme_entrez_id):
+    def find_exact_regulations(self, cause_entrez_id, theme_entrez_id):
         regs = []
         for uid, element in self.elements.items():
             if isinstance(element, Regulation):
-                entrez_ids = element.find_entrez_ids()
-                if {cause_entrez_id, theme_entrez_id} == entrez_ids:
+                if {cause_entrez_id, theme_entrez_id} == element.entrez_ids:
                     regs.append(element)
         return regs
 
-    def save_potential_regulations(self, cause_entrez_id, theme_entrez_id, key):
-        import pystow
-        file_key = '_'.join(list(key) + [cause_entrez_id, theme_entrez_id])
-        fname = pystow.join('evex', 'debug', name='%s.pdf' % file_key)
+    def find_potential_regulations(self, cause_entrez_id, theme_entrez_id):
         regs = []
         for uid, element in self.elements.items():
             if isinstance(element, Regulation):
-                entrez_ids = element.find_entrez_ids()
-                if {cause_entrez_id, theme_entrez_id} <= entrez_ids:
+                if {cause_entrez_id, theme_entrez_id} <= element.entrez_ids:
                     regs.append(element)
+        return regs
+
+    def save_potential_regulations(self, cause_entrez_id, theme_entrez_id, key,
+                                   label):
+        import pystow
+        file_key = '_'.join(list(key) + [cause_entrez_id, theme_entrez_id])
+        fname = pystow.join('evex', 'debug', name='%s.pdf' % file_key)
+        regs = self.find_potential_regulations(cause_entrez_id, theme_entrez_id)
         if not regs:
             return []
-        graphs = [reg.to_graph() for reg in regs]
-        graph = networkx.compose_all(graphs)
+        graph = networkx.compose_all([reg.graph for reg in regs])
         ag = networkx.nx_agraph.to_agraph(graph)
-        graph_label = 'Source: %s, Target: %s' % (cause_entrez_id,
-                                                  theme_entrez_id)
-        ag.graph_attr['label'] = graph_label
+        ag.graph_attr['label'] = label
         ag.draw(fname, prog='dot')
         return regs
 
@@ -318,6 +297,11 @@ class Regulation:
     negation: Negation = None
     speculation: Speculation = None
 
+    def __post_init__(self):
+        self.entrez_ids = self.find_entrez_ids()
+        self.uid_entrez_mappings = self.get_entrez_uid_mapping()
+        self.graph = self.to_graph()
+
     def to_graph(self):
         from networkx import DiGraph
         g = DiGraph()
@@ -325,10 +309,11 @@ class Regulation:
         return g
 
     def draw(self, fname):
-        ag = networkx.nx_agraph.to_agraph(self.to_graph())
+        ag = networkx.nx_agraph.to_agraph(self.graph)
         ag.draw(fname, prog='dot')
 
     def find_entrez_ids(self):
+        """Return all Entrez IDs under this regulation."""
         entrez_ids = set()
         for k, v in self.arguments.items():
             if isinstance(v, Regulation):
@@ -338,6 +323,26 @@ class Regulation:
                 if entrez_id:
                     entrez_ids.add(entrez_id)
         return entrez_ids
+
+    def get_entrez_uid_mapping(self):
+        """Return mappings from Entrez IDs to the UIDs of the nodes where it
+        appears."""
+        uid_mappings = defaultdict(list)
+        for k, v in self.arguments.items():
+            if isinstance(v, Regulation):
+                for kk, vv in v.get_entrez_uid_mapping():
+                    uid_mappings[kk] += vv
+            elif isinstance(v, Entity):
+                entrez_id = v.references.get('EG')
+                if entrez_id:
+                    uid_mappings[entrez_id].append(uid_mappings)
+        return uid_mappings
+
+    def paths_to_entrez_id(self, entrez_id):
+        """Find a path from the root to a given Entrez ID."""
+        uids = self.uid_entrez_mappings.get[entrez_id]
+        for uid in uids:
+            yield networkx.shortest_path(self.graph, self.uid, uid)
 
 
 def add_subgraph(g, obj):
@@ -368,6 +373,7 @@ class Unresolved:
     uid: str
 
 
+# The set of event types used in the standoff format
 standoff_event_types = {
     'Binding',
     'Acetylation',
@@ -392,4 +398,67 @@ standoff_event_types = {
     'Transcription',
     'Localization',
     'Protein_catabolism',
+}
+
+# Mapping network relation types to regulation types used in the standoff files
+# as well as the one with opposite polarity.
+type_standoff_mappings = {
+    'Binding': ('Binding', 'Binding'),
+    'Catalysis of DNA methylation': ('Methylation', 'Demethylation'),
+    'Catalysis of acetylation': ('Acetylation', 'Deacethylation'),
+    'Catalysis of glycosylation': ('Glycosylation', 'Deglycosylation'),
+    'Catalysis of hydroxylation': ('Hydroxylation', 'Dehydroxylation'),
+    'Catalysis of methylation': ('DNA_methylation', 'DNA_demethylation'),
+    'Catalysis of phosphorylation': ('Phosphorylation', 'Dephosphorylation'),
+    'Catalysis of ubiquitination': ('Ubiquitination', 'Deubiquitination'),
+    'Indirect_catalysis of acetylation': ('Acetylation', 'Deacethylation'),
+    'Indirect_catalysis of methylation': ('Methylation', 'Demethylation'),
+    'Indirect_catalysis of ubiquitination': ('Ubiquitination',
+                                             'Deubiquitination'),
+    'Indirect_regulation': (None, None),
+    'Indirect_regulation of binding': ('Binding', 'Binding'),
+    'Indirect_regulation of catabolism': ('Protein_catabolism',
+                                          'Protein_catabolism'),
+    'Indirect_regulation of expression': ('Gene_expression', 'Gene_expression'),
+    'Indirect_regulation of localization': ('Localization', 'Localization'),
+    'Indirect_regulation of phosphorylation': ('Phosphorylation',
+                                               'Dephosphorylation'),
+    'Indirect_regulation of transcription': ('Transcription', 'Transcription'),
+    'Regulation': (None, None),
+    'Regulation of binding': ('Binding', 'Binding'),
+    'Regulation of catabolism': ('Protein_catabolism', 'Protein_catabolism'),
+    'Regulation of expression': ('Gene_expression', 'Gene_expression'),
+    'Regulation of localization': ('Localization', 'Localization'),
+    'Regulation of phosphorylation': ('Phosphorylation', 'Dephosphorylation'),
+    'Regulation of transcription': ('Transcription', 'Transcription'),
+}
+
+# Network relation type mappings to INDRA Statement types
+type_indra_mappings = {
+    'Binding': (Complex, Complex),
+    'Catalysis of DNA methylation': (Methylation, Demethylation),
+    'Catalysis of acetylation': (Acetylation, Deacetylation),
+    'Catalysis of glycosylation': (Glycosylation, Deglycosylation),
+    'Catalysis of hydroxylation': (Hydroxylation, Dehydroxylation),
+    'Catalysis of methylation': (Methylation, Demethylation),
+    'Catalysis of phosphorylation': (Phosphorylation, Dephosphorylation),
+    'Catalysis of ubiquitination': (Ubiquitination, Deubiquitination),
+    'Indirect_catalysis of acetylation': (Acetylation, Deacetylation),
+    'Indirect_catalysis of methylation': (Methylation, Demethylation),
+    'Indirect_catalysis of ubiquitination': (Ubiquitination, Deubiquitination),
+    'Indirect_regulation': None,
+    'Indirect_regulation of binding': None,
+    'Indirect_regulation of catabolism': None,
+    'Indirect_regulation of expression': (IncreaseAmount, DecreaseAmount),
+    'Indirect_regulation of localization': None,
+    'Indirect_regulation of phosphorylation': (Phosphorylation,
+                                               Dephosphorylation),
+    'Indirect_regulation of transcription': (IncreaseAmount, DecreaseAmount),
+    'Regulation': None,
+    'Regulation of binding': None,
+    'Regulation of catabolism': None,
+    'Regulation of expression': (IncreaseAmount, DecreaseAmount),
+    'Regulation of localization': None,
+    'Regulation of phosphorylation': (Phosphorylation, Dephosphorylation),
+    'Regulation of transcription': (IncreaseAmount, DecreaseAmount),
 }
