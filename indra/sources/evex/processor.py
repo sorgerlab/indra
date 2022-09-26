@@ -62,12 +62,14 @@ class EvexProcessor:
 
             standoff = self.get_standoff_for_event(row, article_prefix,
                                                    article_id)
+            if not standoff:
+                continue
             regs = standoff.find_potential_regulations(source_id, target_id)
             for reg in regs:
                 source_paths = reg.paths_to_entrez_id(source_id)
-                print(source_paths)
+                print(list(source_paths))
                 target_paths = reg.paths_to_entrez_id(target_id)
-                print(target_paths)
+                print(list(target_paths))
 
             if len(regs) != 1:
                 self.provenance_stats['reg_number_not_one'][
@@ -211,9 +213,11 @@ def process_annotations(ann_file):
                 event_type, parent_id = parts[0].split(':')
                 event = elements[parent_id]
                 assert event_type == event.event_type
+            # These events don't have actual objects associated with them so
+            # we create placeholder events just to propagate the type
             elif parts[0] in {'Subunit-Complex', 'Protein-Component'}:
                 event_type = parts[0]
-                event = None
+                event = PlaceholderEvent(event_type)
             else:
                 assert False, row
 
@@ -247,6 +251,12 @@ def process_annotations(ann_file):
             for k, v in element.arguments.items():
                 if isinstance(v, Unresolved):
                     element.arguments[k] = elements[v.uid]
+
+    # Now that everything is resolved, we can initialize the regulations
+    for uid, element in elements.items():
+        if isinstance(element, Regulation):
+            element.initialize()
+
     return elements
 
 
@@ -276,6 +286,14 @@ class Entity:
 
 
 @dataclass
+class PlaceholderEvent:
+    event_type: str
+
+    def get_type(self):
+        return self.event_type
+
+
+@dataclass
 class Event:
     uid: str
     event_type: str
@@ -296,15 +314,20 @@ class Regulation:
     confidence_level: str = None
     negation: Negation = None
     speculation: Speculation = None
+    # Dynamically created attributes
+    entrez_ids = None
+    entrez_uid_mappings = None
+    graph = None
 
-    def __post_init__(self):
+    def initialize(self):
+        # Note this can't be simply post init because of unresolved child
+        # objects upon initialization
         self.entrez_ids = self.find_entrez_ids()
-        self.uid_entrez_mappings = self.get_entrez_uid_mapping()
+        self.entrez_uid_mappings = self.get_entrez_uid_mappings()
         self.graph = self.to_graph()
 
     def to_graph(self):
-        from networkx import DiGraph
-        g = DiGraph()
+        g = networkx.DiGraph()
         add_subgraph(g, self)
         return g
 
@@ -324,25 +347,28 @@ class Regulation:
                     entrez_ids.add(entrez_id)
         return entrez_ids
 
-    def get_entrez_uid_mapping(self):
+    def get_entrez_uid_mappings(self):
         """Return mappings from Entrez IDs to the UIDs of the nodes where it
         appears."""
         uid_mappings = defaultdict(list)
-        for k, v in self.arguments.items():
-            if isinstance(v, Regulation):
-                for kk, vv in v.get_entrez_uid_mapping():
-                    uid_mappings[kk] += vv
-            elif isinstance(v, Entity):
-                entrez_id = v.references.get('EG')
-                if entrez_id:
-                    uid_mappings[entrez_id].append(uid_mappings)
-        return uid_mappings
+        for arg_type, arg in self.arguments.items():
+            for single_arg in (arg if isinstance(arg, list) else [arg]):
+                if isinstance(single_arg, Regulation):
+                    for child_entrez_id, child_uids in \
+                            single_arg.get_entrez_uid_mappings().items():
+                        for child_uid in child_uids:
+                            uid_mappings[child_entrez_id].append(child_uid)
+                elif isinstance(single_arg, Entity):
+                    entrez_id = single_arg.references.get('EG')
+                    if entrez_id:
+                        uid_mappings[entrez_id].append(self.uid)
+        return dict(uid_mappings)
 
     def paths_to_entrez_id(self, entrez_id):
         """Find a path from the root to a given Entrez ID."""
-        uids = self.uid_entrez_mappings.get[entrez_id]
+        uids = self.entrez_uid_mappings.get(entrez_id)
         for uid in uids:
-            yield networkx.shortest_path(self.graph, self.uid, uid)
+            path_nodes = networkx.shortest_path(self.graph, self.uid, uid)
 
 
 def add_subgraph(g, obj):
@@ -353,19 +379,20 @@ def add_subgraph(g, obj):
                shape='record',
                label=label)
     for k, v in obj.arguments.items():
-        if isinstance(v, Regulation):
-            add_subgraph(g, v)
-        else:
-            label = '{ID | %s} | {type | %s} | {text | %s}' % \
-                (v.uid, v.get_type(), v.text)
-            if isinstance(v, Entity):
-                egid = v.references.get('EG')
-                if egid:
-                    label += '| {entrez_id | %s}' % egid
-            g.add_node(v.uid,
-                       shape='record',
-                       label=label)
-        g.add_edge(obj.uid, v.uid, label=k)
+        for vv in (v if isinstance(v, list) else [v]):
+            if isinstance(vv, Regulation):
+                add_subgraph(g, vv)
+            else:
+                label = '{ID | %s} | {type | %s} | {text | %s}' % \
+                    (vv.uid, vv.get_type(), vv.text)
+                if isinstance(vv, Entity):
+                    egid = vv.references.get('EG')
+                    if egid:
+                        label += '| {entrez_id | %s}' % egid
+                g.add_node(vv.uid,
+                           shape='record',
+                           label=label)
+            g.add_edge(obj.uid, vv.uid, label=k)
 
 
 @dataclass
