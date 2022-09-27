@@ -16,9 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class EvexProcessor:
+    """A processor to extract INDRA Statements from EVEX relations."""
     def __init__(self, relations_table, articles_table, standoff_index):
         self.relations_table = relations_table
         self.articles_table = articles_table
+        # Build an index of
         self.article_lookup = self.build_article_lookup()
         self.standoff_index = standoff_index
         self.statements = []
@@ -54,6 +56,8 @@ class EvexProcessor:
             obj_agent = get_standard_agent('EGID:%s' % target_id,
                                            db_refs={'EGID': target_id})
 
+            # FIXME: handle multiple articles corresponding to the same
+            # general event ID
             article_prefix, article_id = \
                 self.article_lookup.get(row.general_event_id)
 
@@ -128,9 +132,13 @@ class EvexProcessor:
                 agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
 
             for text, (subj_text, obj_text) in zip(texts, agent_texts):
+                if isinstance(text, int):
+                    breakpoint()
                 annotations = {
                     'evex_relation_type': row.refined_type,
                     'evex_polarity': row.refined_polarity,
+                    'evex_general_event_id': row.general_event_id
+                    #'evex_standoff_regulation_id':
                 }
                 ev = Evidence(source_api='evex',
                               pmid=pmid,
@@ -165,6 +173,8 @@ class EvexProcessor:
         return standoff
 
     def build_article_lookup(self):
+        # FIXME: handle multiple articles corresponding to the same
+        # general event ID
         article_lookup = {}
         for row in self.articles_table.itertuples():
             prefix, article_id = row.article_id.split(': ')
@@ -179,9 +189,21 @@ class EvexProcessor:
         return article_lookup
 
 
+def get_sentence_for_offset(text_lines, line_offsets, offset):
+    """Return a text line for a given offset based on line offsets."""
+    for idx in range(len(line_offsets) - 1):
+        if line_offsets[idx + 1] > offset:
+            return text_lines[idx].strip()
+    return text_lines[-1]
+
+
 class EvexStandoff:
+    """Represent an EVEX standoff file's contents as a set of objects."""
     def __init__(self, standoff_file, key):
         self.key = key
+        # We need to get the content of the text lines corresponding to
+        # the standoff annotations, and then process the annotations from
+        # the annotation file.
         with tarfile.open(standoff_file, 'r:gz') as fh:
             self.ann_file = TextIOWrapper(fh.extractfile('%s_%s.ann' % key),
                                           encoding='utf-8')
@@ -189,17 +211,19 @@ class EvexStandoff:
                                           encoding='utf-8')
             self.text_lines = self.txt_file.readlines()
             self.elements = process_annotations(self.ann_file)
+        # To be able to linearly index into sentences broken up into separate
+        # lines, we build an index of line offsets
         self.line_offsets = [0]
         for idx, line in enumerate(self.text_lines[:-1]):
             self.line_offsets.append(self.line_offsets[idx] + len(line))
 
     def get_sentence_for_offset(self, offset):
-        for idx in range(len(self.line_offsets) - 1):
-            if self.line_offsets[idx+1] > offset:
-                return self.text_lines[idx].strip()
-        return len(self.line_offsets) - 1
+        """Return the sentence for a given offset in the standoff annotation."""
+        get_sentence_for_offset(self.text_lines, self.line_offsets,
+                                offset)
 
     def find_exact_regulations(self, cause_entrez_id, theme_entrez_id):
+        """Find regulations that only contain the given entrez IDs."""
         regs = []
         for uid, element in self.elements.items():
             if isinstance(element, Regulation):
@@ -208,6 +232,7 @@ class EvexStandoff:
         return regs
 
     def find_potential_regulations(self, cause_entrez_id, theme_entrez_id):
+        """Find regulations that contain the given entrez IDs."""
         regs = []
         for uid, element in self.elements.items():
             if isinstance(element, Regulation):
@@ -217,6 +242,7 @@ class EvexStandoff:
 
     def save_potential_regulations(self, cause_entrez_id, theme_entrez_id, key,
                                    label):
+        """Save potential regulation graphs for review/debugging."""
         import pystow
         file_key = '_'.join(list(key) + [cause_entrez_id, theme_entrez_id])
         fname = pystow.join('evex', 'debug', name='%s.pdf' % file_key)
@@ -230,6 +256,11 @@ class EvexStandoff:
         return regs
 
     def annotate_path(self, path_nodes):
+        """Given a raw path of node IDs, create an annotated path.
+
+        The annotated path contains event types for regulation nodes,
+        relation types, and IDs of leaf entity nodes.
+        """
         root = self.elements[path_nodes[0]]
         path_info = [root.event.get_type()]
         for source, target in zip(path_nodes[:-1], path_nodes[1:]):
@@ -242,6 +273,7 @@ class EvexStandoff:
 
 
 def process_annotations(ann_file):
+    """Iterate over the rows of an annotations file and build up objects."""
     elements = {}
     reader = csv.reader(ann_file, delimiter='\t', quotechar=None)
     for row in reader:
@@ -325,6 +357,8 @@ def process_annotations(ann_file):
 
     return elements
 
+
+# Below we define dataclasses to represent elements of Standoff annotations
 
 @dataclass
 class Negation:
