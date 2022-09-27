@@ -2,6 +2,7 @@ import csv
 from collections import defaultdict
 from dataclasses import dataclass, field
 from io import TextIOWrapper
+import itertools
 import logging
 import tarfile
 from typing import Any, Dict
@@ -40,9 +41,7 @@ class EvexProcessor:
         for row in tqdm.tqdm(self.relations_table.itertuples(),
                              total=len(self.relations_table),
                              desc='Processing Evex relations'):
-            # FIXME: look at refined polarity and flip Statement polarity
-            # if necessary
-            pol_idx = 0 if row.refined_polarity else 1
+            pol_idx = 1 if row.refined_polarity == 'Negative' else 0
             stmt_types = type_indra_mappings.get(row.refined_type)
             if not stmt_types:
                 continue
@@ -64,39 +63,73 @@ class EvexProcessor:
                                                    article_id)
             if not standoff:
                 continue
+
+            standoff_event_types = type_standoff_mappings[row.refined_type]
+
             regs = standoff.find_potential_regulations(source_id, target_id)
+            matching_regs = set()
             for reg in regs:
                 source_paths = reg.paths_to_entrez_id(source_id)
                 source_annotated_paths = [standoff.annotate_path(source_path)
                                           for source_path in source_paths]
-                print(source_annotated_paths)
                 target_paths = reg.paths_to_entrez_id(target_id)
                 target_annotated_paths = [standoff.annotate_path(target_path)
                                           for target_path in target_paths]
-                print(target_annotated_paths)
+                if row.refined_polarity in {'Positive', 'Unspecified'}:
+                    constraints = [
+                        {
+                            'source': {'Positive_regulation', 'Regulation'},
+                            'target': {standoff_event_types[0]}
+                         },
+                        {
+                            'source': {'Negative_regulation'},
+                            'target': {standoff_event_types[1]}
+                        }
+                    ]
+                else:
+                    constraints = [
+                        {
+                            'source': {'Positive_regulation', 'Regulation'},
+                            'target': {standoff_event_types[1]}
+                        },
+                        {
+                            'source': {'Negative_regulation'},
+                            'target': {standoff_event_types[0]}
+                        }
+                    ]
+                for source_path, target_path in \
+                        itertools.product(source_annotated_paths,
+                                          target_annotated_paths):
+                    for constraint in constraints:
+                        if source_path[0] in constraint['source'] \
+                                and source_path[1] == 'Cause' \
+                                and target_path[1] == 'Theme' \
+                                and constraint['target'] in target_path:
+                            matching_regs.add(reg)
 
-            if len(regs) != 1:
-                self.provenance_stats['reg_number_not_one'][
-                    (standoff.key, source_id, target_id)] = len(regs)
+            if not matching_regs:
                 label = '\n'.join(['%s: %s' % (k, getattr(row, k))
                                    for k in self.relations_table.columns])
                 standoff.save_potential_regulations(source_id, target_id,
                                                     key=standoff.key,
                                                     label=label)
-                text = None
+                texts = []
             else:
-                text = standoff.get_sentence_for_offset(regs[0].event.start)
+                texts = [standoff.get_sentence_for_offset(reg.event.start)
+                         for reg in matching_regs]
 
-            ev = Evidence(source_api='evex',
-                          pmid=pmid,
-                          text_refs=text_refs,
-                          text=text)
+            for text in texts:
+                ev = Evidence(source_api='evex',
+                              pmid=pmid,
+                              text_refs=text_refs,
+                              text=text)
 
-            if stmt_type == Complex:
-                stmt = Complex([subj_agent, obj_agent], evidence=[ev])
-            else:
-                stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
-            self.statements.append(stmt)
+                if stmt_type == Complex:
+                    stmt = Complex([subj_agent, obj_agent], evidence=[ev])
+                else:
+                    stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
+                self.statements.append(stmt)
+
 
     def get_standoff_for_event(self, row, article_prefix, article_id):
         key = (
@@ -183,7 +216,8 @@ class EvexStandoff:
         path_info = [root.event.get_type()]
         for source, target in zip(path_nodes[:-1], path_nodes[1:]):
             path_info.append(root.graph.edges[(source, target)]['label'])
-            path_info.append(self.elements[target].event.event_type)
+            if isinstance(self.elements[target], Regulation):
+                path_info.append(self.elements[target].event.event_type)
         return path_info
 
 
@@ -373,7 +407,7 @@ class Regulation:
                 elif isinstance(single_arg, Entity):
                     entrez_id = single_arg.references.get('EG')
                     if entrez_id:
-                        uid_mappings[entrez_id].append(self.uid)
+                        uid_mappings[entrez_id].append(single_arg.uid)
         return dict(uid_mappings)
 
     def paths_to_entrez_id(self, entrez_id):
@@ -382,6 +416,8 @@ class Regulation:
         paths = []
         for uid in uids:
             path_nodes = networkx.shortest_path(self.graph, self.uid, uid)
+            if len(path_nodes) == 1:
+                breakpoint()
             paths.append(path_nodes)
         return paths
 
