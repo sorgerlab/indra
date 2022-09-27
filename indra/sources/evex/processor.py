@@ -1,3 +1,4 @@
+import copy
 import csv
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -67,7 +68,7 @@ class EvexProcessor:
             standoff_event_types = type_standoff_mappings[row.refined_type]
 
             regs = standoff.find_potential_regulations(source_id, target_id)
-            matching_regs = set()
+            matching_regs = []
             for reg in regs:
                 source_paths = reg.paths_to_entrez_id(source_id)
                 source_annotated_paths = [standoff.annotate_path(source_path)
@@ -78,23 +79,25 @@ class EvexProcessor:
                 if row.refined_polarity in {'Positive', 'Unspecified'}:
                     constraints = [
                         {
-                            'source': {'Positive_regulation', 'Regulation'},
-                            'target': {standoff_event_types[0]}
+                            'source': {'Positive_regulation', 'Regulation',
+                                       'Catalysis'},
+                            'target': standoff_event_types[0]
                          },
                         {
                             'source': {'Negative_regulation'},
-                            'target': {standoff_event_types[1]}
+                            'target': standoff_event_types[1]
                         }
                     ]
                 else:
                     constraints = [
                         {
-                            'source': {'Positive_regulation', 'Regulation'},
-                            'target': {standoff_event_types[1]}
+                            'source': {'Positive_regulation', 'Regulation',
+                                       'Catalysis'},
+                            'target': standoff_event_types[1]
                         },
                         {
                             'source': {'Negative_regulation'},
-                            'target': {standoff_event_types[0]}
+                            'target': standoff_event_types[0]
                         }
                     ]
                 for source_path, target_path in \
@@ -105,31 +108,46 @@ class EvexProcessor:
                                 and source_path[1] == 'Cause' \
                                 and target_path[1] == 'Theme' \
                                 and constraint['target'] in target_path:
-                            matching_regs.add(reg)
+                            matching_regs.append(
+                                (reg, standoff.elements[source_path[-1]].text,
+                                 standoff.elements[target_path[-1]].text))
 
-            if not matching_regs:
+            if not matching_regs and len(regs) != 1:
                 label = '\n'.join(['%s: %s' % (k, getattr(row, k))
                                    for k in self.relations_table.columns])
                 standoff.save_potential_regulations(source_id, target_id,
                                                     key=standoff.key,
                                                     label=label)
-                texts = []
+                texts = [None]
+                agent_texts = [(None, None)]
             else:
+                if len(regs) == 1:
+                    matching_regs = [(regs[0], None, None)]
                 texts = [standoff.get_sentence_for_offset(reg.event.start)
-                         for reg in matching_regs]
+                         for reg, _, _ in matching_regs]
+                agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
 
-            for text in texts:
+            for text, (subj_text, obj_text) in zip(texts, agent_texts):
+                annotations = {
+                    'evex_relation_type': row.refined_type,
+                    'evex_polarity': row.refined_polarity,
+                }
                 ev = Evidence(source_api='evex',
                               pmid=pmid,
                               text_refs=text_refs,
-                              text=text)
-
+                              text=text,
+                              annotations=annotations)
+                subj = copy.deepcopy(subj_agent)
+                obj = copy.deepcopy(obj_agent)
+                if subj_text:
+                    subj.db_refs['TEXT'] = subj_text
+                if obj_text:
+                    obj.db_refs['TEXT'] = obj_text
                 if stmt_type == Complex:
-                    stmt = Complex([subj_agent, obj_agent], evidence=[ev])
+                    stmt = Complex([subj, obj], evidence=[ev])
                 else:
-                    stmt = stmt_type(subj_agent, obj_agent, evidence=[ev])
+                    stmt = stmt_type(subj, obj, evidence=[ev])
                 self.statements.append(stmt)
-
 
     def get_standoff_for_event(self, row, article_prefix, article_id):
         key = (
@@ -218,6 +236,8 @@ class EvexStandoff:
             path_info.append(root.graph.edges[(source, target)]['label'])
             if isinstance(self.elements[target], Regulation):
                 path_info.append(self.elements[target].event.event_type)
+            elif isinstance(self.elements[target], Entity):
+                path_info.append(target)
         return path_info
 
 
