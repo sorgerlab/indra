@@ -124,7 +124,7 @@ db_sources = ['psp', 'cbn', 'pc', 'bel_lc', 'signor', 'biogrid',
               'ubibrowser', 'acsn']
 """Database source names as they appear in the DB"""
 
-reader_sources = ['geneways', 'tees', 'gnbr', 'semrep', 'isi', 'trips',
+reader_sources = ['geneways', 'tees', 'gnbr', 'semrep', 'evex', 'isi', 'trips',
                   'rlimsp', 'medscan', 'eidos', 'sparser', 'reach']
 """Reader source names as they appear in the DB"""
 
