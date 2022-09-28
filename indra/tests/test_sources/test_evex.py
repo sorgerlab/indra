@@ -1,6 +1,7 @@
 import pickle
 import pandas
-from indra.sources.evex.processor import get_sentence_for_offset, EvexProcessor
+from indra.sources.evex.processor import get_sentence_for_offset, \
+    EvexProcessor, get_sentence_relative_offset
 from indra.statements.validate import assert_valid_statements
 from . import get_resource_file
 
@@ -46,6 +47,13 @@ def test_get_sentence_offset():
     text_lines = ['a', 'b', 'c', 'd', 'e', 'f']
     line_offsets = [0, 188, 376, 627, 823, 1129]
     assert get_sentence_for_offset(text_lines, line_offsets, 535) == 'c'
+
+
+def test_relative_offset():
+    line_offsets = [0, 10, 20]
+    assert get_sentence_relative_offset(line_offsets, 5) == 5
+    assert get_sentence_relative_offset(line_offsets, 15) == 5
+    assert get_sentence_relative_offset(line_offsets, 25) == 5
 
 
 def test_binding_standoff():

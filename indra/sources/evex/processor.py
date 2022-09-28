@@ -33,84 +33,6 @@ class EvexProcessor:
                              desc='Processing Evex relations'):
             self.statements += self.process_row(row)
 
-    def find_evidence_info(self, standoff, source_id, target_id, event_type,
-                           polarity):
-        """Given a standoff, find all regulations matching a relation row
-        and return corresponding evidence info."""
-        potential_regs = standoff.find_potential_regulations(source_id,
-                                                             target_id)
-        matching_reg_info = set()
-        for reg in potential_regs:
-            source_paths = reg.paths_to_entrez_id(source_id)
-            source_annotated_paths = [standoff.annotate_path(source_path)
-                                      for source_path in source_paths]
-            target_paths = reg.paths_to_entrez_id(target_id)
-            target_annotated_paths = [standoff.annotate_path(target_path)
-                                      for target_path in target_paths]
-
-            if event_type == 'Binding':
-                for source_path, target_path in \
-                        itertools.product(source_annotated_paths,
-                                          target_annotated_paths):
-                    if 'Binding' in source_path and 'Binding' in target_path:
-                        source_reg_idx = source_path.index('Binding')
-                        target_reg_idx = target_path.index('Binding')
-                        if source_path[source_reg_idx + 1] == 'Theme' and \
-                                target_path[target_reg_idx + 1] == 'Theme':
-                            matching_reg_info.add(
-                                (standoff.get_sentence_for_offset(
-                                    reg.event.start),
-                                 (standoff.elements[source_path[-1]].text,
-                                  standoff.elements[target_path[-1]].text)))
-                            continue
-            else:
-                pos_event_type, neg_event_type = type_standoff_mappings[
-                    event_type]
-                polarity_is_positive = (polarity in {'Positive', 'Unspecified'})
-                constraints = [
-                    {
-                        'source': {'Positive_regulation', 'Regulation',
-                                   'Catalysis'},
-                        'target': (pos_event_type if polarity_is_positive
-                                   else neg_event_type)
-                    },
-                    {
-                        'source': {'Negative_regulation'},
-                        'target': (neg_event_type if polarity_is_positive
-                                   else pos_event_type)
-                    }
-                ]
-                for source_path, target_path in \
-                        itertools.product(source_annotated_paths,
-                                          target_annotated_paths):
-                    for constraint in constraints:
-                        if source_path[0] in constraint['source'] \
-                                and source_path[1] == 'Cause' \
-                                and target_path[1] == 'Theme' \
-                                and constraint['target'] in target_path:
-                            matching_reg_info.add(
-                                (standoff.get_sentence_for_offset(reg.event.start),
-                                 (standoff.elements[source_path[-1]].text,
-                                  standoff.elements[target_path[-1]].text)))
-
-        if not matching_reg_info:
-            if len(potential_regs) == 1:
-                txt = standoff.get_sentence_for_offset(
-                    potential_regs[0].event.start)
-                matching_reg_info = {(txt, (None, None))}
-            else:
-                data = {'source_id': source_id,
-                        'target_id': target_id,
-                        'event_type': event_type,
-                        'polarity': polarity}
-                label = '\n'.join(['%s: %s' % (k, v) for k, v in data.items()])
-                standoff.save_potential_regulations(source_id, target_id,
-                                                    key=standoff.key,
-                                                    label=label)
-                matching_reg_info = {(None, (None, None))}
-
-        return matching_reg_info
-
     def process_row(self, row):
         """Process a row in the relations table into INDRA Statements."""
         pol_idx = 1 if row.refined_polarity == 'Negative' else 0
@@ -133,30 +55,33 @@ class EvexProcessor:
 
             standoff = self.get_standoff_for_event(article_prefix, article_id)
             if not standoff:
-                evidence_info = {(None, (None, None))}
+                evidence_info = [{}]
             else:
-                evidence_info = \
-                    self.find_evidence_info(standoff, source_id, target_id,
-                                            row.refined_type,
-                                            row.refined_polarity)
-            for text, (subj_text, obj_text) in evidence_info:
+                evidence_info = find_evidence_info(standoff, source_id,
+                                                   target_id, row.refined_type,
+                                                   row.refined_polarity)
+            for ev_info in evidence_info:
                 annotations = {
                     'evex_relation_type': row.refined_type,
                     'evex_polarity': row.refined_polarity,
-                    'evex_general_event_id': str(row.general_event_id)
-                    # 'evex_standoff_regulation_id':
+                    'evex_general_event_id': str(row.general_event_id),
+                    'evex_standoff_regulation_id': ev_info.get('regulation_uid')
                 }
+                if ev_info.get('subj_coords'):
+                    annotations['agents'] = \
+                        {'coords': [ev_info['subj_coords'],
+                                    ev_info['obj_coords']]}
                 ev = Evidence(source_api='evex',
                               pmid=pmid,
                               text_refs=text_refs,
-                              text=text,
+                              text=ev_info.get('text'),
                               annotations=annotations)
                 subj = copy.deepcopy(subj_agent)
                 obj = copy.deepcopy(obj_agent)
-                if subj_text:
-                    subj.db_refs['TEXT'] = subj_text
-                if obj_text:
-                    obj.db_refs['TEXT'] = obj_text
+                if ev_info.get('subj_text'):
+                    subj.db_refs['TEXT'] = ev_info.get('subj_text')
+                if ev_info.get('obj_text'):
+                    obj.db_refs['TEXT'] = ev_info.get('obj_text')
                 if stmt_type == Complex:
                     stmt = Complex([subj, obj], evidence=[ev])
                 else:
@@ -197,12 +122,116 @@ class EvexProcessor:
         return dict(article_lookup)
 
 
+def find_evidence_info(standoff, source_id, target_id, event_type,
+                       polarity):
+    """Given a standoff, find all regulations matching a relation row
+    and return corresponding evidence info."""
+    potential_regs = standoff.find_potential_regulations(source_id,
+                                                         target_id)
+    matching_reg_info = []
+    for reg in potential_regs:
+        source_paths = reg.paths_to_entrez_id(source_id)
+        source_annotated_paths = [standoff.annotate_path(source_path)
+                                  for source_path in source_paths]
+        target_paths = reg.paths_to_entrez_id(target_id)
+        target_annotated_paths = [standoff.annotate_path(target_path)
+                                  for target_path in target_paths]
+
+        if event_type == 'Binding':
+            for source_path, target_path in \
+                    itertools.product(source_annotated_paths,
+                                      target_annotated_paths):
+                if 'Binding' in source_path and 'Binding' in target_path:
+                    source_reg_idx = source_path.index('Binding')
+                    target_reg_idx = target_path.index('Binding')
+                    if source_path[source_reg_idx + 1] == 'Theme' and \
+                            target_path[target_reg_idx + 1] == 'Theme':
+                        matching_reg_info.append(
+                            get_regulation_info(standoff, reg,
+                                                source_path[-1],
+                                                target_path[-1]))
+        else:
+            pos_event_type, neg_event_type = \
+                type_standoff_mappings[event_type]
+            polarity_is_positive = (polarity in {'Positive', 'Unspecified'})
+            constraints = [
+                {
+                    'source': {'Positive_regulation', 'Regulation',
+                               'Catalysis'},
+                    'target': (pos_event_type if polarity_is_positive
+                               else neg_event_type)
+                },
+                {
+                    'source': {'Negative_regulation'},
+                    'target': (neg_event_type if polarity_is_positive
+                               else pos_event_type)
+                }
+            ]
+            for source_path, target_path in \
+                    itertools.product(source_annotated_paths,
+                                      target_annotated_paths):
+                for constraint in constraints:
+                    if source_path[0] in constraint['source'] \
+                            and source_path[1] == 'Cause' \
+                            and target_path[1] == 'Theme' \
+                            and constraint['target'] in target_path:
+                        matching_reg_info.append(
+                            get_regulation_info(standoff, reg,
+                                                source_path[-1],
+                                                target_path[-1]))
+
+    if not matching_reg_info:
+        if len(potential_regs) == 1:
+            txt = standoff.get_sentence_for_offset(
+                potential_regs[0].event.start)
+            matching_reg_info = [{'text': txt,
+                                  'regulation_uid': potential_regs[0].uid}]
+        else:
+            data = {'source_id': source_id,
+                    'target_id': target_id,
+                    'event_type': event_type,
+                    'polarity': polarity}
+            label = '\n'.join(['%s: %s' % (k, v) for k, v in data.items()])
+            standoff.save_potential_regulations(source_id, target_id,
+                                                key=standoff.key,
+                                                label=label)
+            matching_reg_info = [{}]
+
+    return matching_reg_info
+
+
+def get_regulation_info(standoff, regulation, source_uid, target_uid):
+    text = standoff.get_sentence_for_offset(regulation.event.start)
+    subj = standoff.elements[source_uid]
+    subj_text = subj.text
+    subj_coord = [standoff.get_sentence_relative_offset(subj.start),
+                  standoff.get_sentence_relative_offset(subj.end)]
+    obj = standoff.elements[target_uid]
+    obj_text = obj.text
+    obj_coord = [standoff.get_sentence_relative_offset(obj.start),
+                 standoff.get_sentence_relative_offset(obj.end)]
+    return {'text': text,
+            'subj_text': subj_text,
+            'subj_coord': subj_coord,
+            'obj_text': obj_text,
+            'obj_coord': obj_coord,
+            'regulation_uid': regulation.uid}
+
+
 def get_sentence_for_offset(text_lines, line_offsets, offset):
     """Return a text line for a given offset based on line offsets."""
     for idx in range(len(line_offsets) - 1):
         if line_offsets[idx + 1] > offset:
             return text_lines[idx].strip()
     return text_lines[-1]
+
+
+def get_sentence_relative_offset(line_offsets, offset):
+    """Return an offset relative to the sentence it is in."""
+    for idx in range(len(line_offsets) - 1):
+        if line_offsets[idx + 1] > offset:
+            return offset - line_offsets[idx]
+    return offset - line_offsets[-1]
 
 
 class EvexStandoff:
@@ -229,6 +258,10 @@ class EvexStandoff:
         """Return the sentence for a given offset in the standoff annotation."""
         return get_sentence_for_offset(self.text_lines, self.line_offsets,
                                        offset)
+
+    def get_sentence_relative_offset(self, offset):
+        """Return an offset relative to the sentence it is in."""
+        return get_sentence_relative_offset(self.line_offsets, offset)
 
     def find_exact_regulations(self, cause_entrez_id, theme_entrez_id):
         """Find regulations that only contain the given entrez IDs."""
