@@ -12,6 +12,10 @@ def test_get_sentence_offset():
     assert get_sentence_for_offset(text_lines, line_offsets, 17) == \
         text_lines[0]
 
+    text_lines = ['a', 'b', 'c', 'd', 'e', 'f']
+    line_offsets = [0, 188, 376, 627, 823, 1129]
+    assert get_sentence_for_offset(text_lines, line_offsets, 535) == 'c'
+
 
 def test_binding_standoff():
     with open(get_resource_file('evex_binding_standoff.pkl'), 'rb') as fh:
