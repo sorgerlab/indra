@@ -32,7 +32,11 @@ def test_process_relations():
         for agent in stmt.agent_list():
             assert 'EGID' in agent.db_refs
             assert 'TEXT' in agent.db_refs
+        # Make sure we got good coordinates
         assert ev.annotations['agents']['coords'][0][1] > 0
+    # Make sure we don't have redundant evidences
+    assert len({stmt.get_hash(shallow=False) for stmt in ep.statements}) == \
+        len(ep.statements)
     return ep
 
 
