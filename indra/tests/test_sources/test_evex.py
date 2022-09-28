@@ -1,6 +1,36 @@
 import pickle
-from indra.sources.evex.processor import get_sentence_for_offset
+import pandas
+from indra.sources.evex.processor import get_sentence_for_offset, EvexProcessor
+from indra.statements.validate import assert_valid_statements
 from . import get_resource_file
+
+
+def test_process_relations():
+    standoff_tar_gz = get_resource_file('evex_test_annots.tar.gz')
+    relations_df = pandas.read_csv(get_resource_file('evex_rels.tsv'), sep='\t')
+    articles_df = pandas.read_csv(get_resource_file('evex_articles.tsv'),
+                                  sep='\t')
+    standoff_index = {}
+    for aid in articles_df.article_id:
+        paper_prefix, paper_id = aid.split(': ')
+        key = (
+            'pubmed' if paper_prefix == 'PMID' else 'pmc',
+            paper_id if paper_prefix == 'PMID' else paper_id.replace('PMC', '')
+        )
+        standoff_index[key] = standoff_tar_gz
+
+    ep = EvexProcessor(relations_df, articles_df, standoff_index)
+    assert_valid_statements(ep.statements)
+    ep.process_statements()
+    for stmt in ep.statements:
+        assert len(stmt.evidence) == 1
+        ev = stmt.evidence[0]
+        assert ev.text
+        assert ev.text_refs
+        for agent in stmt.agent_list():
+            assert 'EGID' in agent.db_refs
+            assert 'TEXT' in agent.db_refs
+    return ep
 
 
 def test_get_sentence_offset():

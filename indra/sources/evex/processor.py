@@ -10,6 +10,7 @@ from typing import Any, Dict
 import networkx
 import tqdm
 from indra.ontology.standardize import get_standard_agent
+from indra.statements.validate import validate_statement
 from indra.statements import *
 
 logger = logging.getLogger(__name__)
@@ -25,20 +26,12 @@ class EvexProcessor:
         self.standoff_index = standoff_index
         self.statements = []
         self.standoff_cache = {}
-        self.provenance_stats = {
-            'file_missing': set(),
-            'reg_number_not_one': {},
-        }
 
-    def print_provenance_stats(self):
-        from collections import Counter
-        print('Standoff files not found for %s relations' %
-              len(self.provenance_stats['file_missing']))
-        print('Regulation numbers other than one found:')
-        reg_nums = Counter(
-            self.provenance_stats['reg_number_not_one'].values()).most_common()
-        for num, cnt in reg_nums:
-            print('- %s: %s' % (num, cnt))
+    def process_statements(self):
+        for row in tqdm.tqdm(self.relations_table.itertuples(),
+                             total=len(self.relations_table),
+                             desc='Processing Evex relations'):
+            self.statements += self.process_row(row)
 
     def find_evidence_info(self, standoff, source_id, target_id, event_type,
                            polarity):
@@ -138,10 +131,9 @@ class EvexProcessor:
             text_refs = {article_prefix: article_id}
             pmid = article_id if article_prefix == 'PMID' else None
 
-            standoff = self.get_standoff_for_event(row, article_prefix,
-                                                   article_id)
+            standoff = self.get_standoff_for_event(article_prefix, article_id)
             if not standoff:
-                evidence_info = {None, (None, None)}
+                evidence_info = {(None, (None, None))}
             else:
                 evidence_info = \
                     self.find_evidence_info(standoff, source_id, target_id,
@@ -169,16 +161,11 @@ class EvexProcessor:
                     stmt = Complex([subj, obj], evidence=[ev])
                 else:
                     stmt = stmt_type(subj, obj, evidence=[ev])
+                validate_statement(stmt)
                 stmts.append(stmt)
         return stmts
 
-    def process_statements(self):
-        for row in tqdm.tqdm(self.relations_table.itertuples(),
-                             total=len(self.relations_table),
-                             desc='Processing Evex relations'):
-            self.statements += self.process_row(row)
-
-    def get_standoff_for_event(self, row, article_prefix, article_id):
+    def get_standoff_for_event(self, article_prefix, article_id):
         key = (
             'pmc' if article_prefix == 'PMCID' else 'pubmed',
             article_id[3:] if article_prefix == 'PMCID' else article_id
@@ -187,13 +174,13 @@ class EvexProcessor:
             return self.standoff_cache[key]
         standoff_file = self.standoff_index.get(key)
         if not standoff_file:
-            self.provenance_stats['file_missing'].add(key)
             return None
         standoff = EvexStandoff(standoff_file, key)
         self.standoff_cache[key] = standoff
         return standoff
 
     def build_article_lookup(self):
+        """Build a lookup for articles corresponding to event IDs."""
         article_lookup = defaultdict(list)
         for row in self.articles_table.itertuples():
             prefix, article_id = row.article_id.split(': ')
@@ -498,6 +485,7 @@ class Regulation:
 
 
 def add_subgraph(g, obj):
+    """Recursively build up a graph of standoff objects."""
     label = '{ID | %s} | {event_type | %s}' % (obj.uid, obj.event.get_type())
     if obj.negation:
         label += '| {negated | %s}' % True

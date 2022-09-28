@@ -1,0 +1,6 @@
+general_event_id	source_entrezgene_id	target_entrezgene_id	confidence	negation	speculation	coarse_type	coarse_polarity	refined_type	refined_polarity
+963594	9	10	0.0316748	0	0	Binding	Neutral	Binding	Neutral
+51221413	3569	1	-0.488791	0	0	Regulation	Unspecified	Catalysis of phosphorylation	Unspecified
+33192948	23	1	-1.45498	0	0	Regulation	Unspecified	Regulation	Unspecified
+4793648	1401	2	-1.28857	0	0	Regulation	Negative	Regulation of expression	Negative
+5486188	5340	2	-1.56376	0	0	Regulation	Positive	Regulation of expression	Positive
