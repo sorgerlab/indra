@@ -71,13 +71,13 @@ class EvexProcessor:
                     {
                         'source': {'Positive_regulation', 'Regulation',
                                    'Catalysis'},
-                        'target': pos_event_type if polarity_is_positive \
-                            else neg_event_type
+                        'target': (pos_event_type if polarity_is_positive
+                                   else neg_event_type)
                     },
                     {
                         'source': {'Negative_regulation'},
-                        'target': neg_event_type if polarity_is_positive \
-                            else pos_event_type
+                        'target': (neg_event_type if polarity_is_positive
+                                   else pos_event_type)
                     }
                 ]
                 for source_path, target_path in \
@@ -143,7 +143,7 @@ class EvexProcessor:
                 annotations = {
                     'evex_relation_type': row.refined_type,
                     'evex_polarity': row.refined_polarity,
-                    'evex_general_event_id': row.general_event_id
+                    'evex_general_event_id': str(row.general_event_id)
                     # 'evex_standoff_regulation_id':
                 }
                 ev = Evidence(source_api='evex',
