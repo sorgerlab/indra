@@ -20,8 +20,9 @@ def test_process_relations():
         standoff_index[key] = standoff_tar_gz
 
     ep = EvexProcessor(relations_df, articles_df, standoff_index)
-    assert_valid_statements(ep.statements)
     ep.process_statements()
+    assert_valid_statements(ep.statements)
+    assert len(ep.statements) == 12
     for stmt in ep.statements:
         assert len(stmt.evidence) == 1
         ev = stmt.evidence[0]
