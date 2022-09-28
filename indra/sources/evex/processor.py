@@ -40,120 +40,140 @@ class EvexProcessor:
         for num, cnt in reg_nums:
             print('- %s: %s' % (num, cnt))
 
+    def find_evidence_info(self, standoff, source_id, target_id, event_type,
+                           polarity):
+        """Given a standoff, find all regulations matching a relation row
+        and return corresponding evidence info."""
+        pos_event_type, neg_event_type = type_standoff_mappings[event_type]
+        potential_regs = standoff.find_potential_regulations(source_id,
+                                                             target_id)
+        matching_regs = []
+        for reg in potential_regs:
+            source_paths = reg.paths_to_entrez_id(source_id)
+            source_annotated_paths = [standoff.annotate_path(source_path)
+                                      for source_path in source_paths]
+            target_paths = reg.paths_to_entrez_id(target_id)
+            target_annotated_paths = [standoff.annotate_path(target_path)
+                                      for target_path in target_paths]
+            if polarity in {'Positive', 'Unspecified'}:
+                constraints = [
+                    {
+                        'source': {'Positive_regulation', 'Regulation',
+                                   'Catalysis'},
+                        'target': pos_event_type
+                    },
+                    {
+                        'source': {'Negative_regulation'},
+                        'target': neg_event_type
+                    }
+                ]
+            else:
+                constraints = [
+                    {
+                        'source': {'Positive_regulation', 'Regulation',
+                                   'Catalysis'},
+                        'target': neg_event_type
+                    },
+                    {
+                        'source': {'Negative_regulation'},
+                        'target': pos_event_type
+                    }
+                ]
+            for source_path, target_path in \
+                    itertools.product(source_annotated_paths,
+                                      target_annotated_paths):
+                for constraint in constraints:
+                    if source_path[0] in constraint['source'] \
+                            and source_path[1] == 'Cause' \
+                            and target_path[1] == 'Theme' \
+                            and constraint['target'] in target_path:
+                        matching_regs.append(
+                            (reg, standoff.elements[source_path[-1]].text,
+                             standoff.elements[target_path[-1]].text))
+
+        if matching_regs:
+            texts = [standoff.get_sentence_for_offset(reg.event.start)
+                     for reg, _, _ in matching_regs]
+            agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
+        elif len(potential_regs) == 1:
+            texts = [standoff.get_sentence_for_offset(
+                        potential_regs[0].event.start)]
+            agent_texts = [(None, None)]
+        else:
+            data = {'source_id': source_id,
+                    'target_id': target_id,
+                    'event_type': event_type,
+                    'polarity': polarity}
+            label = '\n'.join(['%s: %s' % (k, v) for k, v in data.items()])
+            standoff.save_potential_regulations(source_id, target_id,
+                                                key=standoff.key,
+                                                label=label)
+            texts = [None]
+            agent_texts = [(None, None)]
+
+        return texts, agent_texts
+
+    def process_row(self, row):
+        """Process a row in the relations table into INDRA Statements."""
+        pol_idx = 1 if row.refined_polarity == 'Negative' else 0
+        stmt_types = type_indra_mappings.get(row.refined_type)
+        if not stmt_types:
+            return []
+        stmt_type = stmt_types[pol_idx]
+        source_id = str(row.source_entrezgene_id)
+        target_id = str(row.target_entrezgene_id)
+        subj_agent = get_standard_agent('EGID:%s' % source_id,
+                                        db_refs={'EGID': source_id})
+        obj_agent = get_standard_agent('EGID:%s' % target_id,
+                                       db_refs={'EGID': target_id})
+
+        # FIXME: handle multiple articles corresponding to the same
+        # general event ID
+        article_prefix, article_id = \
+            self.article_lookup.get(row.general_event_id)
+
+        text_refs = {article_prefix: article_id}
+        pmid = article_id if article_prefix == 'PMID' else None
+
+        standoff = self.get_standoff_for_event(row, article_prefix,
+                                               article_id)
+        if not standoff:
+            return []
+
+        texts, agent_texts = \
+            self.find_evidence_info(standoff, source_id, target_id,
+                                    row.refined_type, row.refined_polarity)
+        stmts = []
+        for text, (subj_text, obj_text) in zip(texts, agent_texts):
+            annotations = {
+                'evex_relation_type': row.refined_type,
+                'evex_polarity': row.refined_polarity,
+                'evex_general_event_id': row.general_event_id
+                # 'evex_standoff_regulation_id':
+            }
+            ev = Evidence(source_api='evex',
+                          pmid=pmid,
+                          text_refs=text_refs,
+                          text=text,
+                          annotations=annotations)
+            subj = copy.deepcopy(subj_agent)
+            obj = copy.deepcopy(obj_agent)
+            if subj_text:
+                subj.db_refs['TEXT'] = subj_text
+            if obj_text:
+                obj.db_refs['TEXT'] = obj_text
+            if stmt_type == Complex:
+                stmt = Complex([subj, obj], evidence=[ev])
+            else:
+                stmt = stmt_type(subj, obj, evidence=[ev])
+            stmts.append(stmt)
+        return stmts
+
     def process_statements(self):
         for row in tqdm.tqdm(self.relations_table.itertuples(),
                              total=len(self.relations_table),
                              desc='Processing Evex relations'):
-            pol_idx = 1 if row.refined_polarity == 'Negative' else 0
-            stmt_types = type_indra_mappings.get(row.refined_type)
-            if not stmt_types:
-                continue
-            stmt_type = stmt_types[pol_idx]
-            source_id = str(row.source_entrezgene_id)
-            target_id = str(row.target_entrezgene_id)
-            subj_agent = get_standard_agent('EGID:%s' % source_id,
-                                            db_refs={'EGID': source_id})
-            obj_agent = get_standard_agent('EGID:%s' % target_id,
-                                           db_refs={'EGID': target_id})
-
-            # FIXME: handle multiple articles corresponding to the same
-            # general event ID
-            article_prefix, article_id = \
-                self.article_lookup.get(row.general_event_id)
-
-            text_refs = {article_prefix: article_id}
-            pmid = article_id if article_prefix == 'PMID' else None
-
-            standoff = self.get_standoff_for_event(row, article_prefix,
-                                                   article_id)
-            if not standoff:
-                continue
-
-            standoff_event_types = type_standoff_mappings[row.refined_type]
-
-            regs = standoff.find_potential_regulations(source_id, target_id)
-            matching_regs = []
-            for reg in regs:
-                source_paths = reg.paths_to_entrez_id(source_id)
-                source_annotated_paths = [standoff.annotate_path(source_path)
-                                          for source_path in source_paths]
-                target_paths = reg.paths_to_entrez_id(target_id)
-                target_annotated_paths = [standoff.annotate_path(target_path)
-                                          for target_path in target_paths]
-                if row.refined_polarity in {'Positive', 'Unspecified'}:
-                    constraints = [
-                        {
-                            'source': {'Positive_regulation', 'Regulation',
-                                       'Catalysis'},
-                            'target': standoff_event_types[0]
-                         },
-                        {
-                            'source': {'Negative_regulation'},
-                            'target': standoff_event_types[1]
-                        }
-                    ]
-                else:
-                    constraints = [
-                        {
-                            'source': {'Positive_regulation', 'Regulation',
-                                       'Catalysis'},
-                            'target': standoff_event_types[1]
-                        },
-                        {
-                            'source': {'Negative_regulation'},
-                            'target': standoff_event_types[0]
-                        }
-                    ]
-                for source_path, target_path in \
-                        itertools.product(source_annotated_paths,
-                                          target_annotated_paths):
-                    for constraint in constraints:
-                        if source_path[0] in constraint['source'] \
-                                and source_path[1] == 'Cause' \
-                                and target_path[1] == 'Theme' \
-                                and constraint['target'] in target_path:
-                            matching_regs.append(
-                                (reg, standoff.elements[source_path[-1]].text,
-                                 standoff.elements[target_path[-1]].text))
-
-            if not matching_regs and len(regs) != 1:
-                label = '\n'.join(['%s: %s' % (k, getattr(row, k))
-                                   for k in self.relations_table.columns])
-                standoff.save_potential_regulations(source_id, target_id,
-                                                    key=standoff.key,
-                                                    label=label)
-                texts = [None]
-                agent_texts = [(None, None)]
-            else:
-                if len(regs) == 1:
-                    matching_regs = [(regs[0], None, None)]
-                texts = [standoff.get_sentence_for_offset(reg.event.start)
-                         for reg, _, _ in matching_regs]
-                agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
-
-            for text, (subj_text, obj_text) in zip(texts, agent_texts):
-                annotations = {
-                    'evex_relation_type': row.refined_type,
-                    'evex_polarity': row.refined_polarity,
-                    'evex_general_event_id': row.general_event_id
-                    #'evex_standoff_regulation_id':
-                }
-                ev = Evidence(source_api='evex',
-                              pmid=pmid,
-                              text_refs=text_refs,
-                              text=text,
-                              annotations=annotations)
-                subj = copy.deepcopy(subj_agent)
-                obj = copy.deepcopy(obj_agent)
-                if subj_text:
-                    subj.db_refs['TEXT'] = subj_text
-                if obj_text:
-                    obj.db_refs['TEXT'] = obj_text
-                if stmt_type == Complex:
-                    stmt = Complex([subj, obj], evidence=[ev])
-                else:
-                    stmt = stmt_type(subj, obj, evidence=[ev])
-                self.statements.append(stmt)
+            self.statements += self.process_row(row)
 
     def get_standoff_for_event(self, row, article_prefix, article_id):
         key = (
