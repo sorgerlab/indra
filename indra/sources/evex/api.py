@@ -3,9 +3,9 @@ import glob
 import logging
 import pickle
 import tarfile
+from urllib.request import urlretrieve
 import requests
 import pandas
-import pystow
 import tqdm
 
 from .processor import EvexProcessor
@@ -17,11 +17,35 @@ human_network = 'http://evexdb.org/download/network-format/Metazoa/' \
 standoff_root = 'http://evexdb.org/download/standoff-annotation/version-0.1/'
 
 
-def process_human_events():
-    """Process all human events available in EVEX."""
+def process_human_events(base_folder=None):
+    """Process all human events available in EVEX.
+
+    Note that unless the standoff files have already been downloaded using the
+    `download_evex` function, the Statements produced by this function
+    will not carry any evidence text, agent text and various other metadata
+    in them for which the standoff files are required.
+
+    Parameters
+    ----------
+    base_folder : Optional[str]
+        If provided, the given base folder is used to download the human
+        network file from EVEX. Otherwise, the `pystow` package is used
+        to create an `evex` folder within the pystow base path,
+        typically ~/.data/evex.
+
+    Returns
+    -------
+    EvexProcessor
+        An EvexProcessor instance with the extracted INDRA Statements
+        as its statements attribute.
+    """
+    if not base_folder:
+        import pystow
+        base_folder = pystow.join('evex').as_posix()
     standoff_index = build_standoff_index()
-    network_file = pystow.ensure('evex', name='Homo_sapiens.tar.gz',
-                                 url=human_network)
+    network_file = os.path.join(base_folder, 'Homo_sapiens.tar.gz')
+    if not os.path.exists(network_file):
+        urlretrieve(human_network, network_file)
     with tarfile.open(network_file, 'r:gz') as fh:
         relations_file = fh.extractfile('EVEX_relations_9606.tab')
         articles_file = fh.extractfile('EVEX_articles_9606.tab')
@@ -32,16 +56,35 @@ def process_human_events():
     return ep
 
 
-def build_standoff_index(cached=True):
-    """Build an index of publications in standoff bulk archive files."""
-    cache_file = pystow.join('evex', name='standoff_index.pkl')
-    if cached and cache_file.exists():
-        logger.info('Loading standoff index from %s' % cache_file.as_posix())
+def build_standoff_index(cached=True, base_folder=None):
+    """Build an index of publications in standoff bulk archive files.
+
+    This index is necessary to figure out which standoff archive the annotations
+    for a given article are in.
+
+    Parameters
+    ----------
+    cached: Optional[bool]
+        If True, the standoff index is cached in the base folder and isn't
+        regenerated if this function is called again, just reloaded.
+        This is useful since generating the full standoff file index
+        can take a long time. Default: True
+    base_folder : Optional[str]
+        If provided, the given base folder is used to download the human
+        network file from EVEX. Otherwise, the `pystow` package is used
+        to create an `evex` folder within the pystow base path,
+        typically ~/.data/evex.
+    """
+    if not base_folder:
+        import pystow
+        base_folder = pystow.join('evex').as_posix()
+    cache_file = os.path.join(base_folder, 'standoff_index.pkl')
+    if cached and os.path.exists(cache_file):
+        logger.info('Loading standoff index from %s' % cache_file)
         with open(cache_file, 'rb') as fh:
             return pickle.load(fh)
     index = {}
-    for fname in tqdm.tqdm(glob.glob(os.path.join(
-                                     pystow.join('evex').as_posix(), 'batch*')),
+    for fname in tqdm.tqdm(glob.glob(os.path.join(base_folder, 'batch*')),
                            desc='Building standoff index'):
         try:
             with tarfile.open(fname, 'r:gz') as fh:
@@ -59,11 +102,30 @@ def build_standoff_index(cached=True):
     return index
 
 
-def download_evex():
-    """Download EVEX standoff output."""
+def download_evex(base_folder=None):
+    """Download EVEX human network and standoff output files.
+
+    This function downloads the human network file as well as a large number
+    of standoff output files. These files are necessary to find evidence text,
+    agent text and agent coordinates to be used in INDRA. Note that there
+    are over 4 thousand such files, and the overall size is around 6 GB.
+
+    Parameters
+    ----------
+    base_folder : Optional[str]
+        If provided, the given base folder is used to download the human
+        network file from EVEX. Otherwise, the `pystow` package is used
+        to create an `evex` folder within the pystow base path,
+        typically ~/.data/evex.
+    """
     from bs4 import BeautifulSoup
+    if not base_folder:
+        import pystow
+        base_folder = pystow.join('evex').as_posix()
     # Download human network first
-    pystow.ensure('evex', name='Homo_sapiens.tar.gz', url=human_network)
+    fname = os.path.join(base_folder, 'Homo_sapiens.tar.gz')
+    if not os.path.exists(fname):
+        urlretrieve(human_network, fname)
     # Now download all the standoff files
     res = requests.get(standoff_root)
     soup = BeautifulSoup(res.text, 'html.parser')
@@ -77,5 +139,6 @@ def download_evex():
                          for node in soup.find_all('a')
                          if node.get('href').startswith('batch')]
         for downloadable in downloadables:
-            fname = downloadable.split('/')[-1]
-            pystow.ensure('evex', name=fname, url=downloadable)
+            fname = os.path.join(base_folder, downloadable.split('/')[-1])
+            if not os.path.exists(fname):
+                urlretrieve(downloadable, fname)
