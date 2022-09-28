@@ -18,6 +18,7 @@ standoff_root = 'http://evexdb.org/download/standoff-annotation/version-0.1/'
 
 
 def process_human_events():
+    """Process all human events available in EVEX."""
     standoff_index = build_standoff_index()
     network_file = pystow.ensure('evex', name='Homo_sapiens.tar.gz',
                                  url=human_network)
