@@ -212,9 +212,9 @@ def get_regulation_info(standoff, regulation, source_uid, target_uid):
                  standoff.get_sentence_relative_offset(obj.end)]
     return {'text': text,
             'subj_text': subj_text,
-            'subj_coord': subj_coord,
+            'subj_coords': subj_coord,
             'obj_text': obj_text,
-            'obj_coord': obj_coord,
+            'obj_coords': obj_coord,
             'regulation_uid': regulation.uid}
 
 

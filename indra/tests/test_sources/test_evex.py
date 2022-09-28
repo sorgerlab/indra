@@ -32,6 +32,7 @@ def test_process_relations():
         for agent in stmt.agent_list():
             assert 'EGID' in agent.db_refs
             assert 'TEXT' in agent.db_refs
+        assert ev.annotations['agents']['coords'][0][1] > 0
     return ep
 
 
