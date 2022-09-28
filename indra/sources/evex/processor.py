@@ -47,7 +47,7 @@ class EvexProcessor:
         pos_event_type, neg_event_type = type_standoff_mappings[event_type]
         potential_regs = standoff.find_potential_regulations(source_id,
                                                              target_id)
-        matching_regs = []
+        matching_reg_info = []
         for reg in potential_regs:
             source_paths = reg.paths_to_entrez_id(source_id)
             source_annotated_paths = [standoff.annotate_path(source_path)
@@ -87,18 +87,15 @@ class EvexProcessor:
                             and source_path[1] == 'Cause' \
                             and target_path[1] == 'Theme' \
                             and constraint['target'] in target_path:
-                        matching_regs.append(
-                            (reg, standoff.elements[source_path[-1]].text,
-                             standoff.elements[target_path[-1]].text))
+                        matching_reg_info.append(
+                            (standoff.get_sentence_for_offset(reg.event.start),
+                             (standoff.elements[source_path[-1]].text,
+                              standoff.elements[target_path[-1]].text)))
 
-        if matching_regs:
-            texts = [standoff.get_sentence_for_offset(reg.event.start)
-                     for reg, _, _ in matching_regs]
-            agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
-        elif len(potential_regs) == 1:
-            texts = [standoff.get_sentence_for_offset(
-                        potential_regs[0].event.start)]
-            agent_texts = [(None, None)]
+        if not matching_reg_info and len(potential_regs) == 1:
+            matching_reg_info = [
+                (standoff.get_sentence_for_offset(potential_regs[0].event.start)
+                 (None, None))]
         else:
             data = {'source_id': source_id,
                     'target_id': target_id,
@@ -108,10 +105,9 @@ class EvexProcessor:
             standoff.save_potential_regulations(source_id, target_id,
                                                 key=standoff.key,
                                                 label=label)
-            texts = [None]
-            agent_texts = [(None, None)]
+            matching_reg_info = [(None, (None, None))]
 
-        return texts, agent_texts
+        return matching_reg_info
 
     def process_row(self, row):
         """Process a row in the relations table into INDRA Statements."""
@@ -127,46 +123,45 @@ class EvexProcessor:
         obj_agent = get_standard_agent('EGID:%s' % target_id,
                                        db_refs={'EGID': target_id})
 
-        # FIXME: handle multiple articles corresponding to the same
-        # general event ID
-        article_prefix, article_id = \
-            self.article_lookup.get(row.general_event_id)
-
-        text_refs = {article_prefix: article_id}
-        pmid = article_id if article_prefix == 'PMID' else None
-
-        standoff = self.get_standoff_for_event(row, article_prefix,
-                                               article_id)
-        if not standoff:
-            return []
-
-        texts, agent_texts = \
-            self.find_evidence_info(standoff, source_id, target_id,
-                                    row.refined_type, row.refined_polarity)
+        article_keys = self.article_lookup.get(row.general_event_id)
         stmts = []
-        for text, (subj_text, obj_text) in zip(texts, agent_texts):
-            annotations = {
-                'evex_relation_type': row.refined_type,
-                'evex_polarity': row.refined_polarity,
-                'evex_general_event_id': row.general_event_id
-                # 'evex_standoff_regulation_id':
-            }
-            ev = Evidence(source_api='evex',
-                          pmid=pmid,
-                          text_refs=text_refs,
-                          text=text,
-                          annotations=annotations)
-            subj = copy.deepcopy(subj_agent)
-            obj = copy.deepcopy(obj_agent)
-            if subj_text:
-                subj.db_refs['TEXT'] = subj_text
-            if obj_text:
-                obj.db_refs['TEXT'] = obj_text
-            if stmt_type == Complex:
-                stmt = Complex([subj, obj], evidence=[ev])
-            else:
-                stmt = stmt_type(subj, obj, evidence=[ev])
-            stmts.append(stmt)
+        for article_prefix, article_id in article_keys:
+            text_refs = {article_prefix: article_id}
+            pmid = article_id if article_prefix == 'PMID' else None
+
+            standoff = self.get_standoff_for_event(row, article_prefix,
+                                                   article_id)
+            if not standoff:
+                return []
+
+            evidence_info = \
+                self.find_evidence_info(standoff, source_id, target_id,
+                                        row.refined_type, row.refined_polarity)
+            for text, (subj_text, obj_text) in evidence_info:
+                if text is None:
+                    breakpoint()
+                annotations = {
+                    'evex_relation_type': row.refined_type,
+                    'evex_polarity': row.refined_polarity,
+                    'evex_general_event_id': row.general_event_id
+                    # 'evex_standoff_regulation_id':
+                }
+                ev = Evidence(source_api='evex',
+                              pmid=pmid,
+                              text_refs=text_refs,
+                              text=text,
+                              annotations=annotations)
+                subj = copy.deepcopy(subj_agent)
+                obj = copy.deepcopy(obj_agent)
+                if subj_text:
+                    subj.db_refs['TEXT'] = subj_text
+                if obj_text:
+                    obj.db_refs['TEXT'] = obj_text
+                if stmt_type == Complex:
+                    stmt = Complex([subj, obj], evidence=[ev])
+                else:
+                    stmt = stmt_type(subj, obj, evidence=[ev])
+                stmts.append(stmt)
         return stmts
 
     def process_statements(self):
@@ -191,20 +186,20 @@ class EvexProcessor:
         return standoff
 
     def build_article_lookup(self):
-        # FIXME: handle multiple articles corresponding to the same
-        # general event ID
-        article_lookup = {}
+        article_lookup = defaultdict(list)
         for row in self.articles_table.itertuples():
             prefix, article_id = row.article_id.split(': ')
             if prefix == 'PMCID':
                 if not article_id.startswith('PMC'):
                     article_id = 'PMC' + article_id
-                article_lookup[row.general_event_id] = ('PMCID', article_id)
+                article_lookup[row.general_event_id].append(
+                    ('PMCID', article_id))
             elif prefix == 'PMID':
-                article_lookup[row.general_event_id] = ('PMID', article_id)
+                article_lookup[row.general_event_id].append(
+                    ('PMID', article_id))
             else:
                 ValueError('Unexpected article type: %s' % prefix)
-        return article_lookup
+        return dict(article_lookup)
 
 
 def get_sentence_for_offset(text_lines, line_offsets, offset):
@@ -237,8 +232,8 @@ class EvexStandoff:
 
     def get_sentence_for_offset(self, offset):
         """Return the sentence for a given offset in the standoff annotation."""
-        get_sentence_for_offset(self.text_lines, self.line_offsets,
-                                offset)
+        return get_sentence_for_offset(self.text_lines, self.line_offsets,
+                                       offset)
 
     def find_exact_regulations(self, cause_entrez_id, theme_entrez_id):
         """Find regulations that only contain the given entrez IDs."""
