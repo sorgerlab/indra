@@ -1,4 +1,6 @@
+import pickle
 from indra.sources.evex.processor import get_sentence_for_offset
+from . import get_resource_file
 
 
 def test_get_sentence_offset():
@@ -9,3 +11,13 @@ def test_get_sentence_offset():
 
     assert get_sentence_for_offset(text_lines, line_offsets, 17) == \
         text_lines[0]
+
+
+def test_binding_standoff():
+    with open(get_resource_file('evex_binding_standoff.pkl'), 'rb') as fh:
+        standoff = pickle.load(fh)
+
+    source_id = '19'
+    target_id = '20'
+    regs = standoff.find_potential_regulations(source_id, target_id)
+    assert regs

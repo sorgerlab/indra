@@ -132,8 +132,6 @@ class EvexProcessor:
                 agent_texts = [(at1, at2) for _, at1, at2 in matching_regs]
 
             for text, (subj_text, obj_text) in zip(texts, agent_texts):
-                if isinstance(text, int):
-                    breakpoint()
                 annotations = {
                     'evex_relation_type': row.refined_type,
                     'evex_polarity': row.refined_polarity,
@@ -205,12 +203,12 @@ class EvexStandoff:
         # the standoff annotations, and then process the annotations from
         # the annotation file.
         with tarfile.open(standoff_file, 'r:gz') as fh:
-            self.ann_file = TextIOWrapper(fh.extractfile('%s_%s.ann' % key),
-                                          encoding='utf-8')
-            self.txt_file = TextIOWrapper(fh.extractfile('%s_%s.txt' % key),
-                                          encoding='utf-8')
-            self.text_lines = self.txt_file.readlines()
-            self.elements = process_annotations(self.ann_file)
+            ann_file = TextIOWrapper(fh.extractfile('%s_%s.ann' % key),
+                                     encoding='utf-8')
+            txt_file = TextIOWrapper(fh.extractfile('%s_%s.txt' % key),
+                                     encoding='utf-8')
+            self.text_lines = txt_file.readlines()
+            self.elements = process_annotations(ann_file)
         # To be able to linearly index into sentences broken up into separate
         # lines, we build an index of line offsets
         self.line_offsets = [0]
@@ -439,12 +437,14 @@ class Regulation:
         """Return all Entrez IDs under this regulation."""
         entrez_ids = set()
         for k, v in self.arguments.items():
-            if isinstance(v, Regulation):
-                entrez_ids |= v.find_entrez_ids()
-            elif isinstance(v, Entity):
-                entrez_id = v.references.get('EG')
-                if entrez_id:
-                    entrez_ids.add(entrez_id)
+            v = [v] if not isinstance(v, list) else v
+            for vv in v:
+                if isinstance(vv, Regulation):
+                    entrez_ids |= vv.find_entrez_ids()
+                elif isinstance(vv, Entity):
+                    entrez_id = vv.references.get('EG')
+                    if entrez_id:
+                        entrez_ids.add(entrez_id)
         return entrez_ids
 
     def get_entrez_uid_mappings(self):
@@ -470,8 +470,6 @@ class Regulation:
         paths = []
         for uid in uids:
             path_nodes = networkx.shortest_path(self.graph, self.uid, uid)
-            if len(path_nodes) == 1:
-                breakpoint()
             paths.append(path_nodes)
         return paths
 
