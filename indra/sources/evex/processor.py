@@ -28,6 +28,7 @@ class EvexProcessor:
         self.standoff_cache = {}
 
     def process_statements(self):
+        """Process rows of the EXEV relations table into INDRA Statements."""
         for row in tqdm.tqdm(self.relations_table.itertuples(),
                              total=len(self.relations_table),
                              desc='Processing Evex relations'):
@@ -35,6 +36,9 @@ class EvexProcessor:
 
     def process_row(self, row):
         """Process a row in the relations table into INDRA Statements."""
+
+        # First, we determine the statement type and create the subject/object
+        # ageints.
         pol_idx = 1 if row.refined_polarity == 'Negative' else 0
         stmt_types = type_indra_mappings.get(row.refined_type)
         if not stmt_types:
@@ -47,12 +51,17 @@ class EvexProcessor:
         obj_agent = get_standard_agent('EGID:%s' % target_id,
                                        db_refs={'EGID': target_id})
 
+        # We now figure out what articles provide evidence for this relation
         article_keys = self.article_lookup.get(row.general_event_id)
         stmts = []
         for article_prefix, article_id in article_keys:
+            # These text refs are known based on info we have independent of
+            # standoff availability
             text_refs = {article_prefix: article_id}
             pmid = article_id if article_prefix == 'PMID' else None
 
+            # We not find the standoff for the given relation and gather
+            # evidence info for it if possible.
             standoff = self.get_standoff_for_event(article_prefix, article_id)
             if not standoff:
                 evidence_info = [{}]
@@ -60,6 +69,9 @@ class EvexProcessor:
                 evidence_info = find_evidence_info(standoff, source_id,
                                                    target_id, row.refined_type,
                                                    row.refined_polarity)
+            # For each article, it's possible that multiple evidences are
+            # available for the relation so we create a separate Statements
+            # (each with a single Evidence) here.
             for ev_info in evidence_info:
                 annotations = {
                     'evex_relation_type': row.refined_type,
@@ -76,12 +88,17 @@ class EvexProcessor:
                               text_refs=text_refs,
                               text=ev_info.get('text'),
                               annotations=annotations)
+
+                # We can set the raw Agent text which is specific to this
+                # given evidence.
                 subj = copy.deepcopy(subj_agent)
                 obj = copy.deepcopy(obj_agent)
                 if ev_info.get('subj_text'):
                     subj.db_refs['TEXT'] = ev_info.get('subj_text')
                 if ev_info.get('obj_text'):
                     obj.db_refs['TEXT'] = ev_info.get('obj_text')
+
+                # Finally, create the Statement object
                 if stmt_type == Complex:
                     stmt = Complex([subj, obj], evidence=[ev])
                 else:
@@ -91,6 +108,7 @@ class EvexProcessor:
         return stmts
 
     def get_standoff_for_event(self, article_prefix, article_id):
+        """Based on article info, return a standoff object of annotations."""
         key = (
             'pmc' if article_prefix == 'PMCID' else 'pubmed',
             article_id[3:] if article_prefix == 'PMCID' else article_id
@@ -201,6 +219,7 @@ def find_evidence_info(standoff, source_id, target_id, event_type,
 
 
 def get_regulation_info(standoff, regulation, source_uid, target_uid):
+    """Gather specific evidence info from a regulation in a standoff."""
     text = standoff.get_sentence_for_offset(regulation.event.start)
     subj = standoff.elements[source_uid]
     subj_text = subj.text
@@ -318,19 +337,30 @@ def process_annotations(ann_file):
     elements = {}
     reader = csv.reader(ann_file, delimiter='\t', quotechar=None)
     for row in reader:
+        # The first element is always the UID
         uid = row[0]
         assert len(row) == 2 or len(row) == 3
+        # If the row has 3 elements, then the last one is a value
         value = row[2] if len(row) == 3 else None
+        # The second element can have multiple space-separated parts
         parts = row[1].split()
+        # If this is an entity of some type
         if parts[0] in {'GGP', 'Entity'}:
             entity = Entity(uid, parts[0], int(parts[1]), int(parts[2]), value)
             elements[uid] = entity
+        # These represent entity references like Entrez IDs
         elif parts[0] == 'Reference':
             ref_ns, ref_id = parts[2].split(':', maxsplit=1)
             elements[parts[1]].references[ref_ns] = ref_id
+        # These are various event types, we enumerate them explicitly in
+        # the standoff_event_types variable to make sure it's not some
+        # other type of row.
         elif parts[0] in standoff_event_types:
             event = Event(uid, parts[0], int(parts[1]), int(parts[2]), value)
             elements[uid] = event
+        # These are confidence values associated with regulations but also
+        # other things like Negation. An additional complication is that it
+        # can either represent a numerical of a qualitative confidence level.
         elif parts[0] == 'Confidence':
             # Negation confidence
             if isinstance(parts[1], Negation):
@@ -341,12 +371,16 @@ def process_annotations(ann_file):
             # Regulation confidence level
             else:
                 elements[parts[1]].confidence_level = parts[2]
+        # Represents a negation for a regulation
         elif parts[0] == 'Negation':
             elements[uid] = Negation(uid)
             elements[parts[1]].negation = elements[uid]
+        # Represents a speculation for a regulation
         elif parts[0] == 'Speculation':
             elements[uid] = Speculation(uid)
             elements[parts[1]].speculation = elements[uid]
+        # The remainder of cases are regulations. These are either basic
+        # regulations or special cases like subunit-complex relations.
         elif len(row) == 2:
             if ':' in parts[0]:
                 event_type, parent_id = parts[0].split(':')
@@ -360,6 +394,8 @@ def process_annotations(ann_file):
             else:
                 assert False, row
 
+            # The row contains a series of arguments for the regulation that
+            # need to be parsed out in parts
             arguments = {}
             for element in parts[1:]:
                 role, arg_uid = element.split(':')
@@ -368,6 +404,9 @@ def process_annotations(ann_file):
                 # placeholder for these elements that can be resolved later
                 element_obj = elements.get(arg_uid, Unresolved(arg_uid))
 
+                # There are argument types that there are more than one of,
+                # e.g., Theme for Binding so we need to sometimes turn
+                # these into lists.
                 if role in arguments:
                     if not isinstance(arguments[role], list):
                         arguments[role] = [arguments[role]]
@@ -377,7 +416,7 @@ def process_annotations(ann_file):
             regulation = Regulation(uid, event, arguments)
             elements[uid] = regulation
         else:
-            print(row)
+            logger.error('Could not process standoff file row: %s' % row)
             break
 
     # We now need to resolve Unresolved regulation references. At this point
@@ -517,6 +556,11 @@ class Regulation:
         return paths
 
 
+@dataclass
+class Unresolved:
+    uid: str
+
+
 def add_subgraph(g, obj):
     """Recursively build up a graph of standoff objects."""
     label = '{ID | %s} | {event_type | %s}' % (obj.uid, obj.event.get_type())
@@ -540,11 +584,6 @@ def add_subgraph(g, obj):
                            shape='record',
                            label=label)
             g.add_edge(obj.uid, vv.uid, label=k)
-
-
-@dataclass
-class Unresolved:
-    uid: str
 
 
 # The set of event types used in the standoff format
