@@ -141,11 +141,12 @@ class EvexProcessor:
             standoff = self.get_standoff_for_event(row, article_prefix,
                                                    article_id)
             if not standoff:
-                return []
-
-            evidence_info = \
-                self.find_evidence_info(standoff, source_id, target_id,
-                                        row.refined_type, row.refined_polarity)
+                evidence_info = {None, (None, None)}
+            else:
+                evidence_info = \
+                    self.find_evidence_info(standoff, source_id, target_id,
+                                            row.refined_type,
+                                            row.refined_polarity)
             for text, (subj_text, obj_text) in evidence_info:
                 annotations = {
                     'evex_relation_type': row.refined_type,
