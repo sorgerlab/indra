@@ -77,8 +77,17 @@ class EvexProcessor:
                     'evex_relation_type': row.refined_type,
                     'evex_polarity': row.refined_polarity,
                     'evex_general_event_id': str(row.general_event_id),
-                    'evex_standoff_regulation_id': ev_info.get('regulation_uid')
+                    'evex_standoff_regulation_id':
+                        ev_info.get('regulation_uid'),
+                    'evex_confidence': ev_info.get('confidence')
                 }
+                # These are propagated to allow filtering later
+                epistemics = {}
+                if ev_info.get('negation'):
+                    epistemics['negated'] = True
+                if ev_info.get('speculation'):
+                    epistemics['is_hypothesis'] = True
+
                 if ev_info.get('subj_coords'):
                     annotations['agents'] = \
                         {'coords': [ev_info['subj_coords'],
@@ -87,7 +96,8 @@ class EvexProcessor:
                               pmid=pmid,
                               text_refs=text_refs,
                               text=ev_info.get('text'),
-                              annotations=annotations)
+                              annotations=annotations,
+                              epistemics=epistemics)
 
                 # We can set the raw Agent text which is specific to this
                 # given evidence.
@@ -234,7 +244,10 @@ def get_regulation_info(standoff, regulation, source_uid, target_uid):
             'subj_coords': subj_coord,
             'obj_text': obj_text,
             'obj_coords': obj_coord,
-            'regulation_uid': regulation.uid}
+            'regulation_uid': regulation.uid,
+            'confidence': regulation.confidence_val,
+            'negation': True if regulation.negation else False,
+            'speculation': True if regulation.speculation else False}
 
 
 def get_sentence_for_offset(text_lines, line_offsets, offset):
