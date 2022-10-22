@@ -604,8 +604,8 @@ def update_lincs_proteins():
 def update_mesh_names():
     """Update Mesh ID to name and tree number mappings."""
     url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
-           'xmlmesh/desc2021.gz')
-    desc_path = os.path.join(path, 'mesh_desc2021.gz')
+           'xmlmesh/desc2022.gz')
+    desc_path = os.path.join(path, 'mesh_desc2022.gz')
     if not os.path.exists(desc_path):
         logging.info('Download MeSH descriptors from %s', url)
         urlretrieve(url, desc_path)
@@ -631,8 +631,8 @@ def update_mesh_names():
 def update_mesh_supplementary_names():
     """Update MeSH ID to name mappings for supplementary terms."""
     supp_url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
-                'xmlmesh/supp2021.gz')
-    supp_path = os.path.join(path, 'mesh_supp2021.gz')
+                'xmlmesh/supp2022.gz')
+    supp_path = os.path.join(path, 'mesh_supp2022.gz')
     if not os.path.exists(supp_path):
         logging.info('Download MeSH supplement from %s', supp_url)
         urlretrieve(supp_url, supp_path)
@@ -644,6 +644,8 @@ def update_mesh_supplementary_names():
     reg_number_mappings = []
     for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
+        if uid == 'C008784':
+            breakpoint()
         name = record.find('SupplementalRecordName/String').text
         mapped_to_terms = record.findall('HeadingMappedToList/HeadingMappedTo/'
                                          'DescriptorReferredTo/DescriptorUI')
