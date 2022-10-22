@@ -644,8 +644,6 @@ def update_mesh_supplementary_names():
     reg_number_mappings = []
     for record in supp_et.iterfind('SupplementalRecord'):
         uid = record.find('SupplementalRecordUI').text
-        if uid == 'C008784':
-            breakpoint()
         name = record.find('SupplementalRecordName/String').text
         mapped_to_terms = record.findall('HeadingMappedToList/HeadingMappedTo/'
                                          'DescriptorReferredTo/DescriptorUI')
