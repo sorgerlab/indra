@@ -282,6 +282,12 @@ class CountsScorer(SklearnScorer):
     use_avg_evidence_len :
         Whether to include a feature giving the average evidence sentence
         length (in space-separated tokens).
+    use_residue_position :
+        Whether to include a feature indicating that a Statement has a
+        (not-None) residue and position (i.e., for Modification Statements).
+        When used to train and predict on site-mapped Statements, allows
+        the correspondence between the residue/position and the target
+        substrate to be exploited in predicting overall correctness.
 
     Example
     -------
