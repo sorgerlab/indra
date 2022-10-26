@@ -5,7 +5,8 @@ import pandas as pd
 from collections import Counter
 from typing import Union, Sequence, Optional, List, Any
 from sklearn.base import BaseEstimator
-from indra.statements import Evidence, Statement, get_all_descendants
+from indra.statements import Evidence, Statement, Modification, \
+                             get_all_descendants
 from indra.belief import BeliefScorer, check_extra_evidence, \
                          get_stmt_evidence, SimpleScorer
 
@@ -305,6 +306,7 @@ class CountsScorer(SklearnScorer):
         use_num_pmids: bool = False,
         use_promoter: bool = False,
         use_avg_evidence_len: bool = False,
+        use_residue_position: bool = False,
     ):
         # Call superclass constructor to store the model
         super(CountsScorer, self).__init__(model)
@@ -315,6 +317,7 @@ class CountsScorer(SklearnScorer):
         self.use_num_pmids = use_num_pmids
         self.use_promoter = use_promoter
         self.use_avg_evidence_len = use_avg_evidence_len
+        self.use_residue_position = use_residue_position
         # Build dictionary mapping INDRA Statement types to integers
         if use_stmt_type:
             all_stmt_types = get_all_descendants(Statement)
@@ -441,6 +444,13 @@ class CountsScorer(SklearnScorer):
                 type_features = [1 if ix == stmt_type_ix else 0
                                  for ix in range(len(self.stmt_type_map))]
                 feature_row.extend(type_features)
+            if self.use_residue_position:
+                if (isinstance(stmt, Modification) and stmt.residue and
+                    stmt.position):
+                    has_res_pos = True
+                else:
+                    has_res_pos = False
+                feature_row.append(has_res_pos)
             # Add field for number of members
             if self.use_num_members:
                 feature_row.append(len(stmt.agent_list()))
