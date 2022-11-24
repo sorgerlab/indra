@@ -809,6 +809,14 @@ _section_list = ['title', 'abstract', 'introduction', 'background',
 
 
 def normalize_section(section):
+    # Strip off any spaces, new lines
+    section = section.strip()
+    # Next, we need to deal with a common pattern of section names like
+    # "3. results"
+    section = re.sub(r'^\d+[.]?[ ]?', '', section)
+    # Often, section title ends with a . like "discussion."
+    if section.endswith('.'):
+        section = section[:-1]
     # If the section is in the standard list, return as is
     if section in _section_list:
         return section
@@ -819,7 +827,7 @@ def normalize_section(section):
         return 'supplementary'
     elif section == 'article-title':
         return 'title'
-    elif section in ['subjects|methods', 'methods|subjects']:
+    elif section in {'subjects|methods', 'methods|subjects', 'star*methods'}:
         return 'methods'
     elif section == 'conclusions':
         return 'conclusion'
