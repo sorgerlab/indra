@@ -709,16 +709,12 @@ class ReachProcessor(object):
             if res:
                 sentence_frame = list(res)[0]
                 sections = sentence_frame.get('sections', [])
-                print(sentence_frame['text'])
-                print(sections)
         epistemics['raw_sections'] = sections
         for section in sections:
             norm_section = normalize_section(section)
             if norm_section:
                 epistemics['section_type'] = norm_section
                 break
-        print(epistemics.get('section_type'))
-        print('---')
         return epistemics
 
     def _get_controller_agent(self, arg):

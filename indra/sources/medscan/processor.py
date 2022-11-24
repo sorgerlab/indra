@@ -8,6 +8,8 @@ import shutil
 import tempfile
 import logging
 from math import floor
+
+import gilda
 import lxml.etree
 import collections
 
@@ -1040,7 +1042,15 @@ def _urn_to_db_refs(urn):
                 db_refs['MESH'] = mesh_id
                 db_name = mesh_name
             else:
-                db_name = urn_mesh_name
+                matches = gilda.ground(urn_mesh_name, namespaces=['MESH'])
+                if matches:
+                    for match_ns, match_id in matches[0].get_groundings():
+                        if match_ns == 'MESH':
+                            db_refs['MESH'] = match_id
+                            db_name = matches[0].term.entry_name
+                            break
+                else:
+                    db_name = urn_mesh_name
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
