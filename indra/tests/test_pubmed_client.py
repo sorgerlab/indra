@@ -20,8 +20,8 @@ def test_get_no_ids():
 @attr('webservice')
 def test_get_ids2():
     time.sleep(0.5)
-    ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
-    ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
+    ids1 = pubmed_client.get_ids('JUN', use_text_word=False, reldate=365)
+    ids2 = pubmed_client.get_ids('JUN', use_text_word=True, reldate=365)
     assert len(ids1) > len(ids2)
 
 
@@ -37,9 +37,10 @@ def test_get_id_count():
 @attr('webservice')
 def test_get_id_mesh():
     time.sleep(0.5)
-    ids = pubmed_client.get_ids_for_mesh('D009101')
-    assert len(ids) > 35000
-    ids_maj = pubmed_client.get_ids_for_mesh('D009101', major_topic=True)
+    ids = pubmed_client.get_ids_for_mesh('D009101', reldate=365)
+    assert len(ids) > 100, len(ids)
+    ids_maj = pubmed_client.get_ids_for_mesh('D009101', major_topic=True,
+                                             reldate=365)
     assert len(ids_maj) < len(ids)
 
 
@@ -47,7 +48,7 @@ def test_get_id_mesh():
 def test_get_id_mesh_supc():
     time.sleep(0.5)
     ids = pubmed_client.get_ids_for_mesh('D000086382')
-    assert len(ids) > 15000, len(ids)
+    assert len(ids) > 100, len(ids)
 
 
 @attr('webservice')

@@ -57,8 +57,9 @@ def get_ids(search_term, **kwargs):
 
     PubMed, by default, limits returned PMIDs to a small number, and this
     number can be controlled by the "retmax" parameter. This function
-    uses a retmax value of 100,000 by default that can be changed via the
-    corresponding keyword argument.
+    uses a retmax value of 10,000 by default (the maximum supported by PubMed)
+    that can be changed via the corresponding keyword argument. Note also
+    the retstart argument along with retmax to page across batches of IDs.
 
     Parameters
     ----------
@@ -82,7 +83,7 @@ def get_ids(search_term, **kwargs):
     if use_text_word:
         search_term += '[tw]'
     params = {'term': search_term,
-              'retmax': 100000,
+              'retmax': 10000,
               'retstart': 0,
               'db': 'pubmed',
               'sort': 'pub+date'}
