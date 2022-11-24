@@ -1034,7 +1034,8 @@ def _urn_to_db_refs(urn):
         else:
             # Identifier is MESH
             urn_mesh_name = unquote(urn_id)
-            mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name)
+            mesh_id, mesh_name = mesh_client.get_mesh_id_name(urn_mesh_name,
+                                                              offline=True)
             if mesh_id:
                 db_refs['MESH'] = mesh_id
                 db_name = mesh_name
