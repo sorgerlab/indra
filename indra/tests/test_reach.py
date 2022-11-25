@@ -1,7 +1,7 @@
 import os
 from nose.plugins.attrib import attr
 from indra.sources import reach
-from indra.sources.reach.processor import ReachProcessor
+from indra.sources.reach.processor import ReachProcessor, normalize_section
 from indra.util import unicode_strs
 from indra.statements import IncreaseAmount, DecreaseAmount, \
     Dephosphorylation, Complex, Phosphorylation, Translocation
@@ -530,3 +530,12 @@ def test_organism_prioritization_uppro():
     process(['1513314'], 'PRO_0000006688')
     process(['1513314', '9606'], 'PRO_0000006688')
     process(['1513314', '161274'], 'PRO_0000003427')
+
+
+def test_normalize_section():
+    assert normalize_section('results') == 'results'
+    assert normalize_section('3. results') == 'results'
+    assert normalize_section('3 results') == 'results'
+    assert normalize_section('results.') == 'results'
+    assert normalize_section('star*methods') == 'methods'
+    assert normalize_section('some random section') is None

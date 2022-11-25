@@ -363,6 +363,47 @@ def process_json_file(file_name, citation=None, organism_priority=None):
         logger.error('Could not read file %s.' % file_name)
 
 
+def process_fries_json_group(group_prefix, citation=None,
+                             organism_priority=None):
+    """Return a ReachProcessor by processing a REACH fries output file group.
+
+    When running REACH through its CLI, for each input file, it produces
+    three output JSON files when using the fries output format. These three
+    files jointly constitute the output, so they have to be combined to be
+    processed. For instance, one might have PMC9582577.uaz.entities.json,
+    PMC9582577.uaz.events.json, PMC9582577.uaz.sentence.json.
+
+    Parameters
+    ----------
+    group_prefix : str
+        The prefix for the group of output files, e.g., PMC9582577.uaz
+    citation : Optional[str]
+        A PubMed ID passed to be used in the evidence for the extracted INDRA
+        Statements. Default: None
+    organism_priority : Optional[list of str]
+        A list of Taxonomy IDs providing prioritization among organisms
+        when choosing protein grounding. If not given, the default behavior
+        takes the first match produced by Reach, which is prioritized to be
+        a human protein if such a match exists.
+
+    Returns
+    -------
+    rp : ReachProcessor
+        A ReachProcessor containing the extracted INDRA Statements
+        in rp.statements.
+    """
+    file_types = ['entities', 'events', 'sentences']
+    combined_json = {}
+    for file_type in file_types:
+        fname = '%s.%s.json' % (group_prefix, file_type)
+        with open(fname, 'r') as fh:
+            combined_json[file_type] = json.load(fh)
+    # Note that we serialize back to a JSON string here to make use of the
+    # replacements done in process_json_str below
+    return process_json_str(json.dumps(combined_json), citation=citation,
+                            organism_priority=organism_priority)
+
+
 def process_json_str(json_str, citation=None, organism_priority=None):
     """Return a ReachProcessor by processing the given REACH json string.
 

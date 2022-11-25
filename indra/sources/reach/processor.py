@@ -699,50 +699,23 @@ class ReachProcessor(object):
         if 'is_direct' in event:
             direct = event['is_direct']
             epistemics['direct'] = direct
+
         # Get the section of the paper it comes from
-        section = self._get_section(event)
-        epistemics['section_type'] = section
-        return epistemics
-
-    _section_list = ['title', 'abstract', 'introduction', 'background',
-                     'results', 'methods', 'discussion', 'conclusion',
-                     'supplementary', 'figure']
-
-    def _get_section(self, event):
-        """Get the section of the paper that the event is from."""
         sentence_id = event.get('sentence')
-        section = None
+        sections = []
         if sentence_id:
             qstr = "$.sentences.frames[(@.frame_id is \'%s\')]" % sentence_id
             res = self.tree.execute(qstr)
             if res:
                 sentence_frame = list(res)[0]
-                passage_id = sentence_frame.get('passage')
-                if passage_id:
-                    qstr = "$.sentences.frames[(@.frame_id is \'%s\')]" % \
-                            passage_id
-                    res = self.tree.execute(qstr)
-                    if res:
-                        passage_frame = list(res)[0]
-                        section = passage_frame.get('section-id')
-        # If the section is in the standard list, return as is
-        if section in self._section_list:
-            return section
-        # Next, handle a few special cases that come up in practice
-        elif section.startswith('fig'):
-            return 'figure'
-        elif section.startswith('supm'):
-            return 'supplementary'
-        elif section == 'article-title':
-            return 'title'
-        elif section in ['subjects|methods', 'methods|subjects']:
-            return 'methods'
-        elif section == 'conclusions':
-            return 'conclusion'
-        elif section == 'intro':
-            return 'introduction'
-        else:
-            return None
+                sections = sentence_frame.get('sections', [])
+        epistemics['raw_sections'] = sections
+        for section in sections:
+            norm_section = normalize_section(section)
+            if norm_section:
+                epistemics['section_type'] = norm_section
+                break
+        return epistemics
 
     def _get_controller_agent(self, arg):
         """Return a single or a complex controller agent."""
@@ -824,6 +797,40 @@ class ReachProcessor(object):
                 sites[i] = Site(sites[0].residue, sites[i].position)
 
         return sites
+
+
+_section_list = ['title', 'abstract', 'introduction', 'background',
+                 'results', 'methods', 'discussion', 'conclusion',
+                 'supplementary', 'figure']
+
+
+def normalize_section(section):
+    # Strip off any spaces, new lines
+    section = section.strip()
+    # Next, we need to deal with a common pattern of section names like
+    # "3. results"
+    section = re.sub(r'^\d+[.]?[ ]?', '', section)
+    # Often, section title ends with a . like "discussion."
+    if section.endswith('.'):
+        section = section[:-1]
+    # If the section is in the standard list, return as is
+    if section in _section_list:
+        return section
+    # Next, handle a few special cases that come up in practice
+    elif section.startswith('fig'):
+        return 'figure'
+    elif section.startswith('supm'):
+        return 'supplementary'
+    elif section == 'article-title':
+        return 'title'
+    elif section in {'subjects|methods', 'methods|subjects', 'star*methods'}:
+        return 'methods'
+    elif section == 'conclusions':
+        return 'conclusion'
+    elif section == 'intro':
+        return 'introduction'
+    else:
+        return None
 
 
 def parse_amino_acid_string(s):
