@@ -375,7 +375,7 @@ def process_fries_json_group(group_prefix, citation=None,
 
     Parameters
     ----------
-    group_prefix :
+    group_prefix : str
         The prefix for the group of output files, e.g., PMC9582577.uaz
     citation : Optional[str]
         A PubMed ID passed to be used in the evidence for the extracted INDRA
@@ -400,7 +400,8 @@ def process_fries_json_group(group_prefix, citation=None,
             combined_json[file_type] = json.load(fh)
     # Note that we serialize back to a JSON string here to make use of the
     # replacements done in process_json_str below
-    return process_json_str(json.dumps(combined_json))
+    return process_json_str(json.dumps(combined_json), citation=citation,
+                            organism_priority=organism_priority)
 
 
 def process_json_str(json_str, citation=None, organism_priority=None):
