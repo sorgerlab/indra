@@ -90,6 +90,8 @@ class ReachProcessor(object):
         return self.tree.execute("$.entities.frames")
 
     def get_agents_from_entities(self):
+        """Return INDRA Agents extracted from all entities, even ones not
+        part of events."""
         entities = self.get_all_entities()
         agents = [
             self._get_agent_from_entity(e['frame_id'])[0]

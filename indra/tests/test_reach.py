@@ -4,7 +4,7 @@ from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor, normalize_section
 from indra.util import unicode_strs
 from indra.statements import IncreaseAmount, DecreaseAmount, \
-    Dephosphorylation, Complex, Phosphorylation, Translocation
+    Dephosphorylation, Complex, Phosphorylation, Translocation, Agent
 
 # Change this list to control what modes of
 # reading are enabled in tests
@@ -480,6 +480,14 @@ def test_phosphorylation_regulation():
     stmt = rp.statements[0]
     assert isinstance(stmt, Phosphorylation), stmt
     assert not stmt.sub.mods
+
+
+def test_process_agents():
+    here = os.path.dirname(os.path.abspath(__file__))
+    test_file = os.path.join(here, 'reach_reg_phos.json')
+    agents = reach.process_agents_from_entities(test_file)
+    assert all(isinstance(a, Agent) for a in agents)
+    assert len(agents) == 2
 
 
 def test_organism_prioritization():

@@ -169,6 +169,7 @@ from .api import (process_pmc,
                   process_nxml_file,
                   process_json_str,
                   process_json_file,
+                  process_agents_from_entities,
                   process_fries_json_group,
                   reach_text_url, reach_nxml_url,
                   local_text_url, local_nxml_url)
