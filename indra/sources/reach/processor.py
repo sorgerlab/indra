@@ -85,6 +85,18 @@ class ReachProcessor(object):
             except KeyError:
                 self.all_events[event_type] = [frame_id]
 
+    def get_all_entities(self):
+        """Return all entities extracted, even ones not part of events."""
+        return self.tree.execute("$.entities.frames")
+
+    def get_agents_from_entities(self):
+        entities = self.get_all_entities()
+        agents = [
+            self._get_agent_from_entity(e['frame_id'])[0]
+            for e in entities
+        ]
+        return agents
+
     def print_regulations(self):
         qstr = "$.events.frames[(@.type is 'regulation')]"
         res = self.tree.execute(qstr)

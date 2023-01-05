@@ -429,6 +429,21 @@ def process_json_str(json_str, citation=None, organism_priority=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
+    json_dict = _preprocess_json_str(json_str)
+    if json_dict is None:
+        return None
+    rp = ReachProcessor(json_dict, pmid=citation,
+                        organism_priority=organism_priority)
+    rp.get_modifications()
+    rp.get_complexes()
+    rp.get_activation()
+    rp.get_translocation()
+    rp.get_regulate_amounts()
+    rp.get_conversion()
+    return rp
+
+
+def _preprocess_json_str(json_str):
     fields = ['frame-id', 'argument-label', 'object-meta',
               'doc-id', 'is-hypothesis', 'is-negated',
               'is-direct', 'found-by']
@@ -440,15 +455,15 @@ def process_json_str(json_str, citation=None, organism_priority=None):
         logger.error('Could not decode JSON string.')
         logger.exception(e)
         return None
-    rp = ReachProcessor(json_dict, pmid=citation,
-                        organism_priority=organism_priority)
-    rp.get_modifications()
-    rp.get_complexes()
-    rp.get_activation()
-    rp.get_translocation()
-    rp.get_regulate_amounts()
-    rp.get_conversion()
-    return rp
+    return json_dict
+
+
+def process_agents_from_entities(file_name, organism_priority=None):
+    with open(file_name, 'rb') as fh:
+        json_str = fh.read().decode('utf-8')
+    json_dict = _preprocess_json_str(json_str)
+    rp = ReachProcessor(json_dict, organism_priority=organism_priority)
+    return rp.get_agents_from_entities()
 
 
 def _read_content_offline(content, content_type='text'):
