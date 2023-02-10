@@ -97,6 +97,7 @@ class ReachProcessor(object):
             self._get_agent_from_entity(e['frame_id'])[0]
             for e in entities
         ]
+        agents = [a for a in agents if a is not None]
         return agents
 
     def print_regulations(self):
@@ -448,6 +449,8 @@ class ReachProcessor(object):
 
         # This is the default name, which can be overwritten
         # below for specific database entries
+        if 'text' not in entity_term:
+            return None, None
         agent_name = entity_term['text']
         db_refs = self._get_db_refs(entity_term, self.organism_priority)
 
@@ -507,6 +510,12 @@ class ReachProcessor(object):
                 db_refs['FPLX'] = xr['id']
             elif ns == 'proonto':
                 db_refs['PR'] = xr['id']
+            elif ns == 'taxonomy':
+                db_refs['TAXONOMY'] = xr['id']
+            elif ns == 'cl':
+                db_refs['CL'] = xr['id']
+            elif ns == 'tissuelist':
+                db_refs['CALOHA'] = xr['id']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
