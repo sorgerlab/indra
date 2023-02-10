@@ -516,6 +516,10 @@ class ReachProcessor(object):
                 db_refs['CL'] = xr['id']
             elif ns == 'tissuelist':
                 db_refs['CALOHA'] = xr['id']
+            elif ns == 'uberon':
+                db_refs['UBERON'] = xr['id']
+            elif ns == 'cellosaurus':
+                db_refs['CVCL'] = xr['id']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
