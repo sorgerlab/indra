@@ -541,3 +541,10 @@ def test_none_text_corner_case():
     stmt = Phosphorylation(None, ag)
     res = gm.map_stmts([stmt])
     assert res[0].sub.name == 'x', res[0]
+
+
+def test_text_not_removed():
+    agent = Agent('SERPINA1', db_refs={'UP': 'P01009', 'TEXT': 'PI',
+                                       'HGNC': '8941', 'EGID': '5265'})
+    mapped_agent = gm.map_agent(agent, do_rename=True)
+    assert mapped_agent.db_refs.get('TEXT') == 'PI', mapped_agent.db_refs
