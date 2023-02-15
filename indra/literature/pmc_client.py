@@ -38,10 +38,27 @@ pmids_fulltext_dict = {}
 
 
 def id_lookup(paper_id, idtype=None):
-    """This function takes a Pubmed ID, Pubmed Central ID, or DOI
-    and use the Pubmed ID mapping
-    service and looks up all other IDs from one
-    of these. The IDs are returned in a dictionary."""
+    """Return PMID, DOI and PMCID based on an input ID.
+
+    This function takes a Pubmed ID, Pubmed Central ID, or DOI
+    and use the Pubmed ID mapping service and looks up all other IDs from one
+    of these. The IDs are returned in a dictionary.
+
+    Parameters
+    ----------
+    paper_id : str
+        A PubMed ID, PubMed Central ID, or DOI.
+    idtype : Optional[str]
+        The type of the input ID. If not given, the function will try to
+        determine the type from the input ID. If given, it must be one of
+        'pmid', 'pmcid', or 'doi'.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys 'pmid', 'pmcid', and 'doi' containing the
+        corresponding IDs, or an empty dict if lookup fails.
+    """
     if idtype is not None and idtype not in ('pmid', 'pmcid', 'doi'):
         raise ValueError("Invalid idtype %s; must be 'pmid', 'pmcid', "
                          "or 'doi'." % idtype)
