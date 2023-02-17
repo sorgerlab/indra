@@ -820,7 +820,7 @@ def _is_entity(bpe):
 
 
 def _listify(lst):
-    if not isinstance(lst, collections.Iterable):
+    if not isinstance(lst, list):
         return [lst]
     else:
         return lst
