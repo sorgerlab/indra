@@ -2,7 +2,6 @@ import os
 import logging
 import operator
 import itertools
-import collections
 from copy import deepcopy
 import xml.etree.ElementTree as ET
 from indra.util import read_unicode_csv
@@ -1434,7 +1433,7 @@ class TripsProcessor(object):
         agent = self._get_agent_by_id(term_id, event_id)
         if agent is None:
             return None
-        if isinstance(agent, collections.Iterable):
+        if isinstance(agent, list):
             agent = agent[0]
             logger.warning('Extracting only one basic Agent from %s.'
                             % term_id)
@@ -1742,7 +1741,7 @@ def _agent_list_product(lists):
 
 
 def _listify(lst):
-    if not isinstance(lst, collections.Iterable):
+    if not isinstance(lst, (list, tuple)):
         return [lst]
     else:
         return lst

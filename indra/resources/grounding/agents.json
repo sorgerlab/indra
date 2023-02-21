@@ -129,16 +129,6 @@
   },
   "nl": "PI3K-p85"
  },
- "PI": {
-  "agent": {
-   "name": "PI3K",
-   "db_refs": {
-    "FPLX": "PI3K",
-    "NCIT": "C17270"
-   }
-  },
-  "nl": "PI3K"
- },
  "pTpYERK": {
   "agent": {
    "name": "ERK",

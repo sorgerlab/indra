@@ -247,7 +247,7 @@ def test_get_statements_end_on_limit():
         violations = 0
         violations_allowed = 3
         while p.is_working():
-            assert t < 100
+            assert t < 100, t
             limit = p._get_next_limit()
             if limit == 0 and p.is_working():
                 violations += 1

@@ -243,11 +243,10 @@ class GroundingMapper(object):
         agent.db_refs = self.standardize_db_refs(agent.db_refs)
         # If there is no TEXT available, we can return immediately since we
         # can't do mapping
-        agent_txts = sorted({agent.db_refs[t] for t in {'TEXT', 'TEXT_NORM'}
-                             # Note that get here will correctly handle both
-                             # a non-existent entry and a None entry which
-                             # sometimes appears
-                             if agent.db_refs.get(t)}, key=lambda x: len(x),
+        atxt = agent.db_refs.get('TEXT')
+        anormtxt = agent.db_refs.get('TEXT_NORM')
+        agent_txts = sorted({t for t in [atxt, anormtxt] if t},
+                            key=lambda x: len(x),
                             reverse=True)
         if not agent_txts:
             # We still do the name standardization here
@@ -260,6 +259,10 @@ class GroundingMapper(object):
             if agent_text in self.agent_map:
                 mapped_to_agent = \
                     Agent._from_json(self.agent_map[agent_text]['agent'])
+                if atxt:
+                    mapped_to_agent.db_refs['TEXT'] = atxt
+                if anormtxt:
+                    mapped_to_agent.db_refs['TEXT_NORM'] = anormtxt
                 return mapped_to_agent
 
         # 2. Look agent text up in the grounding map

@@ -34,7 +34,7 @@ identifiers_mappings = {
 # identifiers.org entries
 non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'HMS-LINCS', 'NXPFA',
-    'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK',
+    'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK', 'CALOHA',
     'DRUGBANK.SALT', 'SMILES', 'NIHREPORTER.PROJECT', 'GOOGLE.PATENT', 'SPINE'
 }
 
