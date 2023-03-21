@@ -1,5 +1,5 @@
 import os
-from nose.plugins.attrib import attr
+import pytest
 from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor, normalize_section
 from indra.util import unicode_strs
@@ -298,7 +298,7 @@ def test_process_unicode():
         assert unicode_strs(rp.statements)
 
 
-@attr('slow')
+@pytest.mark.slow
 def test_process_pmc():
     for offline in offline_modes:
         rp = reach.process_pmc('PMC4338247', offline=offline)

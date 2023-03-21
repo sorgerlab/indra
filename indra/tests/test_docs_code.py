@@ -6,9 +6,7 @@ occurence to the tests.
 
 In general, try to separate tests to one test per chunk of interdependent code
 """
-import copy
-from indra.statements import Event, Concept, Influence, Evidence
-from nose.plugins.attrib import attr
+import pytest
 from unittest import skip
 
 
@@ -60,7 +58,8 @@ def test_readme_using_indra2():
 
 
 # From 3rd example under "Using INDRA"
-@attr('slow', 'nogha')
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_readme_using_indra3():
     from indra.sources import reach
     from indra.literature import pubmed_client
@@ -145,7 +144,8 @@ def test_nl_modeling():
 
 
 # CODE IN gene_network.rst
-@attr('slow', 'nogha')
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_gene_network():
     # Chunk 1: this is tested in _get_gene_network_stmts
     # from indra.tools.gene_network import GeneNetwork

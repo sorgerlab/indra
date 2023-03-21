@@ -2,8 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from os.path import join, dirname
-from nose.tools import raises
-from nose.plugins.attrib import attr
+import pytest
 
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -51,7 +50,8 @@ def test_parse_csv_from_file():
     assert sp.complex_map == {}
 
 
-@attr('webservice', 'slow') 
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_parse_csv_from_web():
     sp = process_from_web()
     assert isinstance(sp._data, list)
@@ -98,11 +98,11 @@ def test_get_agent():
     assert test_ag.matches(sp_ag)
 
 
-@raises(KeyError)
 def test_get_agent_keyerror():
     # Create an empty Signor processor
-    sp = SignorProcessor([])
-    sp_ag = sp._get_agent('foo', 'bar', None, None)
+    with pytest.raises(KeyError):
+        sp = SignorProcessor([])
+        sp_ag = sp._get_agent('foo', 'bar', None, None)
 
 
 def test_get_evidence():

@@ -1,36 +1,36 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import cbio_client
-from nose.plugins.attrib import attr
+import pytest
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_cancer_studies():
     study_ids = cbio_client.get_cancer_studies('paad')
     assert len(study_ids) > 0
     assert 'paad_tcga' in study_ids
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_cancer_types():
     type_ids = cbio_client.get_cancer_types('lung')
     assert len(type_ids) > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_genetic_profiles():
     genetic_profiles = \
         cbio_client.get_genetic_profiles('paad_icgc', 'mutation')
     assert len(genetic_profiles) > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_num_sequenced():
     num_case = cbio_client.get_num_sequenced('paad_tcga')
     assert num_case > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_send_request_ccle():
     """Sends a request and gets back a dataframe of all cases in ccle study.
 
@@ -42,7 +42,7 @@ def test_send_request_ccle():
     assert len(df) > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ccle_lines_for_mutation():
     """Check how many lines have BRAF V600E mutations.
 
@@ -53,7 +53,7 @@ def test_get_ccle_lines_for_mutation():
     assert len(cl_BRAF_V600E) == 55
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ccle_mutations():
     muts = cbio_client.get_ccle_mutations(['BRAF', 'AKT1'],
                                           ['LOXIMVI_SKIN', 'A101D_SKIN'])
@@ -66,7 +66,7 @@ def test_get_ccle_mutations():
     assert len(muts['A101D_SKIN']['AKT1']) == 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_profile_data():
     profile_data = cbio_client.get_profile_data(cbio_client.ccle_study,
                                                 ['BRAF', 'PTEN'],
@@ -79,7 +79,7 @@ def test_get_profile_data():
     assert len(profile_data) > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ccle_cna():
     profile_data = cbio_client.get_ccle_cna(['BRAF', 'AKT1'],
                                             ['LOXIMVI_SKIN', 'SKMEL30_SKIN'])
@@ -90,7 +90,7 @@ def test_get_ccle_cna():
     assert len(profile_data) == 2
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ccle_mrna():
     mrna = cbio_client.get_ccle_mrna(['XYZ', 'MAP2K1'], ['A375_SKIN'])
     assert 'A375_SKIN' in mrna
@@ -102,7 +102,7 @@ def test_get_ccle_mrna():
     assert mrna['XXX'] is None
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ccle_cna_big():
     """
     Get the CNA data on 124 genes in 4 cell lines. Expect to have CNA values

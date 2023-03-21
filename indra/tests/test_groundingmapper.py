@@ -6,8 +6,7 @@ from indra.preassembler.grounding_mapper.gilda import ground_statements, \
 from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
     Evidence, BoundCondition
 from indra.util import unicode_strs
-from nose.tools import raises
-from nose.plugins.attrib import attr
+import pytest
 
 
 def test_simple_mapping():
@@ -206,21 +205,21 @@ def test_hgnc_but_not_up():
     assert mapped_erk.db_refs['UP'] == 'P28482'
 
 
-@raises(ValueError)
 def test_hgnc_sym_with_no_id():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'HGNC': 'foobar'}}
-    gm = GroundingMapper(g_map)
-    mapped_stmts = gm.map_stmts([stmt])
+    with pytest.raises(ValueError):
+        gm = GroundingMapper(g_map)
+        mapped_stmts = gm.map_stmts([stmt])
 
 
-@raises(ValueError)
 def test_up_and_invalid_hgnc_sym():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
     g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': 'foobar'}}
-    gm = GroundingMapper(g_map)
+    with pytest.raises(ValueError):
+        gm = GroundingMapper(g_map)
 
 
 def test_up_with_no_gene_name_with_hgnc_sym():
@@ -309,7 +308,7 @@ def test_map_agent():
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 
-@attr('nonpublic')
+@pytest.mark.nonpublic
 def test_adeft_mapping():
     er1 = Agent('ER', db_refs={'TEXT': 'ER'})
     pmid1 = '30775882'
@@ -430,7 +429,7 @@ def test_get_gilda_models():
     assert 'NDR1' in models
 
 
-@attr('nonpublic')
+@pytest.mark.nonpublic
 def test_gilda_disambiguation():
     gm.gilda_mode = 'web'
     er1 = Agent('NDR1', db_refs={'TEXT': 'NDR1'})
@@ -466,7 +465,7 @@ def test_gilda_disambiguation():
     assert annotations['agents']['gilda'][1] is not None
 
 
-@attr('nonpublic')
+@pytest.mark.nonpublic
 def test_gilda_disambiguation_local():
     gm.gilda_mode = 'local'
     er1 = Agent('NDR1', db_refs={'TEXT': 'NDR1'})

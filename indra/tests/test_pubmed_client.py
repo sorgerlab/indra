@@ -1,23 +1,23 @@
 import time
 from indra.literature import pubmed_client
-from nose.plugins.attrib import attr
+import pytest
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ids1():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
     assert len(ids) == 10
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_no_ids():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('UUuXNWMCusRpcVTX', retmax=10, db='pubmed')
     assert not ids
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ids2():
     time.sleep(0.5)
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False, reldate=365)
@@ -25,7 +25,7 @@ def test_get_ids2():
     assert len(ids1) > len(ids2)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_id_count():
     time.sleep(0.5)
     id_count = pubmed_client.get_id_count('SDLFKJSLDKJH')
@@ -34,7 +34,7 @@ def test_get_id_count():
     assert id_count > 0
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_id_mesh():
     time.sleep(0.5)
     ids = pubmed_client.get_ids_for_mesh('D009101', reldate=365)
@@ -44,21 +44,21 @@ def test_get_id_mesh():
     assert len(ids_maj) < len(ids)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_id_mesh_supc():
     time.sleep(0.5)
     ids = pubmed_client.get_ids_for_mesh('D000086382')
     assert len(ids) > 100, len(ids)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_pmc_ids():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert len(ids) == 10
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_title():
     time.sleep(0.5)
     title = pubmed_client.get_title('27754804')
@@ -66,7 +66,7 @@ def test_get_title():
     assert title.lower().startswith('targeting autophagy')
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_title_prefix():
     time.sleep(0.5)
     title = pubmed_client.get_title('PMID27754804')
@@ -74,7 +74,7 @@ def test_get_title_prefix():
     assert title.lower().startswith('targeting autophagy')
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_complex_title():
     time.sleep(0.5)
     title = pubmed_client.get_title('33463523')
@@ -82,7 +82,7 @@ def test_get_complex_title():
     assert title.lower().startswith('atomic structures')
     assert title.lower().endswith('vascular plants.')
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_expand_pagination():
     time.sleep(0.5)
     pages = '456-7'
@@ -90,7 +90,7 @@ def test_expand_pagination():
     assert new_pages == '456-457'
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_abstract_notitle():
     time.sleep(0.5)
     abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
@@ -98,7 +98,7 @@ def test_get_abstract_notitle():
     assert abstract.endswith('vemurafenib.')
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_abstract_title():
     time.sleep(0.5)
     abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
@@ -106,35 +106,35 @@ def test_get_abstract_title():
     assert abstract.endswith('vemurafenib.')
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_abstract2():
     time.sleep(0.5)
     # Try another one
     abstract = pubmed_client.get_abstract('27123883')
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_no_abstract():
     time.sleep(0.5)
     abstract = pubmed_client.get_abstract('xx')
     assert abstract is None
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_ids_for_gene():
     time.sleep(0.5)
     ids = pubmed_client.get_ids_for_gene('EXOC1')
     assert ids
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_metadata_for_ids():
     time.sleep(0.5)
     pmids = ['27123883', '27121204', '27115606']
     metadata = pubmed_client.get_metadata_for_ids(pmids)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_pub_date():
     time.sleep(0.5)
     pmids = ['27123883', '27121204', '27115606']
@@ -150,21 +150,21 @@ def test_get_pub_date():
     assert metadata[pmids[2]]['publication_date']['day'] == 27
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_send_request_invalid():
     time.sleep(0.5)
     res = pubmed_client.send_request('http://xxxxxxx', data={})
     assert res is None
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_abstract_with_html_embedded():
     time.sleep(0.5)
     res = pubmed_client.get_abstract('25484845')
     assert len(res) > 4, res
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_pmid_27821631():
     time.sleep(0.5)
     pmid = '27821631'
@@ -175,7 +175,7 @@ def test_pmid_27821631():
     assert len(res[pmid]['abstract']) > 50
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_annotations():
     time.sleep(0.5)
     pmid = '30971'
@@ -190,7 +190,7 @@ def test_get_annotations():
     assert any(d['major_topic'] for d in me_ans)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_supplementary_annotations():
     time.sleep(0.5)
     pmid = '30105248'
@@ -206,7 +206,7 @@ def test_get_supplementary_annotations():
     assert supp_ann['text'] == 'Tomato yellow leaf curl virus'
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_substance_annotations():
     pmid = '27959613'
     mesh_ids = pubmed_client.get_substance_annotations(pmid)

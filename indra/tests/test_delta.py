@@ -1,5 +1,5 @@
 from indra.statements.delta import *
-from nose.tools import assert_raises
+import pytest
 from datetime import date, timedelta
 
 
@@ -92,10 +92,10 @@ def test_quantitative_conversions():
     assert QuantitativeState.convert_unit(
         'absolute', 'week', 70, source_period=abs_period) == 14
     # Convert to or from absolute value without providing a total period
-    assert_raises(ValueError, QuantitativeState.convert_unit,
-                  'absolute', 'week', 70)
-    assert_raises(ValueError, QuantitativeState.convert_unit,
-                  'day', 'absolute', 2)
+    with pytest.raises(ValueError):
+        QuantitativeState.convert_unit('absolute', 'week', 70)
+    with pytest.raises(ValueError):
+        QuantitativeState.convert_unit('day', 'absolute', 2)
 
 
 def test_arithmetic_operations():
@@ -130,6 +130,8 @@ def test_arithmetic_operations():
     assert qs2 == qs4
     assert qs1 != qs3
     # Operations with different entities
-    assert_raises(ValueError, qs1.__add__, qs5)
+    with pytest.raises(ValueError):
+        qs1 + qs5
     # Operations with absolute unit when absolute period not provided
-    assert_raises(ValueError, qs1.__add__, qs6)
+    with pytest.raises(ValueError):
+        qs1 + qs6

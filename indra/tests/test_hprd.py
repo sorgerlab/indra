@@ -1,5 +1,5 @@
 from os.path import join, abspath, dirname
-from nose.tools import raises
+import pytest
 from indra.statements import Complex, Phosphorylation
 from indra.sources import hprd
 
@@ -91,9 +91,8 @@ def test_process_ppis():
                                      '&isoform_name=Isoform_1')
 
 
-@raises(ValueError)
 def test_process_ptms_no_seq():
-    ptm_file = join(test_dir, 'POST_TRANSLATIONAL_MODIFICATIONS.txt')
-    hp = hprd.process_flat_files(id_file, ptm_file=ptm_file)
-
+    with pytest.raises(ValueError):
+        ptm_file = join(test_dir, 'POST_TRANSLATIONAL_MODIFICATIONS.txt')
+        hp = hprd.process_flat_files(id_file, ptm_file=ptm_file)
 

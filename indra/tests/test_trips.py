@@ -1,13 +1,12 @@
-import sys
 from os.path import dirname, join
 import indra.statements as ist
 from indra.sources import trips
 from indra.sources.trips.processor import sanitize_trips_name
-from indra.assemblers.pysb import PysbAssembler
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 
 test_small_file = join(dirname(__file__), 'test_small.xml')
+
 
 def assert_if_hgnc_then_up(st):
     agents = st.agent_list()
@@ -28,7 +27,9 @@ def assert_grounding_value_or_none(st):
                 if not v:
                     assert v is None
 
-@attr('webservice', 'slow')
+
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_phosphorylation():
     tp = trips.process_text('BRAF phosphorylates MEK1 at Ser222.')
     assert len(tp.statements) == 1
@@ -43,7 +44,8 @@ def test_phosphorylation():
     assert unicode_strs((tp, st))
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_mod_cond():
     tp = trips.process_text('Phosphorylated BRAF binds ubiquitinated MAP2K1.')
     assert len(tp.statements) == 1
@@ -61,7 +63,8 @@ def test_mod_cond():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_ubiquitination():
     tp = trips.process_text('MDM2 ubiquitinates TP53.')
     assert len(tp.statements) == 1
@@ -73,7 +76,8 @@ def test_ubiquitination():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_phosphorylation_noresidue():
     tp = trips.process_text('BRAF phosphorylates MEK1.')
     assert len(tp.statements) == 1
@@ -87,7 +91,8 @@ def test_phosphorylation_noresidue():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_phosphorylation_nosite():
     tp = trips.process_text('BRAF phosphorylates MEK1 at Serine.')
     assert len(tp.statements) == 1
@@ -101,7 +106,8 @@ def test_phosphorylation_nosite():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_actmod():
     tp = trips.process_text('MEK1 phosphorylated at Ser222 is activated.')
     assert len(tp.statements) == 1
@@ -117,7 +123,8 @@ def test_actmod():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_actmods():
     tp = trips.process_text('MEK1 phosphorylated at Ser 218 and Ser222 is activated.')
     assert len(tp.statements) == 1
@@ -134,7 +141,8 @@ def test_actmods():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_actform_bound():
     tp = trips.process_text('HRAS bound to GTP is activated.')
     assert len(tp.statements) == 1
@@ -149,7 +157,8 @@ def test_actform_bound():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_actform_muts():
     tp = trips.process_text('BRAF V600E is activated.')
     assert len(tp.statements) == 1
@@ -165,7 +174,8 @@ def test_actform_muts():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_actmods2():
     tp = trips.process_text('BRAF phosphorylated at Ser536 binds MEK1.')
     assert len(tp.statements) == 1
@@ -181,7 +191,8 @@ def test_actmods2():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_synthesis():
     tp = trips.process_text('NFKB transcribes IKB.')
     assert len(tp.statements) == 1
@@ -195,7 +206,8 @@ def test_synthesis():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_degradation():
     tp = trips.process_text('MDM2 degrades TP53.')
     assert len(tp.statements) == 1
@@ -208,7 +220,8 @@ def test_degradation():
     assert_grounding_value_or_none(st)
     assert st.evidence
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_simple_decrease():
     tp = trips.process_text('Selumetinib decreases FOS.')
     assert len(tp.statements) == 1
@@ -224,7 +237,8 @@ def test_simple_decrease():
     assert st.evidence
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_no_shared_objects():
     """Make sure shared objects are not being created between statements"""
     verbs = ('phosphorylates', 'binds', 'activates',

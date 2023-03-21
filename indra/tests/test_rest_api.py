@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from copy import deepcopy
-from nose.plugins.attrib import attr
+import pytest
 from os import path
 from rest_api.api import api
 from indra.statements import *
@@ -792,7 +792,7 @@ def test_options():
         "Unexpected content: %s" % res_json
 
 
-@attr('nogha')
+@pytest.mark.nogha
 def test_trips_process_text():
     res = _call_api('post', 'trips/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -822,7 +822,7 @@ def test_trips_process_xml():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('nogha')
+@pytest.mark.nogha
 def test_reach_process_text():
     res = _call_api('post', 'reach/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -851,7 +851,7 @@ def test_reach_process_json():
     assert stmts[0].obj is not None
 
 
-@attr('nogha')
+@pytest.mark.nogha
 def test_reach_process_pmc():
     res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC4338247'})
     res_json = json.loads(res.get_data())
@@ -996,7 +996,7 @@ def test_pipeline():
     assert len(res_json['statements']) == 1
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_ccle_mrna():
     res = _call_api('post', 'databases/cbio/get_ccle_mrna',
                     json={'gene_list': ['XYZ', 'MAP2K1'],
@@ -1018,7 +1018,7 @@ def test_ccle_mrna():
     assert mrna['XXX'] is None
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_ccle_cna():
     res = _call_api('post', 'databases/cbio/get_ccle_cna',
                     json={'gene_list': ['BRAF', 'AKT1'],
@@ -1033,7 +1033,7 @@ def test_ccle_cna():
     assert len(cna) == 2
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_ccle_mutations():
     res = _call_api('post', 'databases/cbio/get_ccle_mutations',
                     json={'gene_list': ['BRAF', 'AKT1'],

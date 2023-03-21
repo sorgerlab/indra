@@ -1,6 +1,6 @@
 from indra.databases import chebi_client
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 
 
 def test_read_chebi_to_pubchem():
@@ -46,7 +46,7 @@ def test_chebi_name_to_id():
     assert cid == 'CHEBI:63637', cid
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_chebi_name_from_web():
     name = chebi_client.get_chebi_name_from_id_web('63637')
     assert name == 'vemurafenib'
@@ -54,7 +54,7 @@ def test_chebi_name_from_web():
     assert name == 'NAD zwitterion'
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_inchi_key():
     ik = chebi_client.get_inchi_key('2150')
     assert ik == 'NVKAWKQGWWIWPM-MISPCMORSA-N'

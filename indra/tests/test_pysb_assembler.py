@@ -8,7 +8,7 @@ from indra.assemblers.pysb.kappa_util import get_cm_cycles
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
-from nose.tools import raises
+import pytest
 
 
 def test_pysb_assembler_complex1():
@@ -1211,12 +1211,12 @@ def test_policy_parameters():
     assert model.parameters['c'].value == 3.0
 
 
-@raises(pa.UnknownPolicyError)
 def test_policy_object_invalid():
-    stmt = Phosphorylation(Agent('a'), Agent('b'))
-    pa = PysbAssembler([stmt])
-    model = pa.make_model(policies={'xyz': Policy('two_step')})
-    assert len(model.rules) == 3
+    with pytest.raises(pa.UnknownPolicyError):
+        stmt = Phosphorylation(Agent('a'), Agent('b'))
+        pa = PysbAssembler([stmt])
+        model = pa.make_model(policies={'xyz': Policy('two_step')})
+        assert len(model.rules) == 3
 
 
 def test_mod_parameter():

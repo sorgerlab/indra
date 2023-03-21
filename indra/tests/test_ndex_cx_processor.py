@@ -3,11 +3,9 @@ from builtins import dict, str
 import os
 from indra.sources.ndex_cx import process_cx_file, process_ndex_network
 from indra.sources.ndex_cx.processor import NdexCxProcessor
-from indra.databases import hgnc_client
 from indra.statements import Agent, Statement
 from requests.exceptions import HTTPError
-from nose.tools import raises
-from nose.plugins.attrib import attr
+import pytest
 
 
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -67,14 +65,14 @@ def test_get_statements():
             assert ev.source_api == 'ndex'
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_cx_from_ndex():
     # Ras Machine network
     ncp = process_ndex_network('fc56fe8d-1b60-11e8-b939-0ac135e8bacf')
 
 
-@raises(HTTPError)
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_cx_from_ndex_unauth():
     # This network should error because unauthorized without username/pwd
-    ncp = process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf')
+    with pytest.raises(HTTPError):
+        ncp = process_ndex_network('df1fea48-8cfb-11e7-a10d-0ac135e8bacf')

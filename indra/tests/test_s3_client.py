@@ -3,10 +3,12 @@ from builtins import dict, str
 from indra.literature import s3_client
 from indra.util import unicode_strs
 import zlib
-from nose.plugins.attrib import attr
+import pytest
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_check_pmid():
     pmid = s3_client.check_pmid(12345)
     assert pmid == 'PMID12345'
@@ -19,7 +21,9 @@ def test_check_pmid():
     assert unicode_strs(pmid)
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_get_pmid_key():
     pmid = '12345'
     pmid_key = s3_client.get_pmid_key(pmid)
@@ -27,14 +31,18 @@ def test_get_pmid_key():
     assert unicode_strs(pmid_key)
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_filter_keys():
     pmid_key = s3_client.get_pmid_key('1001287')
     key_list = s3_client.filter_keys(pmid_key)
     assert len(key_list) == 4
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_get_gz_object():
     # Get XML
     key = 'papers/PMID27297883/fulltext/txt'
@@ -46,13 +54,17 @@ def test_get_gz_object():
     assert unicode_strs(obj)
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_get_gz_object_nosuchkey():
     obj = s3_client.get_gz_object('foobar')
     assert obj is None
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_get_full_text():
     (content, content_type) = s3_client.get_full_text('27297883')
     assert unicode_strs((content, content_type))
@@ -68,7 +80,9 @@ def test_get_full_text():
     assert content is None and content_type is None
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_put_full_text():
     full_text = 'test_put_full_text'
     pmid_test = 'PMID000test1'
@@ -80,7 +94,9 @@ def test_put_full_text():
     assert unicode_strs(content)
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_put_abstract():
     abstract = 'test_put_abstract'
     pmid_test = 'PMID000test2'
@@ -92,7 +108,9 @@ def test_put_abstract():
     assert unicode_strs(content)
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_reach_output():
     # Test put_reach_output
     reach_data = {'foo': 1, 'bar': {'baz': 2}}
@@ -120,7 +138,9 @@ def test_gzip_string():
     assert content == content_dec_uni
 
 
-@attr('webservice', 'nonpublic', 'cron')
+@pytest.mark.webservice
+@pytest.mark.nonpublic
+@pytest.maerk.cron
 def test_get_upload_content():
     pmid_s3_no_content = 'PMID000foobar'
     (ct, ct_type) = s3_client.get_upload_content(pmid_s3_no_content)

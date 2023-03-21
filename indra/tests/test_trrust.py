@@ -1,9 +1,10 @@
-from nose.plugins.attrib import attr
+import pytest
 from indra.sources import trrust
 from indra.statements import RegulateAmount
 
 
-@attr('slow', 'webservice')
+@pytest.mark.slow
+@pytest.mark.webservice
 def test_process_from_web():
     tp = trrust.process_from_web()
     assert len(tp.statements) > 6200

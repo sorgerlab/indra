@@ -1,10 +1,10 @@
 import time
 from indra.literature import id_lookup, get_full_text
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_full_text_pmc():
     txt, txt_format = get_full_text('PMC4322985', 'pmcid')
     assert txt_format == 'pmc_oa_xml'
@@ -12,7 +12,7 @@ def test_get_full_text_pmc():
     assert unicode_strs((txt, txt_format))
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_full_text_doi():
     txt, txt_format = get_full_text('10.18632/oncotarget.2555', 'doi')
     assert txt_format == 'pmc_oa_xml'
@@ -20,7 +20,7 @@ def test_get_full_text_doi():
     assert unicode_strs((txt, txt_format))
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_full_text_pubmed_abstract():
     # DOI lookup in CrossRef fails for this one because of page mismatch
     txt, txt_format = get_full_text('27075779', 'pmid')
@@ -29,14 +29,14 @@ def test_get_full_text_pubmed_abstract():
     assert unicode_strs((txt, txt_format))
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_id_lookup():
     time.sleep(0.5)
     res = id_lookup('17513615', 'pmid')
     assert res['doi'] == '10.1158/1535-7163.MCT-06-0807'
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_id_lookup_no_pmid():
     """Look up a paper that has a PMCID and DOI but not PMID."""
     time.sleep(0.5)
