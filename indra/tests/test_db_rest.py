@@ -87,7 +87,7 @@ def test_too_big_request_no_persist():
     return resp_some
 
 
-@attr('nonpublic', 'slow', 'notravis')
+@attr('nonpublic', 'slow', 'nogha')
 @unittest.skip('skipping')
 def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(200, agents=['TP53'], persist=True,
@@ -98,7 +98,7 @@ def test_too_big_request_persist_and_block():
     return resp_all1
 
 
-@attr('nonpublic', 'slow', 'notravis')
+@attr('nonpublic', 'slow', 'nogha')
 def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
@@ -142,7 +142,7 @@ def test_famplex_namespace():
         + ', '.join({s.agent_list()[1].name for s in stmts})
 
 
-@attr('nonpublic', 'notravis')
+@attr('nonpublic', 'nogha')
 def test_paper_query():
     p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
                                        ('pmid', '27014235')])
@@ -294,7 +294,7 @@ def test_get_statements_strict_stop_long():
     assert p.statements
 
 
-@attr('nonpublic', 'notravis')
+@attr('nonpublic', 'nogha')
 def test_filter_ev():
     ids = [('pmcid', 'PMC5770457'), ('pmid', '27014235')]
     p = dbr.get_statements_for_papers(ids)

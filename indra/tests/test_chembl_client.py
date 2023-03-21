@@ -33,7 +33,7 @@ def test_get_inhibitions():
         assert ev.source_id
 
 
-@attr('webservice', 'notravis')
+@attr('webservice', 'nogha')
 def test_activity_query():
     res = chembl_client.send_query(query_dict_vem_activity)
     assert res['page_meta']['total_count'] == len(res['activities'])
@@ -49,7 +49,7 @@ def test_target_query():
     assert target['target_type'] == 'SINGLE PROTEIN'
 
 
-@attr('webservice', 'slow', 'notravis')
+@attr('webservice', 'slow', 'nogha')
 def test_get_drug_inhibition_stmts_vem():
     stmts = chembl_client.get_drug_inhibition_stmts(vem)
     assert len(stmts) > 0
@@ -63,7 +63,7 @@ def test_get_drug_inhibition_stmts_vem():
             assert ev.source_id
 
 
-@attr('webservice', 'slow', 'notravis')
+@attr('webservice', 'slow', 'nogha')
 def test_get_drug_inhibition_stmts_az628():
     stmts = chembl_client.get_drug_inhibition_stmts(az628)
     assert len(stmts) > 0

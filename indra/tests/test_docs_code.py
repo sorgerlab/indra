@@ -52,7 +52,7 @@ def test_readme_using_indra1():
 
 
 # From 2nd example under "Using INDRA"
-@attr('notravis')  # This test takes 10+ minutes, stalling Travis
+@pytest.mark.nogha  # This test takes 10+ minutes, stalling Travis
 def test_readme_using_indra2():
     from indra.sources import reach
     reach_processor = reach.process_pmc('PMC8511698', url=reach.local_nxml_url)
@@ -60,7 +60,7 @@ def test_readme_using_indra2():
 
 
 # From 3rd example under "Using INDRA"
-@attr('slow', 'notravis')
+@attr('slow', 'nogha')
 def test_readme_using_indra3():
     from indra.sources import reach
     from indra.literature import pubmed_client
@@ -77,7 +77,7 @@ def test_readme_using_indra3():
 
 
 # From 4th example under "Using INDRA"
-@attr('slow')
+@pytest.mark.slow
 def test_readme_using_indra4():
     from indra.sources import bel
     # Process the neighborhood of BRAF and MAP2K1
@@ -86,7 +86,7 @@ def test_readme_using_indra4():
 
 
 # From 5th example under "Using INDRA"
-@attr('slow')
+@pytest.mark.slow
 def test_readme_using_indra5():
     from indra.sources import biopax
     # Process the neighborhood of BRAF and MAP2K1
@@ -145,7 +145,7 @@ def test_nl_modeling():
 
 
 # CODE IN gene_network.rst
-@attr('slow', 'notravis')
+@attr('slow', 'nogha')
 def test_gene_network():
     # Chunk 1: this is tested in _get_gene_network_stmts
     # from indra.tools.gene_network import GeneNetwork
@@ -243,7 +243,7 @@ def test_getting_started4():
     assert reach_processor.statements
 
 
-@attr('slow')
+@pytest.mark.slow
 def test_getting_started5():
     # Chunk 5
     from indra.sources import bel
@@ -260,7 +260,7 @@ def test_getting_started6():
     assert stmt
 
 
-@attr('notravis')
+@pytest.mark.nogha
 def test_getting_started7_8():
     # Chunk 7
     stmts = gn_stmts  # Added only in this test, not in docs

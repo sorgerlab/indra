@@ -792,7 +792,7 @@ def test_options():
         "Unexpected content: %s" % res_json
 
 
-@attr('notravis')
+@attr('nogha')
 def test_trips_process_text():
     res = _call_api('post', 'trips/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -822,7 +822,7 @@ def test_trips_process_xml():
     assert stmt.sub.name == 'ERK', stmt.sub
 
 
-@attr('notravis')
+@attr('nogha')
 def test_reach_process_text():
     res = _call_api('post', 'reach/process_text',
                     json={'text': 'MEK phosphorylates ERK.'})
@@ -851,7 +851,7 @@ def test_reach_process_json():
     assert stmts[0].obj is not None
 
 
-@attr('notravis')
+@attr('nogha')
 def test_reach_process_pmc():
     res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC4338247'})
     res_json = json.loads(res.get_data())

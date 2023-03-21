@@ -9,7 +9,7 @@ from indra.sources.hypothesis.annotator import statement_to_annotations, \
     evidence_to_annotation, get_annotation_text
 
 
-@attr('nonpublic', 'slow', 'notravis')
+@attr('nonpublic', 'slow', 'nogha')
 def test_process_indra_annnotations():
     hp = hypothesis.process_annotations(reader=trips.process_text)
     assert hp.statements
