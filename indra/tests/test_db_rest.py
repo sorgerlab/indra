@@ -45,12 +45,14 @@ def test_null_request():
     assert False, "Null request did not raise any exception."
 
 
-@attr('nonpublic', 'slow')
+@pytest.mark.nonpublic
+@pytest.mark.slow
 def test_large_request():
     __check_request(40, agents=['AKT1'])
 
 
-@attr('nonpublic', 'slow')
+@pytest.mark.nonpublic
+@pytest.mark.slow
 def test_bigger_request():
     __check_request(60, agents=['MAPK1'])
 
@@ -78,7 +80,8 @@ def test_timeout_no_persist_type_object():
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
-@attr('nonpublic', 'slow')
+@pytest.mark.nonpublic
+@pytest.mark.slow
 def test_too_big_request_no_persist():
     resp_some = __check_request(60, agents=['TP53'], persist=False)
     assert sum(resp_some.get_ev_count(s) is not None
@@ -87,7 +90,9 @@ def test_too_big_request_no_persist():
     return resp_some
 
 
-@attr('nonpublic', 'slow', 'nogha')
+@pytest.mark.nonpublic
+@pytest.mark.slow
+@pytest.mark.nogha
 @unittest.skip('skipping')
 def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(200, agents=['TP53'], persist=True,
@@ -98,7 +103,9 @@ def test_too_big_request_persist_and_block():
     return resp_all1
 
 
-@attr('nonpublic', 'slow', 'nogha')
+@pytest.mark.nonpublic
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
@@ -142,7 +149,8 @@ def test_famplex_namespace():
         + ', '.join({s.agent_list()[1].name for s in stmts})
 
 
-@attr('nonpublic', 'nogha')
+@pytest.mark.nonpublic
+@pytest.mark.nogha
 def test_paper_query():
     p = dbr.get_statements_for_papers([('pmcid', 'PMC5770457'),
                                        ('pmid', '27014235')])
@@ -294,7 +302,8 @@ def test_get_statements_strict_stop_long():
     assert p.statements
 
 
-@attr('nonpublic', 'nogha')
+@pytest.mark.nonpublic
+@pytest.mark.nogha
 def test_filter_ev():
     ids = [('pmcid', 'PMC5770457'), ('pmid', '27014235')]
     p = dbr.get_statements_for_papers(ids)

@@ -72,7 +72,6 @@ def test_statement_validate():
     assert validate_statement(stmt)
     assert_valid_statement(stmt)
     stmt = Phosphorylation(None, Agent('ERK', db_refs={'XXX': 'ERK'}))
-    # Pytest implementations of the above assert_raises
     with pytest.raises(UnknownNamespace):
         assert_valid_statement(stmt)
     assert not validate_statement(stmt)
