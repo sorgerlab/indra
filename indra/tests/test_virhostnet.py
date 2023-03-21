@@ -1,5 +1,5 @@
 import pandas
-from nose.plugins.attrib import attr
+import pytest
 from indra.statements import Complex
 from indra.sources import virhostnet
 from indra.sources.virhostnet.api import data_columns
@@ -20,7 +20,8 @@ test_row = {k: v for k, v in zip(data_columns, test_row_str.split('\t'))}
 test_df = pandas.DataFrame.from_dict({k: [v] for k, v in test_row.items()})
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_process_from_web():
     vp = virhostnet.process_from_web(query='pubmed:8553588')
     assert len(vp.statements) == 5, len(vp.statements)

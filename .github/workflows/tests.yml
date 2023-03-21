@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/CI-specific dependencies not covered elsewhere
         pip install --upgrade pip setuptools wheel
-        pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
+        pip install pytest pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         # PySB and dependencies
@@ -79,7 +79,7 @@ jobs:
         ELSEVIER_INST_KEY: ${{ secrets.ELSEVIER_INST_KEY }}
         BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
-        # Set nose attributes based on the context in which we are running
+        # Set pytest attributes based on the context in which we are running
         export NOSEATTR="(not notravis) and (not slow) and (not cron)";
         export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR and (not nonpublic); else echo $NOSEATTR; fi)
         echo $NOSEATTR
