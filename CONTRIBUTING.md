@@ -73,16 +73,15 @@ Python version compatibility and unicode
 ----------------------------------------
 Up to release 1.10, the core modules of INDRA used to be Python 2/3
 cross-compatible. However, as of release 1.11, Python 2.x is not supported
-anymore. Compatibility with Python 3.5, however, is still maintained.
-This means that features only available in later versions of Python
-such as f-strings should not be used in code contributed to INDRA.
+anymore. A requirement that is mostly automatically satisfied in a Python
+3-only context but is still important to keep in mind is that all strings
+within INDRA should be represented, manipulated and passed around as unicode
+(simply `str` in Python 3). Whenever a string is read from a source or written
+to some output, it should be decoded and encoded, respectively. This concept is
+also called the ["unicode sandwich"](https://nedbatchelder.com/text/unipain/unipain.html#1).
 
-A requirement that is mostly automatically satisfied in a Python 3-only context
-but is still important to keep in mind is that all strings within INDRA
-should be represented, manipulated and passed around as unicode (simply `str`
-in Python 3). Whenever a string is read from a source or written to some
-output, it should be decoded and encoded, respectively. This concept is also
-called the ["unicode sandwich"](https://nedbatchelder.com/text/unipain/unipain.html#1).
+Generally, we prefer code that supports broader compatibility since INDRA
+is used (often as a dependency) across many different Python environments.
 
 Documentation
 -------------
