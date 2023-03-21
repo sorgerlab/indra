@@ -57,15 +57,12 @@ jobs:
         #      mv TEES ~/TEES;
         #      export TEES_SETTINGS=~/TEES/tees_local_settings.py
         #  fi
-        # Install nose notify
-        #mkdir $HOME/.nose_notify;
-        #git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
-        #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
         python -m gilda.resources
         # Get INDRA World
         git clone https://github.com/indralab/indra_world.git
+        # Download Reach
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         # Get INDRA Bioontology
         BIOONTOLOGY_VERSION=$(python -m indra.ontology.bio version)
@@ -83,8 +80,8 @@ jobs:
         BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
         # Set nose attributes based on the context in which we are running
-        export NOSEATTR="!notravis,!slow,!cron";
-        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
+        export NOSEATTR="(not notravis) and (not slow) and (not cron)";
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR and (not nonpublic); else echo $NOSEATTR; fi)
         echo $NOSEATTR
         #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
         #echo "$TRAVIS_EVENT_TYPE"
@@ -99,8 +96,10 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
-        nosetests -v -a $NOSEATTR indra/tests/test_reach.py
+        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --doctest-ignore-unicode --durations=10
+        pytest -v -m "$NOSEATTR" indra/tests/test_reach.py
+        #nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
+        #nosetests -v -a $NOSEATTR indra/tests/test_reach.py
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
