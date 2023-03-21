@@ -11,7 +11,7 @@ with open(readme_path, 'r', encoding='utf-8') as fh:
 def main():
     install_list = ['pysb>=1.3.0', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx>=2,<3', 'pandas>=1.5', 'ndex2==2.0.1', 'jinja2',
+                    'networkx>=2,<3', 'pandas<2', 'ndex2==2.0.1', 'jinja2',
                     'markupsafe<2.1.0',
                     'protmapper>=0.0.27', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
@@ -113,10 +113,9 @@ def main():
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'License :: OSI Approved :: BSD License',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',
