@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
+import unittest
 
 import pytest
 from indra.databases.lincs_client import get_drug_target_data, LincsClient
