@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_check_pmid():
     pmid = s3_client.check_pmid(12345)
     assert pmid == 'PMID12345'
@@ -23,7 +23,7 @@ def test_check_pmid():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_get_pmid_key():
     pmid = '12345'
     pmid_key = s3_client.get_pmid_key(pmid)
@@ -33,7 +33,7 @@ def test_get_pmid_key():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_filter_keys():
     pmid_key = s3_client.get_pmid_key('1001287')
     key_list = s3_client.filter_keys(pmid_key)
@@ -42,7 +42,7 @@ def test_filter_keys():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_get_gz_object():
     # Get XML
     key = 'papers/PMID27297883/fulltext/txt'
@@ -56,7 +56,7 @@ def test_get_gz_object():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_get_gz_object_nosuchkey():
     obj = s3_client.get_gz_object('foobar')
     assert obj is None
@@ -64,7 +64,7 @@ def test_get_gz_object_nosuchkey():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_get_full_text():
     (content, content_type) = s3_client.get_full_text('27297883')
     assert unicode_strs((content, content_type))
@@ -82,7 +82,7 @@ def test_get_full_text():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_put_full_text():
     full_text = 'test_put_full_text'
     pmid_test = 'PMID000test1'
@@ -96,7 +96,7 @@ def test_put_full_text():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_put_abstract():
     abstract = 'test_put_abstract'
     pmid_test = 'PMID000test2'
@@ -110,7 +110,7 @@ def test_put_abstract():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_reach_output():
     # Test put_reach_output
     reach_data = {'foo': 1, 'bar': {'baz': 2}}
@@ -140,7 +140,7 @@ def test_gzip_string():
 
 @pytest.mark.webservice
 @pytest.mark.nonpublic
-@pytest.maerk.cron
+@pytest.mark.cron
 def test_get_upload_content():
     pmid_s3_no_content = 'PMID000foobar'
     (ct, ct_type) = s3_client.get_upload_content(pmid_s3_no_content)

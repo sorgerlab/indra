@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/CI-specific dependencies not covered elsewhere
         pip install --upgrade pip setuptools wheel
-        pip install pytest pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
+        pip install pytest pydot jsonschema coverage nose-timer awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         # PySB and dependencies
@@ -96,7 +96,7 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --doctest-ignore-unicode --durations=10
+        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10
         pytest -v -m "$NOSEATTR" indra/tests/test_reach.py
         #nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
         #nosetests -v -a $NOSEATTR indra/tests/test_reach.py
