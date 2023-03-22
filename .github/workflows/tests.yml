@@ -96,8 +96,7 @@ jobs:
         echo $NOSEATTR
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        cd indra
-        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10
+        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 indra/tests
         pytest -v -m "$NOSEATTR" indra/tests/test_reach.py
         #nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
         #nosetests -v -a $NOSEATTR indra/tests/test_reach.py
