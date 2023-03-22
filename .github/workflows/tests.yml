@@ -80,8 +80,8 @@ jobs:
         BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
         # Set pytest attributes based on the context in which we are running
-        export NOSEATTR="(not notravis) and (not slow) and (not cron)";
-        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR and (not nonpublic); else echo $NOSEATTR; fi)
+        export NOSEATTR="(not nogha) and (not slow) and (not cron)"
+        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR "and (not nonpublic)"; else echo $NOSEATTR; fi)
         echo $NOSEATTR
         #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
         #echo "$TRAVIS_EVENT_TYPE"
