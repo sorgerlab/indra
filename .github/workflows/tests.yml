@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/CI-specific dependencies not covered elsewhere
         pip install --upgrade pip setuptools wheel
-        pip install pytest pydot jsonschema coverage nose-timer awscli pycodestyle
+        pip install pytest pytest-cov pydot jsonschema coverage nose-timer awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         # PySB and dependencies
