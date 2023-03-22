@@ -98,7 +98,7 @@ class SiteMapper(ProtMapper):
     >>> (valid, mapped) = default_mapper.map_sites([stmt])
     >>> valid
     []
-    >>> mapped  # doctest:+IGNORE_UNICODE
+    >>> mapped
     [
     MappedStatement:
         original_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
@@ -110,7 +110,7 @@ class SiteMapper(ProtMapper):
     >>> ms = mapped[0]
     >>> ms.original_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
-    >>> ms.mapped_mods # doctest:+IGNORE_UNICODE
+    >>> ms.mapped_mods
     [MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='217', mapped_id='Q02750', mapped_res='S', mapped_pos='218', description='off by one', gene_name='MAP2K1'), MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='221', mapped_id='Q02750', mapped_res='S', mapped_pos='222', description='off by one', gene_name='MAP2K1'), MappedSite(up_id='P28482', error_code=None, valid=False, orig_res='T', orig_pos='183', mapped_id='P28482', mapped_res='T', mapped_pos='185', description='INFERRED_MOUSE_SITE', gene_name='MAPK1')]
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
