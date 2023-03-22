@@ -4,7 +4,7 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
-raise pytest.skip('Elsevier credentials currently not operational.')
+pytest.skip('Elsevier credentials currently not operational.')
 
 
 @pytest.mark.nonpublic
