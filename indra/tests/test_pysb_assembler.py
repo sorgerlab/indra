@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
-from indra.assemblers.pysb.assembler import Policy, Param
+from indra.assemblers.pysb.assembler import Policy, Param, UnknownPolicyError
 from indra.assemblers.pysb.preassembler import PysbPreassembler
 from indra.assemblers.pysb.export import export_cm_network
 from indra.assemblers.pysb.kappa_util import get_cm_cycles
@@ -1212,7 +1212,7 @@ def test_policy_parameters():
 
 
 def test_policy_object_invalid():
-    with pytest.raises(pa.UnknownPolicyError):
+    with pytest.raises(UnknownPolicyError):
         stmt = Phosphorylation(Agent('a'), Agent('b'))
         pa = PysbAssembler([stmt])
         model = pa.make_model(policies={'xyz': Policy('two_step')})
