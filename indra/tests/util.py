@@ -3,7 +3,7 @@ from functools import wraps
 import pytest
 
 IS_PY3 = True
-if version_info.major is not 3:
+if version_info.major != 3:
     IS_PY3 = False
 
 
