@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/CI-specific dependencies not covered elsewhere
         pip install --upgrade pip setuptools wheel
-        pip install pytest pytest-cov pydot jsonschema coverage nose-timer awscli pycodestyle
+        pip install pytest pytest-cov pydot jsonschema awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         # PySB and dependencies
@@ -80,26 +80,19 @@ jobs:
         BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
         # Set pytest attributes based on the context in which we are running
-        export NOSEATTR="(not nogha) and (not slow) and (not cron)"
-        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR "and (not nonpublic)"; else echo $NOSEATTR; fi)
-        echo $NOSEATTR
-        #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
-        #echo "$TRAVIS_EVENT_TYPE"
-        #export TEES_PATH=~/TEES
+        export PYTESTMARKS="(not nogha) and (not slow) and (not cron)"
+        export PYTESTMARKS=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $PYTESTMARKS "and (not nonpublic)"; else echo $PYTESTMARKS; fi)
         export PYTHONPATH=$PYTHONPATH:`pwd`/indra_world
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
         export CLASSPATH=$REACHPATH
         # These are files that are ignored so that doctests don't fail
-        export NOSE_IGNORE_FILES="find_full_text_sentence.py";
-        echo $NOSEATTR
+        #export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        pytest -v -m "$NOSEATTR" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 indra/tests
-        pytest -v -m "$NOSEATTR" indra/tests/test_reach.py
-        #nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
-        #nosetests -v -a $NOSEATTR indra/tests/test_reach.py
+        pytest -v -m "$PYTESTMARKS" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 indra/tests
+        pytest -v -m "$PYTESTMARKS" indra/tests/test_reach.py
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
