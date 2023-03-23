@@ -1,5 +1,5 @@
 from copy import deepcopy
-from nose.tools import raises
+import pytest
 from indra.statements import *
 from indra.belief import BeliefEngine, load_default_probs, \
     sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
@@ -204,12 +204,12 @@ def test_sample_statements():
     assert st3 not in stmts
 
 
-@raises(Exception)
 def test_check_prior_probs():
-    be = BeliefEngine()
-    st = Phosphorylation(None, Agent('ERK'),
-                         evidence=[Evidence(source_api='xxx')])
-    be.set_prior_probs([st])
+    with pytest.raises(Exception):
+        be = BeliefEngine()
+        st = Phosphorylation(None, Agent('ERK'),
+                             evidence=[Evidence(source_api='xxx')])
+        be.set_prior_probs([st])
 
 
 def test_evidence_subtype_tagger():
@@ -341,16 +341,16 @@ def test_bayesian_scorer():
     assert scorer.subtype_probs['eidos']['rule2'] == 0.75
 
 
-@raises(AssertionError)
 def test_cycle():
-    st1 = Phosphorylation(Agent('B'), Agent('A1'))
-    st2 = Phosphorylation(None, Agent('A1'))
-    st1.supports = [st2]
-    st1.supported_by = [st2]
-    st2.supports = [st1]
-    st2.supported_by = [st1]
-    engine = BeliefEngine()
-    engine.set_hierarchy_probs([st1, st2])
+    with pytest.raises(AssertionError):
+        st1 = Phosphorylation(Agent('B'), Agent('A1'))
+        st2 = Phosphorylation(None, Agent('A1'))
+        st1.supports = [st2]
+        st1.supported_by = [st2]
+        st2.supports = [st1]
+        st2.supported_by = [st1]
+        engine = BeliefEngine()
+        engine.set_hierarchy_probs([st1, st2])
 
 
 def assert_close_enough(b1, b2):

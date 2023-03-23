@@ -40,6 +40,7 @@ def main():
                               'docstring-parser', 'gunicorn'],
                       'sklearn_belief': ['scikit-learn'],
                       'owl': ['pronto'],
+                      'tests': ['pytest', 'pytest-cov'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})

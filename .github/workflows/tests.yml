@@ -31,7 +31,7 @@ jobs:
         sudo apt-get install libstdc++6 graphviz python3-dev libgraphviz-dev pkg-config
         # Install test/CI-specific dependencies not covered elsewhere
         pip install --upgrade pip setuptools wheel
-        pip install pydot jsonschema coverage nose-timer doctest-ignore-unicode awscli pycodestyle
+        pip install pytest pytest-cov pydot jsonschema awscli pycodestyle
         mkdir -p $HOME/.pybel/data
         wget -nv https://bigmech.s3.amazonaws.com/travis/pybel_cache.db -O $HOME/.pybel/data/pybel_cache.db
         # PySB and dependencies
@@ -57,15 +57,12 @@ jobs:
         #      mv TEES ~/TEES;
         #      export TEES_SETTINGS=~/TEES/tees_local_settings.py
         #  fi
-        # Install nose notify
-        #mkdir $HOME/.nose_notify;
-        #git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
-        #export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
         # Download adeft models
         python -m adeft.download
         python -m gilda.resources
         # Get INDRA World
         git clone https://github.com/indralab/indra_world.git
+        # Download Reach
         wget -nv https://bigmech.s3.amazonaws.com/travis/reach-82631d-biores-e9ee36.jar
         # Get INDRA Bioontology
         BIOONTOLOGY_VERSION=$(python -m indra.ontology.bio version)
@@ -82,25 +79,20 @@ jobs:
         ELSEVIER_INST_KEY: ${{ secrets.ELSEVIER_INST_KEY }}
         BIOGRID_API_KEY: ${{ secrets.BIOGRID_API_KEY }}
       run: |
-        # Set nose attributes based on the context in which we are running
-        export NOSEATTR="!notravis,!slow,!cron";
-        export NOSEATTR=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $NOSEATTR,!nonpublic; else echo $NOSEATTR; fi)
-        echo $NOSEATTR
-        #echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
-        #echo "$TRAVIS_EVENT_TYPE"
-        #export TEES_PATH=~/TEES
+        # Set pytest attributes based on the context in which we are running
+        export PYTESTMARKS="(not nogha) and (not slow) and (not cron)"
+        export PYTESTMARKS=$(if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then echo $PYTESTMARKS "and (not nonpublic)"; else echo $PYTESTMARKS; fi)
         export PYTHONPATH=$PYTHONPATH:`pwd`/indra_world
         export _JAVA_OPTIONS="-Xmx4g -Xms1g"
         export BNGPATH=`pwd`/BioNetGen-2.4.0
         export REACHPATH=`pwd`/reach-82631d-biores-e9ee36.jar
         export CLASSPATH=$REACHPATH
         # These are files that are ignored so that doctests don't fail
-        export NOSE_IGNORE_FILES="find_full_text_sentence.py";
-        echo $NOSEATTR
+        #export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        nosetests -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*isi.*' --exclude='.*test_reach.*' --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10 --processes=0
-        nosetests -v -a $NOSEATTR indra/tests/test_reach.py
+        pytest -v -m "$PYTESTMARKS" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 indra/tests
+        pytest -v -m "$PYTESTMARKS" indra/tests/test_reach.py
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
         #  --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;

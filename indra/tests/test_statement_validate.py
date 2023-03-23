@@ -1,4 +1,4 @@
-from nose.tools import assert_raises
+import pytest
 from indra.statements.validate import *
 
 
@@ -14,19 +14,19 @@ def test_db_refs_validate():
 
     assert_valid_id('NXPFA', '1234')
     assert_valid_id('TEXT', 'hello')
-    assert_raises(UnknownIdentifier, assert_valid_id,
-                  'XXX', 'ABCD1')
+    with pytest.raises(UnknownIdentifier):
+        assert_valid_id('XXX', 'ABCD1')
 
 
 def test_text_refs_validate():
-    assert_raises(InvalidTextRefs, assert_valid_text_refs,
-                  {'pmid': '123'})
-    assert_raises(InvalidTextRefs, assert_valid_text_refs,
-                  {'PMID': 'api123'})
-    assert_raises(InvalidTextRefs, assert_valid_text_refs,
-                  {'DOI': 'https://xyz'})
-    assert_raises(InvalidTextRefs, assert_valid_text_refs,
-                  {'PMCID': '12345'})
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_text_refs({'pmid': '123'})
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_text_refs({'PMID': 'api123'})
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_text_refs({'DOI': 'https://xyz'})
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_text_refs({'PMCID': '12345'})
     assert_valid_text_refs({'PMID': '12345'})
     assert_valid_text_refs({'PMCID': 'PMC12345'})
     assert_valid_text_refs({'DOI': '10.15252/msb.20177651'})
@@ -37,32 +37,34 @@ def test_pmid_text_refs_validate():
     assert_valid_pmid_text_refs(Evidence(pmid='1234'))
     assert_valid_pmid_text_refs(Evidence(pmid='1234',
                                          text_refs={'PMID': '1234'}))
-    assert_raises(InvalidTextRefs, assert_valid_pmid_text_refs,
-                  Evidence(pmid='1234', text_refs={'PMID': '12345'}))
-    assert_raises(InvalidTextRefs, assert_valid_pmid_text_refs,
-                  Evidence(pmid=None, text_refs={'PMID': '123'}))
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_pmid_text_refs(Evidence(pmid='1234',
+                                             text_refs={'PMID': '12345'}))
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_pmid_text_refs(Evidence(pmid=None,
+                                             text_refs={'PMID': '123'}))
 
 
 def test_context_validate():
     assert_valid_context(
         BioContext(organ=RefContext('liver', {'MESH': 'D008099'})))
-    assert_raises(InvalidContext, assert_valid_context,
-                  BioContext())
-    assert_raises(InvalidContext, assert_valid_context,
-                  BioContext(organ='liver'))
-    assert_raises(UnknownNamespace, assert_valid_context,
-                  BioContext(organ=RefContext('liver', db_refs={'XXX': '1'})))
-
+    with pytest.raises(InvalidContext):
+        assert_valid_context(BioContext())
+    with pytest.raises(InvalidContext):
+        assert_valid_context(BioContext(organ='liver'))
+    with pytest.raises(UnknownNamespace):
+        assert_valid_context(BioContext(organ=RefContext('liver',
+                                                         db_refs={'XXX': '1'})))
     assert_valid_context(None)
 
 
 def test_evidence_validate():
     assert_valid_evidence(Evidence(pmid='1234'))
-    assert_raises(InvalidTextRefs, assert_valid_evidence,
-                  Evidence(pmid=None, text_refs={'PMID': '1234'}))
-    assert_raises(UnknownNamespace, assert_valid_evidence,
-                  Evidence(context=BioContext(
-                      organ=RefContext('liver', db_refs={'XXX': '1'}))))
+    with pytest.raises(InvalidTextRefs):
+        assert_valid_evidence(Evidence(pmid=None, text_refs={'PMID': '1234'}))
+    with pytest.raises(UnknownNamespace):
+        assert_valid_evidence(Evidence(context=BioContext(
+            organ=RefContext('liver', db_refs={'XXX': '1'}))))
 
 
 def test_statement_validate():
@@ -70,7 +72,8 @@ def test_statement_validate():
     assert validate_statement(stmt)
     assert_valid_statement(stmt)
     stmt = Phosphorylation(None, Agent('ERK', db_refs={'XXX': 'ERK'}))
-    assert_raises(UnknownNamespace, assert_valid_statement, stmt)
+    with pytest.raises(UnknownNamespace):
+        assert_valid_statement(stmt)
     assert not validate_statement(stmt)
 
     assert not validate_statement(Phosphorylation(None, None))

@@ -3,7 +3,7 @@ from builtins import dict, str
 from indra.statements import Agent
 from indra.databases import chembl_client
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 import unittest
 
 vem = Agent('VEMURAFENIB', db_refs={'CHEBI': '63637', 'TEXT': 'VEMURAFENIB'})
@@ -20,7 +20,8 @@ query_dict_BRAF_target = {'query': 'target',
                                      'limit': 1}}
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_get_inhibitions():
     stmt = chembl_client.get_inhibition(vem, braf)
     assert stmt is not None
@@ -33,7 +34,8 @@ def test_get_inhibitions():
         assert ev.source_id
 
 
-@attr('webservice', 'notravis')
+@pytest.mark.webservice
+@pytest.mark.nogha
 def test_activity_query():
     res = chembl_client.send_query(query_dict_vem_activity)
     assert res['page_meta']['total_count'] == len(res['activities'])
@@ -43,13 +45,15 @@ def test_activity_query():
         assert e_t in assay_types
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_target_query():
     target = chembl_client.query_target(braf_chembl_id)
     assert target['target_type'] == 'SINGLE PROTEIN'
 
 
-@attr('webservice', 'slow', 'notravis')
+@pytest.mark.webservice
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_get_drug_inhibition_stmts_vem():
     stmts = chembl_client.get_drug_inhibition_stmts(vem)
     assert len(stmts) > 0
@@ -63,7 +67,9 @@ def test_get_drug_inhibition_stmts_vem():
             assert ev.source_id
 
 
-@attr('webservice', 'slow', 'notravis')
+@pytest.mark.webservice
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_get_drug_inhibition_stmts_az628():
     stmts = chembl_client.get_drug_inhibition_stmts(az628)
     assert len(stmts) > 0

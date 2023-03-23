@@ -1,6 +1,6 @@
 import logging
 import unittest
-from nose.plugins.attrib import attr
+import pytest
 from indra.literature.adeft_tools import universal_extract_paragraphs, \
     filter_paragraphs
 from indra.literature import pmc_client, elsevier_client, pubmed_client
@@ -8,7 +8,8 @@ from indra.literature import pmc_client, elsevier_client, pubmed_client
 logger = logging.getLogger(__name__)
 
 
-@attr('nonpublic', 'webservice')
+@pytest.mark.nonpublic
+@pytest.mark.webservice
 @unittest.skip('Elsevier credentials currently not operational')
 def test_universal_extract_paragraphs_elsevier():
     doi = '10.1016/B978-0-12-416673-8.00004-6'
@@ -20,7 +21,7 @@ def test_universal_extract_paragraphs_elsevier():
     assert len(paragraphs) > 1
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_universal_extract_paragraphs_pmc():
     pmc_id = 'PMC3262597'
     xml_str = pmc_client.get_xml(pmc_id)
@@ -28,7 +29,7 @@ def test_universal_extract_paragraphs_pmc():
     assert len(paragraphs) > 1, paragraphs
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_universal_extract_paragraphs_abstract():
     pmid = '16511588'
     abstract = pubmed_client.get_abstract(pmid)

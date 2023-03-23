@@ -4,7 +4,7 @@ from indra.sources import biopax
 from indra.statements import *
 import indra.sources.biopax.processor as bpc
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 
 model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           'biopax_test.owl')
@@ -86,7 +86,8 @@ def test_chebi_grounding_extraction():
     assert agents[0].db_refs['CHEBI'] == 'CHEBI:15996'
 
 
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
     assert_pmids(bp.statements)

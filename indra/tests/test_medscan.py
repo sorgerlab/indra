@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
-from nose.tools import raises
 
 from indra.statements import *
 from indra.sources.medscan.processor import *

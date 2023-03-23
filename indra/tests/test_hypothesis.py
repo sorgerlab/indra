@@ -1,4 +1,4 @@
-from nose.plugins.attrib import attr
+import pytest
 from gilda import ground
 from indra.sources import hypothesis
 from indra.sources import trips
@@ -9,7 +9,9 @@ from indra.sources.hypothesis.annotator import statement_to_annotations, \
     evidence_to_annotation, get_annotation_text
 
 
-@attr('nonpublic', 'slow', 'notravis')
+@pytest.mark.nonpublic
+@pytest.mark.slow
+@pytest.mark.nogha
 def test_process_indra_annnotations():
     hp = hypothesis.process_annotations(reader=trips.process_text)
     assert hp.statements
@@ -25,7 +27,7 @@ def test_grounding_annotation():
     assert hp.groundings['Plaquenil'] == {'CHEBI': 'CHEBI:5801'}
 
 
-@attr('slow')
+@pytest.mark.slow
 def test_statement_annotation():
     hp = HypothesisProcessor(annotations=[statement_annot_example],
                              reader=trips.process_text)

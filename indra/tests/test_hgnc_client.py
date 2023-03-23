@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import hgnc_client
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
+import pytest
 
 
 def test_get_uniprot_id():
@@ -26,7 +26,7 @@ def test_get_hgnc_name():
     assert unicode_strs(hgnc_name)
 
 
-@attr('webservice')
+@pytest.mark.webservice
 def test_get_hgnc_name_nonexistent():
     hgnc_id = '123456'
     hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)

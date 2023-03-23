@@ -4,12 +4,11 @@ import numpy as np
 from copy import copy
 from os.path import join, abspath, dirname
 from collections import defaultdict, Counter
-from nose.tools import raises
+import pytest
 from sklearn.linear_model import LogisticRegression
 from indra.sources import signor
 from indra.belief import BeliefEngine, default_scorer
 from indra.tools import assemble_corpus as ac
-from indra.statements import Evidence
 from indra.belief.skl import CountsScorer, HybridScorer
 
 
@@ -130,13 +129,13 @@ def test_fit_stmts_predict_stmts():
         'prediction results should have dimension (# stmts)'
 
 
-@raises(ValueError)
 def test_check_df_cols_err():
     """Drop a required column and make sure we get a ValueError."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cw = CountsScorer(lr, source_list)
-    cw.df_to_matrix(test_df.drop('stmt_type', axis=1))
+    with pytest.raises(ValueError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser', 'signor']
+        cw = CountsScorer(lr, source_list)
+        cw.df_to_matrix(test_df.drop('stmt_type', axis=1))
 
 
 def test_check_df_cols_noerr():
@@ -210,15 +209,15 @@ def test_fit_df_pred_stmts():
         'prediction results should have dimension (# stmts)'
 
 
-@raises(ValueError)
 def test_check_missing_source_counts():
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser']
-    cw = CountsScorer(lr, source_list)
-    # Drop the source_counts column
-    df_no_sc = test_df.drop('source_counts', axis=1)
-    # Should error
-    cw.fit(df_no_sc, y_arr_df)
+    with pytest.raises(ValueError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser']
+        cw = CountsScorer(lr, source_list)
+        # Drop the source_counts column
+        df_no_sc = test_df.drop('source_counts', axis=1)
+        # Should error
+        cw.fit(df_no_sc, y_arr_df)
 
 
 def test_check_source_columns():
@@ -245,15 +244,15 @@ def test_matrix_to_matrix():
             'If passed a numpy array to_matrix should return it back.'
 
 
-@raises(ValueError)
 def test_use_members_with_df():
     """Check that we can't set use_num_members when passing a DataFrame."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cw = CountsScorer(lr, source_list, use_num_members=True)
-    # This should error because stmt DataFrame doesn't contain num_members
-    # info
-    stmt_arr = cw.to_matrix(test_df)
+    with pytest.raises(ValueError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser', 'signor']
+        cw = CountsScorer(lr, source_list, use_num_members=True)
+        # This should error because stmt DataFrame doesn't contain num_members
+        # info
+        stmt_arr = cw.to_matrix(test_df)
 
 
 def test_use_members_with_stmts():
@@ -306,36 +305,36 @@ def test_set_prior_probs():
            "Statement beliefs should be set to predicted probabilities."
 
 
-@raises(NotImplementedError)
 def test_df_extra_ev_value_error():
     """to_matrix should raise NotImplementError if given a DataFrame and extra
        evidence (for now)."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cs = CountsScorer(lr, source_list)
-    cs.to_matrix(test_df, extra_evidence=[[5]])
+    with pytest.raises(NotImplementedError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser', 'signor']
+        cs = CountsScorer(lr, source_list)
+        cs.to_matrix(test_df, extra_evidence=[[5]])
 
 
-@raises(ValueError)
 def test_extra_evidence_length():
     """Should raise ValueError because the extra_evidence list is not the
     same length as the list of statements."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cs = CountsScorer(lr, source_list)
-    extra_ev = [[5]]
-    x_arr = cs.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
+    with pytest.raises(ValueError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser', 'signor']
+        cs = CountsScorer(lr, source_list)
+        extra_ev = [[5]]
+        x_arr = cs.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
 
-@raises(ValueError)
 def test_extra_evidence_content():
     """Should raise ValueError if extra_evidence list entries are not
     Evidence objects or empty lists."""
-    lr = LogisticRegression()
-    source_list = ['reach', 'sparser', 'signor']
-    cs = CountsScorer(lr, source_list)
-    extra_ev = ([[5]] * (len(test_stmts) - 1)) + [[]]
-    x_arr = cs.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
+    with pytest.raises(ValueError):
+        lr = LogisticRegression()
+        source_list = ['reach', 'sparser', 'signor']
+        cs = CountsScorer(lr, source_list)
+        extra_ev = ([[5]] * (len(test_stmts) - 1)) + [[]]
+        x_arr = cs.stmts_to_matrix(test_stmts, extra_evidence=extra_ev)
 
 
 def test_set_hierarchy_probs():

@@ -106,9 +106,7 @@ intended.
 
 Testing
 -------
-INDRA is tested using the `nosetests` script and `nose`/`unittest` tools.
-See the [nose documentation](http://nose.readthedocs.io/en/latest/) for more
-details.
+INDRA is tested using the `pytest` package. See the [pytest documentation](https://docs.pytest.org/) for more details.
 
 All new functionalities added should also be tested unless special
 circumstances prevent testing. Similarly, fixed bugs should have regression

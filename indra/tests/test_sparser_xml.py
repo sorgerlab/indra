@@ -1,5 +1,5 @@
 from indra.sources import sparser
-from nose.plugins.attrib import attr
+import pytest
 
 
 def test_invalid_xml():
@@ -20,7 +20,8 @@ def test_phosphorylation():
 
 
 # This test uses some slow UniPtot web queries to standardize agent names
-@attr('webservice', 'slow')
+@pytest.mark.webservice
+@pytest.mark.slow
 def test_phosphorylation2():
     sp = sparser.process_xml(xml_str2)
     assert len(sp.statements) == 1

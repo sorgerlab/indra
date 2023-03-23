@@ -1,7 +1,7 @@
 import json
 import jsonschema
 import os
-from nose.tools import assert_raises
+import pytest
 from jsonschema.exceptions import ValidationError
 
 dir_this = os.path.dirname(__file__)
@@ -89,19 +89,23 @@ def test_valid_modification():
 def test_invalid_phosphorylation():
     s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
          'id': '5', 'residue': 5}  # residue should be a string
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'enz': valid_agent1, 'sub': invalid_agent1, 'type': 'Phosphorylation',
          'id': '5'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'enz': valid_agent1, 'sub': invalid_agent2, 'type': 'Phosphorylation',
          'id': '5'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'enz': valid_agent1, 'sub': invalid_agent3, 'type': 'Phosphorylation',
          'id': '5'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     invalid_evidence = {'source_api': 42}
     s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
@@ -117,23 +121,28 @@ def test_valid_active_form():
 def test_invalid_active_form():
     s = {'agent': invalid_agent1, 'activity': 'kinase', 'is_active': True,
          'type': 'ActiveForm', 'id': '6'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': 'moo',
          'type': 'ActiveForm', 'id': '6'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
          'type': 'ActiveForm', 'id': 42}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
          'type': 'MOO', 'id': '6'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'agent': valid_agent1, 'activity': {'cow': False}, 'is_active': True,
          'type': 'ActiveForm', 'id': '6'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
 
 def test_valid_complex():
@@ -147,11 +156,13 @@ def test_valid_complex():
 def test_invalid_complex():
     s = {'members': [invalid_agent1, valid_agent2], 'type': 'Complex',
          'id': '3'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'members': [valid_agent1, invalid_agent2], 'type': 'Complex',
          'id': '3'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
 
 def test_valid_event():
@@ -167,23 +178,28 @@ def test_valid_influence():
 def test_invalid_influence():
     s = {'subj': invalid_concept1, 'obj': valid_concept2, 'subj_delta': None,
          'obj_delta': None, 'type': 'Influence', 'id': '10'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'subj': valid_concept1, 'obj': invalid_concept2, 'subj_delta': None,
          'obj_delta': None, 'type': 'Influence', 'id': '10'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
          'obj_delta': 'Henry', 'type': 'Influence', 'id': '10'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': 'Larry',
          'obj_delta': None, 'type': 'Influence', 'id': '10'}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
          'obj_delta': None, 'type': 'Influence', 'id': 10}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
 
 def test_valid_conversion():
@@ -195,20 +211,24 @@ def test_valid_conversion():
 def test_invalid_conversion():
     s = {'type': 'Conversion', 'id': '11', 'subj': valid_agent1,
          'obj_from': [12, valid_agent3], 'obj_to': [valid_agent3]}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'type': 'Conversion', 'id': '11', 'subj': valid_agent1,
          'obj_from': [valid_agent2, valid_agent3],
          'obj_to': [valid_agent3, 12]}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'type': 'Conversion', 'id': '11', 'subj': 'dog',
          'obj_from': [valid_agent2, valid_agent3], 'obj_to': [valid_agent3]}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
     s = {'type': 'Conversion', 'id': '11', 'subj': valid_agent1,
          'obj_from': 'banana', 'obj_to': [valid_agent3]}
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
 
 def test_self_modifications():
@@ -235,7 +255,8 @@ def test_translocation():
     jsonschema.validate([s], schema)
 
     s['to_location'] = 3
-    assert_raises(ValidationError, val, s)
+    with pytest.raises(ValidationError):
+        val(s)
 
 
 def test_gef():

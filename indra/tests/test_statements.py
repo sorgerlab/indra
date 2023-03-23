@@ -4,7 +4,7 @@ import os
 import json
 import unittest
 from copy import deepcopy
-from nose.tools import raises
+import pytest
 from indra.ontology.bio import bio_ontology
 from indra.statements import *
 from indra.util import unicode_strs
@@ -1256,19 +1256,19 @@ def test_mtor_rictor_refinement():
     assert not c2.refinement_of(c1, bio_ontology)
 
 
-@raises(InvalidResidueError)
 def test_residue_mod_condition():
-    ModCondition('phosphorylation', 'xyz')
+    with pytest.raises(InvalidResidueError):
+        ModCondition('phosphorylation', 'xyz')
 
 
-@raises(InvalidResidueError)
 def test_residue_mod():
-    Phosphorylation(Agent('a'), Agent('b'), 'xyz')
+    with pytest.raises(InvalidResidueError):
+        Phosphorylation(Agent('a'), Agent('b'), 'xyz')
 
 
-@raises(InvalidResidueError)
 def test_residue_selfmod():
-    Autophosphorylation(Agent('a'), 'xyz')
+    with pytest.raises(InvalidResidueError):
+        Autophosphorylation(Agent('a'), 'xyz')
 
 
 def test_valid_mod_residue():
