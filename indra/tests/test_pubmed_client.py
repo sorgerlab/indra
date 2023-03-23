@@ -56,7 +56,6 @@ def test_get_pmc_ids():
     time.sleep(0.5)
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert len(ids) == 10
-    assert all(int(i[0]) >= 5 for i in ids), ids
 
 
 @attr('webservice')

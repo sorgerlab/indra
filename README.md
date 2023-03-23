@@ -248,17 +248,18 @@ Molecular Systems Biology, 13, 954.
 
 Bachman J.A., Gyori B.M., Sorger P.K.
 [Automated assembly of molecular mechanisms at scale from text mining and
-curated databases](https://doi.org/10.1101/2022.08.30.505688) (2022),
-bioRxiv preprint
+curated databases](https://doi.org/10.15252/msb.202211325) (2023),
+Molecular Systems Biology, e11325.
 
 ## Installation
 
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA currently supports Python 3.6+. The last release of INDRA compatible
-with Python 2.7 is 1.10, and the last release fully compatible with Python 3.5
-is 1.17.
+INDRA currently supports Python 3.8 and 3.9. The last release of INDRA compatible
+with Python 2.7 is 1.10, the last release fully compatible with Python 3.5
+is 1.17. Most usages of INDRA will work with other Python versions, however,
+full compatibility is currently only tested with 3.8 and 3.9.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as
