@@ -367,7 +367,7 @@ def _get_pubmed_publication_date(pubmed_data):
 
 def _parse_author(author_info, include_details=False):
     if not include_details:
-        return author_info.find("LastName")
+        return author_info.find("LastName").text
 
     parsed_info = {
         "last_name": None,
