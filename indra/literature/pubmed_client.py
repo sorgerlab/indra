@@ -365,6 +365,35 @@ def _get_pubmed_publication_date(pubmed_data):
     return date_dict
 
 
+def _parse_author(author_info):
+    parsed_info = {
+        "last_name": None,
+        "first_name": None,
+        "initials": None,
+        "suffix": None,
+        "identifier": None,
+        "affiliations": None,
+    }
+    affiliations = []
+    for element in author_info.findall("*"):
+        if element.tag == "AffiliationInfo":
+            affiliation_name = element.find("Affiliation").text
+            identifiers = [e.text for e in element.findall("Identifier")]
+            affiliations.append({"name": affiliation_name, "identifiers": identifiers})
+        elif element.tag == "LastName":
+            parsed_info["last_name"] = element.text
+        elif element.tag == "ForeName":
+            parsed_info["first_name"] = element.text
+        elif element.tag == "Initials":
+            parsed_info["initials"] = element.text
+        elif element.tag == "Suffix":
+            parsed_info["suffix"] = element.text
+        elif element.tag == "Identifier":
+            parsed_info["identifier"] = element.text
+    parsed_info["affiliations"] = affiliations
+    return parsed_info
+
+
 def _get_article_info(medline_citation, pubmed_data):
     article = medline_citation.find('Article')
     pmid = _find_elem_text(medline_citation, './PMID')
@@ -386,9 +415,9 @@ def _get_article_info(medline_citation, pubmed_data):
     title = _get_title_from_article_element(article)
 
     # Author list
-    author_elems = article.findall('AuthorList/Author/LastName')
+    author_elems = article.findall('AuthorList/Author')
     author_names = None if author_elems is None \
-        else [au.text for au in author_elems]
+        else [_parse_author(au) for au in author_elems]
 
     # Get the page number entry
     page = _find_elem_text(article, 'Pagination/MedlinePgn')
