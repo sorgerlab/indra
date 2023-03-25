@@ -365,7 +365,39 @@ def _get_pubmed_publication_date(pubmed_data):
     return date_dict
 
 
-def _get_article_info(medline_citation, pubmed_data):
+def _parse_author(author_info, include_details=False):
+    if not include_details:
+        return author_info.find("LastName").text
+
+    parsed_info = {
+        "last_name": None,
+        "first_name": None,
+        "initials": None,
+        "suffix": None,
+        "identifier": None,
+        "affiliations": None,
+    }
+    affiliations = []
+    for element in author_info.findall("*"):
+        if element.tag == "AffiliationInfo":
+            affiliation_name = element.find("Affiliation").text
+            identifiers = [e.text for e in element.findall("Identifier")]
+            affiliations.append({"name": affiliation_name, "identifiers": identifiers})
+        elif element.tag == "LastName":
+            parsed_info["last_name"] = element.text
+        elif element.tag == "ForeName":
+            parsed_info["first_name"] = element.text
+        elif element.tag == "Initials":
+            parsed_info["initials"] = element.text
+        elif element.tag == "Suffix":
+            parsed_info["suffix"] = element.text
+        elif element.tag == "Identifier":
+            parsed_info["identifier"] = element.text
+    parsed_info["affiliations"] = affiliations
+    return parsed_info
+
+
+def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
     article = medline_citation.find('Article')
     pmid = _find_elem_text(medline_citation, './PMID')
     pii = _find_elem_text(article,
@@ -386,9 +418,9 @@ def _get_article_info(medline_citation, pubmed_data):
     title = _get_title_from_article_element(article)
 
     # Author list
-    author_elems = article.findall('AuthorList/Author/LastName')
+    author_elems = article.findall('AuthorList/Author')
     author_names = None if author_elems is None \
-        else [au.text for au in author_elems]
+        else [_parse_author(au, detailed_authors) for au in author_elems]
 
     # Get the page number entry
     page = _find_elem_text(article, 'Pagination/MedlinePgn')
@@ -399,7 +431,7 @@ def _get_article_info(medline_citation, pubmed_data):
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
-                               mesh_annotations=True):
+                               mesh_annotations=True, detailed_authors=False):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -423,6 +455,10 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     mesh_annotations : Optional[bool]
         If True, extract mesh annotations from the pubmed entries and include
         in the returned data. If false, don't. Default: True
+    detailed_authors : Optional[bool]
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
 
     Returns
     -------
@@ -440,7 +476,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
 
         # Build the result
         result = {}
-        article_info = _get_article_info(medline_citation, pubmed_data)
+        article_info = _get_article_info(medline_citation, pubmed_data, detailed_authors)
         result.update(article_info)
         journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
         result.update(journal_info)
@@ -529,7 +565,8 @@ def _get_annotations(medline_citation):
 
 
 def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
-                         get_abstracts=False, prepend_title=False):
+                         get_abstracts=False, prepend_title=False,
+                         detailed_authors=False):
     """Get article metadata for up to 200 PMIDs from the Pubmed database.
 
     Parameters
@@ -545,6 +582,10 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
     prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
+    detailed_authors : bool
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
 
     Returns
     -------
@@ -562,7 +603,8 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
     if tree is None:
         return None
     return get_metadata_from_xml_tree(tree, get_issns_from_nlm, get_abstracts,
-                                      prepend_title)
+                                      prepend_title,
+                                      detailed_authors=detailed_authors)
 
 
 @lru_cache(maxsize=1000)
