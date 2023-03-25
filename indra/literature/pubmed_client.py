@@ -456,8 +456,9 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         If True, extract mesh annotations from the pubmed entries and include
         in the returned data. If false, don't. Default: True
     detailed_authors : Optional[bool]
-        If True, extract as many of the author details as possible, such as firt
-        name, identifiers, and institutions. If false, don't. Default: False
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
 
     Returns
     -------
@@ -564,7 +565,8 @@ def _get_annotations(medline_citation):
 
 
 def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
-                         get_abstracts=False, prepend_title=False):
+                         get_abstracts=False, prepend_title=False,
+                         detailed_authors=False):
     """Get article metadata for up to 200 PMIDs from the Pubmed database.
 
     Parameters
@@ -580,6 +582,10 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
     prepend_title : bool
         If get_abstracts is True, specifies whether the article title should
         be prepended to the abstract text.
+    detailed_authors : bool
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
 
     Returns
     -------
@@ -597,7 +603,8 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
     if tree is None:
         return None
     return get_metadata_from_xml_tree(tree, get_issns_from_nlm, get_abstracts,
-                                      prepend_title)
+                                      prepend_title,
+                                      detailed_authors=detailed_authors)
 
 
 @lru_cache(maxsize=1000)
