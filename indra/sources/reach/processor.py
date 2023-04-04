@@ -520,6 +520,10 @@ class ReachProcessor(object):
                 db_refs['UBERON'] = xr['id']
             elif ns == 'cellosaurus':
                 db_refs['CVCL'] = xr['id']
+            elif ns in ['uo', 'ncit', 'edam.topic', 'ncbitaxon', 'vo', 'bto',
+                        'efo', 'swo', 'iobc', 'ohpi', 'obi', 'ino',
+                        'ido', 'pr']:
+                db_refs[ns.upper()] = xr['id']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
