@@ -400,6 +400,27 @@ def _parse_author(author_info, include_details=False):
     return parsed_info
 
 
+def _get_references(reference_list, only_pmid=True):
+    """Return a list of references for an article."""
+    if reference_list is None:
+        return None
+
+    references = []
+    for reference in reference_list.findall('Reference'):
+        pmid = _find_elem_text(reference, '*/ArticleId[@IdType="pubmed"]')
+        if only_pmid:
+            references.append(pmid)
+        else:
+            ref_dict = {
+                'pmid': pmid,
+                'doi': _find_elem_text(reference, '*/ArticleId[@IdType="doi"]'),
+                'pmcid': _find_elem_text(reference, '*/ArticleId[@IdType="pmcid"]'),
+                'citation': _find_elem_text(reference, 'Citation'),
+            }
+            references.append(ref_dict)
+    return references
+
+
 def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
     article = medline_citation.find('Article')
     pmid = _find_elem_text(medline_citation, './PMID')
@@ -434,7 +455,8 @@ def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
-                               mesh_annotations=True, detailed_authors=False):
+                               mesh_annotations=True, detailed_authors=False,
+                               citations_included=None):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -462,6 +484,9 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         If True, extract as many of the author details as possible, such as
         first name, identifiers, and institutions. If false, only last names
         are returned. Default: False
+    citations_included : Optional[str]
+        If 'detailed', include detailed citations in the results. If 'pmid', only include
+        the PMID of the citation. If None, don't include citations. Default: None
 
     Returns
     -------
@@ -486,6 +511,11 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         if mesh_annotations:
             context_info = _get_annotations(medline_citation)
             result.update(context_info)
+        if citations_included:
+            citations = _get_references(pubmed_data.find('ReferenceList'),
+                                        only_pmid=(citations_included == 'pmid'))
+            result['citations'] = citations
+
         publication_date = _get_pubmed_publication_date(pubmed_data)
         result['publication_date'] = publication_date
 
