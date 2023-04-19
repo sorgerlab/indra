@@ -9,7 +9,7 @@ different ways in which INDRA can use REACH.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Setup and usage: Follow standard instructions to install
-`SBT <www.scala-sbt.org>`_. Then clone REACH and run the REACH web server.
+`SBT <https://www.scala-sbt.org>`_. Then clone REACH and run the REACH web server.
 
 .. code-block:: bash
 
