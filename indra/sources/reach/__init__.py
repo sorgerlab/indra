@@ -17,6 +17,17 @@ Setup and usage: Follow standard instructions to install
     cd reach
     sbt "runMain org.clulab.reach.export.server.ApiServer"
 
+Alternately, REACH can be run via docker with the following.
+
+.. code-block:: bash
+
+    git clone https://github.com/clulab/reach.git
+    cd reach/docker
+    docker build --tag reach:latest .
+    docker run -d -it -p 8080:8080 reach:latest
+
+Where ``-d`` stands for 'detach' and runs the service in the background.
+
 Then read text by specifying the url parameter when using
 `indra.sources.reach.process_text`.
 
