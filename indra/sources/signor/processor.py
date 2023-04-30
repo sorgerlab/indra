@@ -57,7 +57,8 @@ _type_db_map = {
     ('chemical', 'ChEBI'): 'CHEBI',
     ('smallmolecule', 'ChEBI'): 'CHEBI',
     ('mirna', 'miRBase'): 'MIRBASE',
-    ('antibody', 'DRUGBANK'): 'DRUGBANK'
+    ('antibody', 'DRUGBANK'): 'DRUGBANK',
+    ('ncrna', 'RNAcentral'): 'RNACENTRAL',
 }
 
 
@@ -132,11 +133,9 @@ class SignorProcessor(object):
     ----------
     statements : list[indra.statements.Statements]
         A list of INDRA Statements extracted from the SIGNOR table.
-    no_mech_rows: list of SignorRow namedtuples
-        List of rows where no mechanism statements were generated.
-    no_mech_ctr : collections.Counter
-        Counter listing the frequency of different MECHANISM types in the
-        list of no-mechanism rows.
+    stats : dict
+        A dictionary containing statistics about the processing, useful
+        for determining any unprocessed entries and debugging.
     """
     def __init__(self, data, complex_map=None):
         self._data = data
@@ -144,20 +143,34 @@ class SignorProcessor(object):
             self.complex_map = {}
         else:
             self.complex_map = complex_map
+        self.stats = {}
 
         # Process into statements
         self.statements = []
-        self.no_mech_rows = []
+
+        # Counter listing the frequency of different mechanisms that are
+        # not handled by the processor.
+        self.stats['unhandled_mech_ctr'] = Counter()
+
+        # List of SignorRow namedtuples
+        # List of rows where no mechanism statements were generated.
+        self.stats['no_mech_rows'] = []
+
         for idx, row in enumerate(tqdm.tqdm(self._data,
                                             desc='Processing SIGNOR rows')):
             row_stmts, no_mech = self._process_row(row)
             if no_mech:
-                self.no_mech_rows.append(row)
+                self.stats['no_mech_rows'].append(row)
             self.statements.extend(row_stmts)
+
+        # Counter listing the frequency of different MECHANISM types in the
+        # list of no-mechanism rows.
         # No-mechanism rows by mechanism type
-        no_mech_ctr = Counter([row.MECHANISM for row in self.no_mech_rows])
-        self.no_mech_ctr = sorted([(k, v) for k, v in no_mech_ctr.items()],
-                                  key=lambda x: x[1], reverse=True)
+        no_mech_ctr = Counter([row.MECHANISM
+                               for row in self.stats['no_mech_rows']])
+        self.stats['no_mech_ctr'] = \
+            sorted([(k, v) for k, v in no_mech_ctr.items()],
+                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
         for complex_id in tqdm.tqdm(sorted(self.complex_map.keys()),
@@ -210,7 +223,7 @@ class SignorProcessor(object):
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase',
-                                    'DRUGBANK'):
+                                    'DRUGBANK', 'RNAcentral'):
                     raise ValueError('Unexpected database %s' % database)
                 if database == 'PUBCHEM' and id.startswith('CID:'):
                     # We take off the CID: prefix plus fix an issue with
@@ -418,6 +431,7 @@ class SignorProcessor(object):
         if row.MECHANISM:
             if row.MECHANISM not in _mechanism_map:
                 logger.warning('Unhandled mechanism type: %s' % row.MECHANISM)
+                self.stats['unhandled_mech_ctr'][row.MECHANISM] += 1
                 mech_stmt_type = None
             else:
                 mech_stmt_type = _mechanism_map[row.MECHANISM]
@@ -523,13 +537,19 @@ def get_ref_context(db_ns, db_id):
 
 
 def process_uniprot_entry(up_id):
-    parts = up_id.split('_', maxsplit=1)
+    """Process a UniProt entry ID into a db_refs structure."""
+    # In older versions of SIGNOR, the ID was formatted as
+    # P12345_PRO_12345 or P12345-1.
+    # As of 4/2023, the ID is formatted as P12345-PRO_12345 or P12345-1.
+    if up_id == 'P17861_P17861-2':
+        up_id = 'P17861-2'
+    parts = up_id.split('-')
     if len(parts) == 1:
-        if '-' in up_id:
-            return {'UP': up_id.split('-')[0], 'UPISO': up_id}
         return {'UP': up_id}
+    elif len(parts) > 2:
+        print(parts)
+        breakpoint()
+    elif parts[1].startswith('PRO'):
+        return {'UP': parts[0], 'UPPRO': parts[1]}
     else:
-        if parts[1].startswith('PRO'):
-            return {'UP': parts[0], 'UPPRO': parts[1]}
-        else:
-            return {'UP': parts[0]}
+        return {'UP': parts[0], 'UPISO': up_id}
