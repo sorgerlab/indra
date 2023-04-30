@@ -79,6 +79,16 @@ def process_from_file(signor_data_file, signor_complexes_file=None,
 
 
 def process_from_web():
+    """Process Signor interaction data from the web.
+
+    This downloads the latest interaction data directly from the Signor
+    website without an intermediate local file.
+
+    Returns
+    -------
+    indra.sources.signor.SignorProcessor
+        SignorProcessor containing Statements extracted from the Signor data.
+    """
     # Get interaction data
     data_url = 'https://signor.uniroma2.it/download_entity.php'
     res = requests.post(data_url, data={'organism': 'human', 'format': 'csv',
