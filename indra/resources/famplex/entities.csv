@@ -201,6 +201,7 @@ Desumoylase
 Deubiquitinase
 DGC
 DGK
+DIO
 DNA_polymerase_alpha
 DNA_polymerase_delta
 DNM
@@ -230,6 +231,7 @@ EIF4E
 EIF4EBP
 EIF4G
 ELA
+ELOVL
 ENO
 Eotaxin
 EPHA
@@ -283,6 +285,7 @@ FPR
 FSH
 FUT
 FZD
+G6Pase
 G_12
 G_12_alpha
 GABBR
@@ -316,6 +319,7 @@ G_protein
 GPX
 G_q
 G_q_alpha
+Growth_factor
 GRI
 GRIA
 GRID
@@ -338,6 +342,7 @@ GUCY
 GUCY1A
 GUCY1B
 GYS
+HACD
 hCG
 HDAC
 HDAC_I
@@ -345,6 +350,8 @@ HDAC_II
 HDAC_III
 HDAC_IV
 HDL
+HECT_E3_ligase
+Hexokinase
 Hedgehog
 Hemoglobin
 HES
@@ -359,8 +366,12 @@ Histone_H2A
 Histone_H2B
 Histone_H3
 Histone_H4
+HLA1
+HLA2_alpha
+HLA2_beta
 HLA_DR
 HMOX
+HOMER
 HRH
 HSP90
 HSP90A
@@ -420,6 +431,7 @@ LDH
 LFA_1
 LH
 Ligand_gated_ion_channels
+Liprin_alpha
 LPAR
 LRRC8
 LXR
@@ -482,6 +494,7 @@ Natriuretic_peptide
 NCOA
 NCOR
 NDRG
+Netrin
 Neurexins
 Neuropeptide_receptor
 Neuropeptides
@@ -562,6 +575,8 @@ PDGFR_BB
 PDH
 PDK
 Pertussis_toxin
+PGAM
+PFK
 PFN
 PhK
 Phosphatase
@@ -574,6 +589,7 @@ PIM
 PKA
 PKC
 PKI
+PKM2
 PKN
 PLA2
 PLA2G2
@@ -611,6 +627,8 @@ PRMT
 Propionyl_CoA_carboxylase
 Protease
 Proteasome
+Protocadherin_alpha
+Protocadherin_beta
 PTGER
 Purinergic_receptors
 PYG
@@ -628,11 +646,13 @@ RasGAP
 RASGRF
 RASGRP
 RASSF
+RBR_E3_ligase
 RFC
 RFX
 RGL
 RHO
 RhoGDI
+RING_E3_ligase
 RIPK
 RLR
 RNApo_I
@@ -685,10 +705,13 @@ SP
 SPHK
 SPRED
 SPRY
+SPTB
 SRC
 SREBF
+STAG
 STAT
 STAT5
+STK3_4
 STT3
 Sulfonylurea_receptor
 SWI_SNF
@@ -739,6 +762,7 @@ Ubiquitin
 UCHL
 UGGT
 UGT
+UNC5
 USP
 USPL
 USP9
