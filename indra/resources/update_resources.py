@@ -539,7 +539,7 @@ def update_ncit_map():
 def update_famplex():
     """Update all the CSV files that form the FamPlex resource."""
     famplex_url_pattern = \
-        'https://raw.githubusercontent.com/bgyori/famplex/signor/%s.csv'
+        'https://raw.githubusercontent.com/sorgerlab/famplex/master/%s.csv'
     csv_names = ['entities', 'equivalences', 'gene_prefixes',
                  'grounding_map', 'relations']
     for csv_name in csv_names:
