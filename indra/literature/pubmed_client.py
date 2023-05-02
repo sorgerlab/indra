@@ -367,7 +367,10 @@ def _get_pubmed_publication_date(pubmed_data):
 
 def _parse_author(author_info, include_details=False):
     if not include_details:
-        return author_info.find("LastName").text
+        last_name = author_info.find("LastName")
+        if last_name is None:
+            return None
+        return last_name.text
 
     parsed_info = {
         "last_name": None,
@@ -395,6 +398,27 @@ def _parse_author(author_info, include_details=False):
             parsed_info["identifier"] = element.text
     parsed_info["affiliations"] = affiliations
     return parsed_info
+
+
+def _get_references(reference_list, only_pmid=True):
+    """Return a list of references for an article."""
+    if reference_list is None:
+        return None
+
+    references = []
+    for reference in reference_list.findall('Reference'):
+        pmid = _find_elem_text(reference, '*/ArticleId[@IdType="pubmed"]')
+        if only_pmid:
+            references.append(pmid)
+        else:
+            ref_dict = {
+                'pmid': pmid,
+                'doi': _find_elem_text(reference, '*/ArticleId[@IdType="doi"]'),
+                'pmcid': _find_elem_text(reference, '*/ArticleId[@IdType="pmcid"]'),
+                'citation': _find_elem_text(reference, 'Citation'),
+            }
+            references.append(ref_dict)
+    return references
 
 
 def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
@@ -431,7 +455,8 @@ def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
-                               mesh_annotations=True, detailed_authors=False):
+                               mesh_annotations=True, detailed_authors=False,
+                               references_included=None):
     """Get metadata for an XML tree containing PubmedArticle elements.
 
     Documentation on the XML structure can be found at:
@@ -459,6 +484,9 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         If True, extract as many of the author details as possible, such as
         first name, identifiers, and institutions. If false, only last names
         are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
 
     Returns
     -------
@@ -483,6 +511,11 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         if mesh_annotations:
             context_info = _get_annotations(medline_citation)
             result.update(context_info)
+        if references_included:
+            references = _get_references(pubmed_data.find('ReferenceList'),
+                                         only_pmid=(references_included == 'pmid'))
+            result['references'] = references
+
         publication_date = _get_pubmed_publication_date(pubmed_data)
         result['publication_date'] = publication_date
 
@@ -566,7 +599,7 @@ def _get_annotations(medline_citation):
 
 def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
                          get_abstracts=False, prepend_title=False,
-                         detailed_authors=False):
+                         detailed_authors=False, references_included=None):
     """Get article metadata for up to 200 PMIDs from the Pubmed database.
 
     Parameters
@@ -586,6 +619,9 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
         If True, extract as many of the author details as possible, such as
         first name, identifiers, and institutions. If false, only last names
         are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
 
     Returns
     -------
@@ -604,7 +640,8 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
         return None
     return get_metadata_from_xml_tree(tree, get_issns_from_nlm, get_abstracts,
                                       prepend_title,
-                                      detailed_authors=detailed_authors)
+                                      detailed_authors=detailed_authors,
+                                      references_included=references_included)
 
 
 @lru_cache(maxsize=1000)
