@@ -57,7 +57,8 @@ _type_db_map = {
     ('chemical', 'ChEBI'): 'CHEBI',
     ('smallmolecule', 'ChEBI'): 'CHEBI',
     ('mirna', 'miRBase'): 'MIRBASE',
-    ('antibody', 'DRUGBANK'): 'DRUGBANK'
+    ('antibody', 'DRUGBANK'): 'DRUGBANK',
+    ('ncrna', 'RNAcentral'): 'RNACENTRAL',
 }
 
 
@@ -85,6 +86,8 @@ _mechanism_map = {
     'chemical inhibition': Inhibition,
     'trimethylation': Methylation,
     'ubiquitination': Ubiquitination,
+    'monoubiquitination': Ubiquitination,
+    'polyubiquitination': Ubiquitination,
     'post transcriptional regulation': None,
     'relocalization': None, # TODO: Translocation,
     'small molecule catalysis': None,
@@ -132,11 +135,9 @@ class SignorProcessor(object):
     ----------
     statements : list[indra.statements.Statements]
         A list of INDRA Statements extracted from the SIGNOR table.
-    no_mech_rows: list of SignorRow namedtuples
-        List of rows where no mechanism statements were generated.
-    no_mech_ctr : collections.Counter
-        Counter listing the frequency of different MECHANISM types in the
-        list of no-mechanism rows.
+    stats : dict
+        A dictionary containing statistics about the processing, useful
+        for determining any unprocessed entries and debugging.
     """
     def __init__(self, data, complex_map=None):
         self._data = data
@@ -144,20 +145,37 @@ class SignorProcessor(object):
             self.complex_map = {}
         else:
             self.complex_map = complex_map
+        self.stats = {}
 
         # Process into statements
         self.statements = []
-        self.no_mech_rows = []
+
+        # Keys missing from FamPlex map
+        self.stats['famplex_missing'] = []
+
+        # Counter listing the frequency of different mechanisms that are
+        # not handled by the processor.
+        self.stats['unhandled_mech_ctr'] = Counter()
+
+        # List of SignorRow namedtuples
+        # List of rows where no mechanism statements were generated.
+        self.stats['no_mech_rows'] = []
+
         for idx, row in enumerate(tqdm.tqdm(self._data,
                                             desc='Processing SIGNOR rows')):
             row_stmts, no_mech = self._process_row(row)
             if no_mech:
-                self.no_mech_rows.append(row)
+                self.stats['no_mech_rows'].append(row)
             self.statements.extend(row_stmts)
+
+        # Counter listing the frequency of different MECHANISM types in the
+        # list of no-mechanism rows.
         # No-mechanism rows by mechanism type
-        no_mech_ctr = Counter([row.MECHANISM for row in self.no_mech_rows])
-        self.no_mech_ctr = sorted([(k, v) for k, v in no_mech_ctr.items()],
-                                  key=lambda x: x[1], reverse=True)
+        no_mech_ctr = Counter([row.MECHANISM
+                               for row in self.stats['no_mech_rows']])
+        self.stats['no_mech_ctr'] = \
+            sorted([(k, v) for k, v in no_mech_ctr.items()],
+                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
         for complex_id in tqdm.tqdm(sorted(self.complex_map.keys()),
@@ -174,6 +192,15 @@ class SignorProcessor(object):
                           text='Inferred from SIGNOR complex %s' % complex_id)
             s = Complex(agents, evidence=[ev])
             self.statements.append(s)
+        self._log_stats()
+
+    def _log_stats(self):
+        """Log statistics about the processing."""
+        logger.info('Famplex mapping missing for %d families/complexes' %
+                    len(Counter(self.stats['famplex_missing'])))
+        logger.info('No mechanism rows: %d' % len(self.stats['no_mech_rows']))
+        logger.info('Unhandled mechanism types: %d' %
+                    len(self.stats['unhandled_mech_ctr']))
 
     def _get_agent(self, ent_name, ent_type, id, database):
         # Returns a list of agents corresponding to this id
@@ -203,14 +230,14 @@ class SignorProcessor(object):
                 # Use SIGNOR name unless we have a mapping in FamPlex
                 famplex_id = famplex_map.get(key)
                 if famplex_id is None:
-                    logger.info('Could not find %s in FamPlex map' %
-                                str(key))
+                    logger.debug('Could not find %s in FamPlex map' % str(key))
+                    self.stats['famplex_missing'].append(key[1])
                 else:
                     db_refs['FPLX'] = famplex_id
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase',
-                                    'DRUGBANK'):
+                                    'DRUGBANK', 'RNAcentral'):
                     raise ValueError('Unexpected database %s' % database)
                 if database == 'PUBCHEM' and id.startswith('CID:'):
                     # We take off the CID: prefix plus fix an issue with
@@ -262,7 +289,10 @@ class SignorProcessor(object):
                 db_refs['CHEBI'] = c
                 name = chebi_client.get_chebi_name_from_id(c)
             else:
-                name = uniprot_client.get_gene_name(c)
+                if not c.startswith('SIGNOR'):
+                    name = uniprot_client.get_gene_name(c, web_fallback=False)
+                else:
+                    name = None
                 if name is None:
                     db_refs['SIGNOR'] = c
                 else:
@@ -281,8 +311,9 @@ class SignorProcessor(object):
                         name = db_refs['FPLX']
                 elif not name:
                     # We neither have a Uniprot nor Famplex grounding
-                    logger.info('Have neither a Uniprot nor Famplex grounding '
-                                'for "%s" in complex %s' % (c, complex_id))
+                    logger.debug('Have neither a Uniprot nor Famplex grounding '
+                                 'for "%s" in complex %s' % (c, complex_id))
+                    self.stats['famplex_missing'].append(c)
                     if not name:
                         # Set the agent name to the Signor name if neither the
                         # Uniprot nor Famplex names are available
@@ -346,6 +377,10 @@ class SignorProcessor(object):
         elif row.PMID.startswith('PMC'):
             pmid = None
             text_refs = {'PMCID': row.PMID}
+        # Sometimes it's an NCBI Book
+        elif row.PMID.startswith('NBK'):
+            pmid = None
+            text_refs = {'NCBIBOOK': row.PMID}
         # We log any other suspicious unhandled IDs
         else:
             logger.info('Invalid PMID: %s' % row.PMID)
@@ -417,7 +452,8 @@ class SignorProcessor(object):
         # Get the mechanism statement type.
         if row.MECHANISM:
             if row.MECHANISM not in _mechanism_map:
-                logger.warning('Unhandled mechanism type: %s' % row.MECHANISM)
+                logger.debug('Unhandled mechanism type: %s' % row.MECHANISM)
+                self.stats['unhandled_mech_ctr'][row.MECHANISM] += 1
                 mech_stmt_type = None
             else:
                 mech_stmt_type = _mechanism_map[row.MECHANISM]
@@ -523,13 +559,16 @@ def get_ref_context(db_ns, db_id):
 
 
 def process_uniprot_entry(up_id):
-    parts = up_id.split('_', maxsplit=1)
+    """Process a UniProt entry ID into a db_refs structure."""
+    # In older versions of SIGNOR, the ID was formatted as
+    # P12345_PRO_12345 or P12345-1.
+    # As of 4/2023, the ID is formatted as P12345-PRO_12345 or P12345-1.
+    if up_id == 'P17861_P17861-2':
+        up_id = 'P17861-2'
+    parts = up_id.split('-')
     if len(parts) == 1:
-        if '-' in up_id:
-            return {'UP': up_id.split('-')[0], 'UPISO': up_id}
         return {'UP': up_id}
+    elif parts[1].startswith('PRO'):
+        return {'UP': parts[0], 'UPPRO': parts[1]}
     else:
-        if parts[1].startswith('PRO'):
-            return {'UP': parts[0], 'UPPRO': parts[1]}
-        else:
-            return {'UP': parts[0]}
+        return {'UP': parts[0], 'UPISO': up_id}
