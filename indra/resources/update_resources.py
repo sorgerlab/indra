@@ -601,15 +601,18 @@ def update_lincs_proteins():
         json.dump(prot_dict, fh, indent=1)
 
 
+MESH_YEAR = "2022"
+
+
 def update_mesh_names():
     """Update Mesh ID to name and tree number mappings."""
     url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
-           'xmlmesh/desc2022.gz')
-    desc_path = os.path.join(path, 'mesh_desc2022.gz')
+           f'xmlmesh/desc{MESH_YEAR}.gz')
+    desc_path = os.path.join(path, f'mesh_desc{MESH_YEAR}.gz')
     if not os.path.exists(desc_path):
-        logging.info('Download MeSH descriptors from %s', url)
+        logging.info('Download %s MeSH descriptors from %s', MESH_YEAR, url)
         urlretrieve(url, desc_path)
-        logging.info('Done downloading MeSH descriptors')
+        logging.info('Done downloading %s MeSH descriptors', MESH_YEAR)
     # Process the XML and find descriptor records
     with gzip.open(desc_path) as desc_file:
         logging.info('Parsing MeSH descriptors')
@@ -631,12 +634,12 @@ def update_mesh_names():
 def update_mesh_supplementary_names():
     """Update MeSH ID to name mappings for supplementary terms."""
     supp_url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
-                'xmlmesh/supp2022.gz')
-    supp_path = os.path.join(path, 'mesh_supp2022.gz')
+                f'xmlmesh/supp{MESH_YEAR}.gz')
+    supp_path = os.path.join(path, f'mesh_supp{MESH_YEAR}.gz')
     if not os.path.exists(supp_path):
-        logging.info('Download MeSH supplement from %s', supp_url)
+        logging.info('Download %s MeSH supplement from %s', MESH_YEAR, supp_url)
         urlretrieve(supp_url, supp_path)
-        logging.info('Done downloading MeSH supplement')
+        logging.info('Done downloading %s MeSH supplement', MESH_YEAR)
     with gzip.open(supp_path) as supp_file:
         logging.info('Parsing MeSH supplement')
         supp_et = ET.parse(supp_file)
