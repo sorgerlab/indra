@@ -601,11 +601,16 @@ def update_lincs_proteins():
         json.dump(prot_dict, fh, indent=1)
 
 
-MESH_YEAR = "2022"
+MESH_YEAR = "2023"
 
 
 def update_mesh_names():
     """Update Mesh ID to name and tree number mappings."""
+    # The structure of the MeSH FTP site is a bit confusing -
+    # the addresses used in the update_mesh_names() functions
+    # only work for the current year's releases. If you want
+    # a previous release, you need to change the following URL to be:
+    # ftp://nlmpubs.nlm.nih.gov/online/mesh/<YEAR>/xmlmesh/desc<YEAR>.gz
     url = ('ftp://nlmpubs.nlm.nih.gov/online/mesh/MESH_FILES/'
            f'xmlmesh/desc{MESH_YEAR}.gz')
     desc_path = os.path.join(path, f'mesh_desc{MESH_YEAR}.gz')
