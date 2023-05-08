@@ -633,7 +633,7 @@ def update_mesh_names():
         rows.append((uid, name, term_name_str, tree_numbers_str))
 
     fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
-    write_unicode_csv(fname, rows, delimiter='\t')
+    write_unicode_csv(fname, sorted(rows), delimiter='\t')
 
 
 def update_mesh_supplementary_names():
@@ -667,9 +667,9 @@ def update_mesh_supplementary_names():
         supp_rows.append((uid, name, term_name_str, mapped_to))
 
     fname = os.path.join(path, 'mesh_supp_id_label_mappings.tsv')
-    write_unicode_csv(fname, supp_rows, delimiter='\t')
+    write_unicode_csv(fname, sorted(supp_rows), delimiter='\t')
     fname = os.path.join(path, 'mesh_cas_mappings.tsv')
-    write_unicode_csv(fname, reg_number_mappings, delimiter='\t')
+    write_unicode_csv(fname, sorted(reg_number_mappings), delimiter='\t')
 
 
 def _get_term_name_str(record, name):
