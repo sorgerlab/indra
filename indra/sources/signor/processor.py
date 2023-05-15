@@ -164,6 +164,8 @@ class SignorProcessor(object):
         for idx, row in enumerate(tqdm.tqdm(self._data,
                                             desc='Processing SIGNOR rows')):
             row_stmts, no_mech = self._process_row(row)
+            if row_stmts is None:
+                continue
             if no_mech:
                 self.stats['no_mech_rows'].append(row)
             self.statements.extend(row_stmts)
@@ -396,6 +398,8 @@ class SignorProcessor(object):
                                   row.DATABASEA)
         agent_b = self._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
                                   row.DATABASEB)
+        if not agent_a.name or not agent_b.name:
+            return None, None
 
         evidence = SignorProcessor._get_evidence(row)
         stmts = []
