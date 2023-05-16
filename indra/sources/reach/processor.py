@@ -436,7 +436,17 @@ class ReachProcessor(object):
                 return loc
         return None
 
-    def _get_agent_from_entity(self, entity_id):
+    def _get_agent_from_entity(self, entity_id, sentence_coords=True):
+        """Return an INDRA Agent from a Reach entity ID.
+
+        Parameters
+        ----------
+        entity_id : str
+            The ID of the Reach entity.
+        sentence_coords : Optional[bool]
+            If True, the sentence coordinates of the entity are returned
+            rather than the global coordinates. Default: True
+        """
         qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % entity_id
         res = self.tree.execute(qstr)
         if res is None:
@@ -458,7 +468,7 @@ class ReachProcessor(object):
         mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
 
         # get sentence coordinates of the entity
-        coords = self._get_entity_coordinates(entity_term)
+        coords = self._get_entity_coordinates(entity_term, sentence_coords=sentence_coords)
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         standardize_agent_name(agent, standardize_refs=True)
@@ -610,13 +620,39 @@ class ReachProcessor(object):
                                % mod_type_str)
         return mcs
 
-    def _get_entity_coordinates(self, entity_term):
+    def _get_entity_coordinates(self, entity_term, sentence_coords=True):
         """Return sentence coordinates for a given entity.
 
         Given an entity term return the associated sentence coordinates as
         a tuple of the form (int, int). Returns None if for any reason the
         sentence coordinates cannot be found.
+
+        Parameters
+        ----------
+        entity_term : dict
+            A dictionary representing an entity term.
+        sentence_coords : Optional[bool]
+            If True, return the sentence coordinates of the entity. If False,
+            the global coordinates are returned. Default: True
         """
+        # Get the entity coordinate in the entire text and subtract the
+        # coordinate of the first character in the associated sentence to
+        # get the sentence coordinate of the entity. Return None if entity
+        # coordinates are missing
+        entity_start = entity_term.get('start-pos')
+        entity_stop = entity_term.get('end-pos')
+        if entity_start is None or entity_stop is None:
+            return None
+        entity_start = entity_start.get('offset')
+        entity_stop = entity_stop.get('offset')
+        if entity_start is None or entity_stop is None:
+            return None
+
+        # At this point we can return the global coordinates if we aren't
+        # interested in sentence-specific coordinates
+        if not sentence_coords:
+            return entity_start, entity_stop
+
         # The following lines get the starting coordinate of the sentence
         # containing the entity.
         sent_id = entity_term.get('sentence')
@@ -635,18 +671,6 @@ class ReachProcessor(object):
             return None
         sent_start = sent_start.get('offset')
         if sent_start is None:
-            return None
-        # Get the entity coordinate in the entire text and subtract the
-        # coordinate of the first character in the associated sentence to
-        # get the sentence coordinate of the entity. Return None if entity
-        # coordinates are missing
-        entity_start = entity_term.get('start-pos')
-        entity_stop = entity_term.get('end-pos')
-        if entity_start is None or entity_stop is None:
-            return None
-        entity_start = entity_start.get('offset')
-        entity_stop = entity_stop.get('offset')
-        if entity_start is None or entity_stop is None:
             return None
         return (entity_start - sent_start, entity_stop - sent_start)
 
