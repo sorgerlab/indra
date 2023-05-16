@@ -443,7 +443,7 @@ def process_json_str(json_str, citation=None, organism_priority=None):
     return rp
 
 
-def process_agents_from_entities(file_name, organism_priority=None):
+def process_agents_from_entities(file_name, organism_priority=None, with_coordinates=False):
     """Return INDRA Agents extracted from all entites, eve ones not appearing
     in Statements.
 
@@ -456,6 +456,9 @@ def process_agents_from_entities(file_name, organism_priority=None):
         when choosing protein grounding. If not given, the default behavior
         takes the first match produced by Reach, which is prioritized to be
         a human protein if such a match exists.
+    with_coordinates : Optional[bool]
+        If True, the Agents will be returned in a tuple with their
+        coordinates. Default: False
 
     Returns
     -------
@@ -466,7 +469,10 @@ def process_agents_from_entities(file_name, organism_priority=None):
         json_str = fh.read().decode('utf-8')
     json_dict = _preprocess_json_str(json_str)
     rp = ReachProcessor(json_dict, organism_priority=organism_priority)
-    return rp.get_agents_from_entities()
+    if with_coordinates:
+        return rp.get_agents_from_entities_with_coords()
+    else:
+        return rp.get_agents_from_entities()
 
 
 def _preprocess_json_str(json_str):

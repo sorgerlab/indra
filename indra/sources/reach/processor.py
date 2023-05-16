@@ -100,6 +100,17 @@ class ReachProcessor(object):
         agents = [a for a in agents if a is not None]
         return agents
 
+    def get_agents_from_entities_with_coords(self, sentence_coords=False):
+        """Return INDRA Agents extracted from all entities, along with
+        global document-level coordinates, even ones not part of events."""
+        entities = self.get_all_entities()
+        agents_coords = [
+            self._get_agent_from_entity(e['frame_id'], sentence_coords=sentence_coords)
+            for e in entities
+        ]
+        agents_coords = [a for a in agents_coords if a[0] is not None]
+        return agents_coords
+
     def print_regulations(self):
         qstr = "$.events.frames[(@.type is 'regulation')]"
         res = self.tree.execute(qstr)
