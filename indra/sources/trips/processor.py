@@ -1061,7 +1061,7 @@ class TripsProcessor(object):
                 self._add_extracted(_get_type(event), event.attrib['id'])
                 self.statements.append(st)
 
-    def get_agents(self):
+    def get_agents(self, with_coords=False):
         """Return list of INDRA Agents corresponding to TERMs in the EKB.
 
         This is meant to be used when entities e.g. "phosphorylated ERK",
@@ -1069,16 +1069,22 @@ class TripsProcessor(object):
         language. These entities with their respective states are represented
         as INDRA Agents.
 
+        Parameters
+        ----------
+        with_coords : Optional[bool]
+            If True, the coordinates of the agent are also returned in the
+            result as a tuple. Default: False.
+
         Returns
         -------
         agents : list[indra.statements.Agent]
             List of INDRA Agents extracted from EKB.
         """
-        agents_dict = self.get_term_agents()
+        agents_dict = self.get_term_agents(with_coords=with_coords)
         agents = [a for a in agents_dict.values() if a is not None]
         return agents
 
-    def get_term_agents(self):
+    def get_term_agents(self, with_coords=False):
         """Return dict of INDRA Agents keyed by corresponding TERMs in the EKB.
 
         This is meant to be used when entities e.g. "phosphorylated ERK",
@@ -1088,6 +1094,12 @@ class TripsProcessor(object):
         the ID assigned by TRIPS to the given TERM that the Agent was
         extracted from.
 
+        Parameters
+        ----------
+        with_coords : Optional[bool]
+            If True, the coordinates of the agent are also returned in the
+            dictionary as a tuple. Default: False.
+
         Returns
         -------
         agents : dict[str, indra.statements.Agent]
@@ -1096,6 +1108,7 @@ class TripsProcessor(object):
         terms = self.tree.findall('TERM')
         agents = {}
         assoc_links = []
+        coords = {}
         for term in terms:
             term_id = term.attrib.get('id')
             if term_id:
@@ -1107,11 +1120,27 @@ class TripsProcessor(object):
                     aw_id = aw.attrib.get('id')
                     if aw_id:
                         assoc_links.append((term_id, aw_id))
+            if with_coords:
+                start_coord = term.attrib.get('start')
+                end_coord = term.attrib.get('end')
+                try:
+                    start_coord = int(start_coord)
+                except Exception:
+                    start_coord = None
+                try:
+                    end_coord = int(end_coord)
+                except Exception:
+                    end_coord = None
+                coords[term_id] = (start_coord, end_coord)
         # We only keep the target end of assoc with links if both
         # source and target are in the list
         for source, target in assoc_links:
             if target in agents and source in agents:
                 agents.pop(source)
+        if with_coords:
+            for term_id, agent in agents.items():
+                agents[term_id] = (agent, coords[term_id])
+
         return agents
 
     def _get_cell_loc_by_id(self, term_id):
