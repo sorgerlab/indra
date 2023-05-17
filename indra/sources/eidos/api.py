@@ -95,7 +95,7 @@ def process_json_bio(json_dict, grounder=None):
     return ep
 
 
-def process_json_bio_entities(json_dict, grounder=None):
+def process_json_bio_entities(json_dict, grounder=None, with_coords=False):
     """Return INDRA Agents grounded to biological ontologies extracted
     from Eidos JSON-LD.
 
@@ -106,6 +106,9 @@ def process_json_bio_entities(json_dict, grounder=None):
     grounder : Optional[function]
         A function which takes a text and an optional context as argument
         and returns a dict of groundings.
+    with_coords : Optional[bool]
+        If True, the Agents will have their coordinates returned along
+        with them in a tuple. Default: False
 
     Returns
     -------
@@ -125,7 +128,13 @@ def process_json_bio_entities(json_dict, grounder=None):
         context = event.evidence[0].text
         agent = get_agent_bio(event.concept, context=context,
                               grounder=grounder)
-        agents.append(agent)
+        if with_coords:
+            prov = event.evidence[0].annotations['provenance']
+            pos = prov[0]['documentCharPositions']
+            start_coord, end_coord = pos[0]['start'], pos[0]['end']
+            agents.append((agent, (start_coord, end_coord)))
+        else:
+            agents.append(agent)
     return agents
 
 
