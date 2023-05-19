@@ -132,6 +132,11 @@ def process_json_bio_entities(json_dict, grounder=None, with_coords=False):
             prov = event.evidence[0].annotations['provenance']
             pos = prov[0]['documentCharPositions']
             start_coord, end_coord = pos[0]['start'], pos[0]['end']
+            # We make sure this is a proper coordinate, in which case
+            # we add one to ensure consistency with coordinate boundaries
+            # from other INDRA sources
+            if isinstance(end_coord, int):
+                end_coord += 1
             agents.append((agent, (start_coord, end_coord)))
         else:
             agents.append(agent)
