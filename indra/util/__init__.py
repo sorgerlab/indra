@@ -6,6 +6,7 @@ import logging
 from io import BytesIO
 from functools import wraps
 from datetime import datetime
+import xml
 import xml.etree.ElementTree as ET
 try:  # Python 3
     from itertools import zip_longest
@@ -254,3 +255,21 @@ def batch_iter(iterator, batch_size, return_func=None, padding=None):
             yield gen
         else:
             yield return_func(gen)
+
+
+def pretty_save_xml(xml_tree, fname):
+    """Save an XML tree to a file, with pretty formatting.
+
+
+    Parameters
+    ----------
+    xml_tree : xml.etree.ElementTree.Element
+        The XML tree to save.
+    fname : str
+        The name of the file to save to.
+    """
+    xml_str = ET.tostring(xml_tree, encoding='utf-8')
+    xmld = xml.dom.minidom.parseString(xml_str)
+    xml_str_pretty = xmld.toprettyxml()
+    with open(fname, 'w') as fh:
+        fh.write(xml_str_pretty)
