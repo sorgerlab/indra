@@ -8,6 +8,7 @@ from typing import List
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
+from indra.util import pretty_save_xml
 
 
 logger = logging.getLogger(__name__)
@@ -229,13 +230,15 @@ def get_article_xml(pubmed_id):
 
 
 @lru_cache(maxsize=100)
-def get_full_xml(pubmed_id):
+def get_full_xml(pubmed_id, fname=None):
     """Get the full XML tree of a single article from the Pubmed database.
 
     Parameters
     ----------
     pubmed_id : str
         A PubMed ID.
+    fname : Optional[str]
+        If given, the XML is saved to the given file name.
 
     Returns
     -------
@@ -250,6 +253,8 @@ def get_full_xml(pubmed_id):
               'retmode': 'xml',
               'id': pubmed_id}
     tree = send_request(pubmed_fetch, params)
+    if fname:
+        pretty_save_xml(tree, fname)
     return tree
 
 

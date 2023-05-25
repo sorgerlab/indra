@@ -260,6 +260,9 @@ def batch_iter(iterator, batch_size, return_func=None, padding=None):
 def pretty_save_xml(xml_tree, fname):
     """Save an XML tree to a file, with pretty formatting.
 
+
+    Parameters
+    ----------
     xml_tree : xml.etree.ElementTree.Element
         The XML tree to save.
     fname : str
