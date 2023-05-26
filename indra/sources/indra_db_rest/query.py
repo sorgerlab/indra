@@ -575,6 +575,8 @@ class HasAgent(Query):
 
     def __init__(self, agent_id=None, namespace='NAME', role=None,
                  agent_num=None):
+        if agent_id:
+            agent_id = agent_id.replace('_', r'\_')
         self.agent_id = agent_id
         self.namespace = namespace
         self.role = role
