@@ -307,11 +307,36 @@ def _find_elem_text(root, xpath_string):
     return None if elem is None else elem.text
 
 
-def _get_journal_info(medline_citation, get_issns_from_nlm):
+def _get_issue_info(journal: ET.Element):
+    # Issue info
+    issue = journal.find('JournalIssue')
+    issue_volume = _find_elem_text(issue, 'Volume')
+    issue_issue = _find_elem_text(issue, 'Issue')
+
+    issue_pub_date = issue.find('PubDate')
+    if issue_pub_date is not None:
+        # Get issue year
+        issue_year = _find_elem_text(issue_pub_date, 'Year')
+        issue_year = int(issue_year) if issue_year else None
+
+    else:
+        issue_year = None
+
+    return {
+        "issue_volume": issue_volume,
+        "issue_issue": issue_issue,
+        "issue_year": issue_year
+    }
+
+
+def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
     # Journal info
     journal = medline_citation.find('Article/Journal')
     journal_title = _find_elem_text(journal, 'Title')
     journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
+
+    # Issue info
+    issue_info = _get_issue_info(journal)
 
     # Add the ISSN from the article record
     issn_list = []
@@ -336,8 +361,15 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     # Remove any duplicate issns
     issn_list = list(set(issn_list))
 
-    return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
-            'issn_list': issn_list, 'journal_nlm_id': nlm_id}
+    return {
+        'journal_title': journal_title,
+        'journal_abbrev': journal_abbrev,
+        'issn_list': issn_list,
+        'journal_nlm_id': nlm_id,
+        'issue': issue_info['issue_issue'],
+        'issue_volume': issue_info['issue_volume'],
+        'issue_year': issue_info['issue_year'],
+    }
 
 
 def _get_pubmed_publication_date(pubmed_data):
@@ -498,7 +530,8 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     dict of dicts
         Dictionary indexed by PMID. Each value is a dict containing the
         following fields: 'doi', 'title', 'authors', 'journal_title',
-        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page',
+        'issue_volume', 'issue', 'issue_pub_date'.
     """
     # Iterate over the articles and build the results dict
     results = {}
