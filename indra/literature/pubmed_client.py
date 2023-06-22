@@ -371,6 +371,7 @@ def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
         'journal_title': journal_title,
         'journal_abbrev': journal_abbrev,
         'issn_list': issn_list,
+        'issn_l': issn_linking,
         'journal_nlm_id': nlm_id,
         'issue': issue_info['issue_issue'],
         'issue_volume': issue_info['issue_volume'],
