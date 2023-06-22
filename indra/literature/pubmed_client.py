@@ -329,6 +329,83 @@ def _get_issue_info(journal: ET.Element):
     }
 
 
+def get_issn_info(medline_citation: ET.Element,
+                  get_issns_from_nlm: bool = False):
+    """Given a medline citation, get the issn info from the article
+
+    Parameters
+    ----------
+    medline_citation : xml.etree.ElementTree.Element
+        The MedlineCitation element of the PubMed XML tree.
+    get_issns_from_nlm : bool
+        If True, get the ISSN from the NLM catalog as well.
+
+    Returns
+    -------
+    dict
+        A dictionary journal, issue, and ISSN info. The structure is as
+        follows:
+        {
+            "journal_title": str,
+            "journal_abbrev": str,
+            "journal_nlm_id": str,
+            "issn_dict": {
+                "issn": str,
+                "issn_l": str,
+                "p_issn": str,
+                "e_issn": str
+                "other": [str, ...]
+            },
+            "issue_dict": {
+                "issue_volume": str,
+                "issue": str,
+                "issue_year": int
+            }
+    """
+    # Journal info
+    journal = medline_citation.find('Article/Journal')
+    journal_title = _find_elem_text(journal, 'Title')
+    journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
+
+    # Issue info
+    issue_info = _get_issue_info(journal)
+
+    # Get the ISSN from the article record
+    issn_dict = {}
+    issn_element = journal.find("ISSN")
+    if issn_element is not None:
+        issn_type = issn_element.attrib["IssnType"]
+        issn = issn_element.text
+        issn_dict["issn"] = issn
+        if issn_type.lower() in ["electronic", "print"]:
+            type_prefix = "p_" if issn_type.lower() == "print" else "e_"
+            issn_dict[type_prefix + "issn"] = issn
+        else:
+            issn_dict["other"] = [issn]
+
+    # Get the linking ISSN from the article record
+    issn_linking = _find_elem_text(medline_citation,
+                                   "MedlineJournalInfo/ISSNLinking")
+    if issn_linking:
+        issn_dict["issn_l"] = issn_linking
+
+    nlm_id = _find_elem_text(medline_citation,
+                             'MedlineJournalInfo/NlmUniqueID')
+
+    # Get the ISSN from the NLM catalog
+    if get_issns_from_nlm:
+        nlm_dict = get_issns_for_journal(nlm_id)
+        issn_dict.update(nlm_dict)
+
+    return {
+        "journal_title": journal_title,
+        "journal_abbrev": journal_abbrev,
+        "journal_nlm_id": nlm_id,
+        "issn_dict": issn_dict,
+        "issue_dict": issue_info,
+    }
+
+
 def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
     # Journal info
     journal = medline_citation.find('Article/Journal')
