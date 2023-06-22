@@ -354,9 +354,15 @@ def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
     nlm_id = _find_elem_text(medline_citation,
                              'MedlineJournalInfo/NlmUniqueID')
     if nlm_id and get_issns_from_nlm:
-        nlm_issn_list = get_issns_for_journal(nlm_id)
-        if nlm_issn_list:
-            issn_list += nlm_issn_list
+        nlm_issn_dict = get_issns_for_journal(nlm_id)
+        if nlm_issn_dict:
+            values = []
+            for issn_type, issn_val in nlm_issn_dict.items():
+                if issn_type == 'other':
+                    values += issn_val
+                else:
+                    values.append(issn_val)
+            issn_list += values
 
     # Remove any duplicate issns
     issn_list = list(set(issn_list))
@@ -684,7 +690,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
 
 @lru_cache(maxsize=1000)
 def get_issns_for_journal(nlm_id):
-    """Get a list of the ISSN numbers for a journal given its NLM ID.
+    """Get a dict of the ISSN numbers for a journal given its NLM ID.
 
     Information on NLM XML DTDs is available at
     https://www.nlm.nih.gov/databases/dtd/
@@ -695,14 +701,24 @@ def get_issns_for_journal(nlm_id):
     tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
-    issn_list = tree.findall('.//ISSN')
-    issn_linking = tree.findall('.//ISSNLinking')
-    issns = issn_list + issn_linking
+    issn_list = [(e.attrib, e.text) for e in tree.findall('.//ISSN')]
+    issn_linking = tree.find('.//ISSNLinking')
+    issn_l = issn_linking.text if issn_linking else None
+    issn_dict = {
+        'print': None, 'electronic': None, 'linking': issn_l, 'other': []
+    }
+    for issn_type, issn in issn_list:
+        if issn_type.lower() in ('print', 'electronic'):
+            type_prefix = "p_" if issn_type.lower() == 'print' else "e_"
+            issn_dict[type_prefix + "issn"] = type_prefix + issn
+        elif issn != issn_l:
+            issn_dict['other'].append(issn)
+
     # No ISSNs found!
-    if not issns:
+    if not any(issn_dict.values()):
         return None
     else:
-        return [issn.text for issn in issns]
+        return issn_dict
 
 
 def expand_pagination(pages):
