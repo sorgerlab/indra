@@ -4,7 +4,7 @@ Search and get metadata for articles in Pubmed.
 import logging
 import requests
 from time import sleep
-from typing import List
+from typing import List, Literal
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
@@ -329,16 +329,22 @@ def _get_issue_info(journal: ET.Element):
     }
 
 
-def get_issn_info(medline_citation: ET.Element,
-                  get_issns_from_nlm: bool = False):
+def get_issn_info(
+    medline_citation: ET.Element,
+    get_issns_from_nlm: Literal["never", "missing", "always"] = "never"
+):
     """Given a medline citation, get the issn info from the article
 
     Parameters
     ----------
     medline_citation : xml.etree.ElementTree.Element
         The MedlineCitation element of the PubMed XML tree.
-    get_issns_from_nlm : bool
-        If True, get the ISSN from the NLM catalog as well.
+    get_issns_from_nlm : Literal['never', 'missing', 'always']
+        Whether to recover ISSN values from the NLM catalog. Options are
+        'never', 'missing', and 'always'. If 'missing', then the ISSN
+        values will be recovered from the NLM catalog if they are not found
+        in the XML. If 'always', then the ISSN values will be recovered from
+        the NLM catalog regardless of whether they are found in the XML.
 
     Returns
     -------
@@ -363,6 +369,9 @@ def get_issn_info(medline_citation: ET.Element,
             }
         }
     """
+    if get_issns_from_nlm not in ['never', 'missing', 'always']:
+        raise ValueError("get_issns_from_nlm must be one of 'never', "
+                         "'missing', or 'always'")
     # Journal info
     journal = medline_citation.find('Article/Journal')
     journal_title = _find_elem_text(journal, 'Title')
@@ -393,10 +402,13 @@ def get_issn_info(medline_citation: ET.Element,
     nlm_id = _find_elem_text(medline_citation,
                              'MedlineJournalInfo/NlmUniqueID')
 
-    # Get the ISSN from the NLM catalog
-    if get_issns_from_nlm:
-        nlm_dict = get_issns_for_journal(nlm_id)
-        issn_dict.update(nlm_dict)
+    # Get ISSN values from the NLM catalog
+    if nlm_id and (
+            get_issns_from_nlm == 'always' or
+            get_issns_from_nlm == 'missing' and not any(issn_dict.values())
+    ):
+        nlm_issn_dict = get_issns_for_journal(nlm_id)
+        issn_dict.update(nlm_issn_dict)
 
     return {
         "journal_title": journal_title,
