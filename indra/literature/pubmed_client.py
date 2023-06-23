@@ -361,6 +361,7 @@ def get_issn_info(medline_citation: ET.Element,
                 "issue": str,
                 "issue_year": int
             }
+        }
     """
     # Journal info
     journal = medline_citation.find('Article/Journal')
