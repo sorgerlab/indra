@@ -792,7 +792,8 @@ def get_issns_for_journal(nlm_id):
     tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
-    issn_list = [(e.attrib, e.text) for e in tree.findall('.//ISSN')]
+    issn_list = [(e.attrib.get("IssnType", "other"), e.text)
+                 for e in tree.findall('.//ISSN')]
     issn_linking = tree.find('.//ISSNLinking')
     issn_l = issn_linking.text if issn_linking else None
     issn_dict = {
