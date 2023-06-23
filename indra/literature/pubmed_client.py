@@ -783,7 +783,7 @@ def get_issns_for_journal(nlm_id):
     issn_linking = tree.find('.//ISSNLinking')
     issn_l = issn_linking.text if issn_linking else None
     issn_dict = {
-        'print': None, 'electronic': None, 'linking': issn_l, 'other': []
+        'p_issn': None, 'e_issn': None, 'issn_l': issn_l, 'other': []
     }
     for issn_type, issn in issn_list:
         if issn_type.lower() in ('print', 'electronic'):
