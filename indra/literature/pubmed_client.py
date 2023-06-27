@@ -410,7 +410,8 @@ def get_issn_info(
             get_issns_from_nlm == 'missing' and not any(issn_dict.values())
     ):
         nlm_issn_dict = get_issns_for_journal(nlm_id)
-        issn_dict.update(nlm_issn_dict)
+        if nlm_issn_dict:
+            issn_dict.update(nlm_issn_dict)
 
     return {
         "journal_title": journal_title,
