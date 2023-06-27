@@ -798,15 +798,16 @@ def get_issns_for_journal(nlm_id):
                  for e in tree.findall('.//ISSN')]
     issn_linking = tree.find('.//ISSNLinking')
     issn_l = issn_linking.text if issn_linking else None
-    issn_dict = {
-        'p_issn': None, 'e_issn': None, 'issn_l': issn_l, 'other': []
-    }
+    issn_dict = {}
     for issn_type, issn in issn_list:
         if issn_type.lower() in ('print', 'electronic'):
             type_prefix = "p_" if issn_type.lower() == 'print' else "e_"
             issn_dict[type_prefix + "issn"] = type_prefix + issn
         elif issn != issn_l:
-            issn_dict['other'].append(issn)
+            if 'other' in issn_dict:
+                issn_dict['other'].append(issn)
+            else:
+                issn_dict['other'] = [issn]
 
     # No ISSNs found!
     if not any(issn_dict.values()):
