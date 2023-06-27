@@ -345,6 +345,8 @@ def get_issn_info(
         values will be recovered from the NLM catalog if they are not found
         in the XML. If 'always', then the ISSN values will be recovered from
         the NLM catalog regardless of whether they are found in the XML.
+        Default is 'never' (i.e., never recover from NLM catalog regardless
+        of whether they are found in the XML).
 
     Returns
     -------
