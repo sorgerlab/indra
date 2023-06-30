@@ -360,9 +360,7 @@ def get_issn_info(
             "issn_dict": {
                 "issn": str,
                 "issn_l": str,
-                "p_issn": str,
-                "e_issn": str
-                "other": [str, ...]
+                "type": "print"|"electronic"|"other",
             },
             "issue_dict": {
                 "volume": str,
@@ -386,14 +384,10 @@ def get_issn_info(
     issn_dict = {}
     issn_element = journal.find("ISSN")
     if issn_element is not None:
-        issn_type = issn_element.attrib["IssnType"]
+        issn_type = issn_element.attrib.get("IssnType", "other").lower()
         issn = issn_element.text
         issn_dict["issn"] = issn
-        if issn_type.lower() in ["electronic", "print"]:
-            type_prefix = "p_" if issn_type.lower() == "print" else "e_"
-            issn_dict[type_prefix + "issn"] = issn
-        else:
-            issn_dict["other"] = [issn]
+        issn_dict["type"] = issn_type
 
     # Get the linking ISSN from the article record
     issn_linking = _find_elem_text(medline_citation,
@@ -409,9 +403,9 @@ def get_issn_info(
             get_issns_from_nlm == 'always' or
             get_issns_from_nlm == 'missing' and not any(issn_dict.values())
     ):
-        nlm_issn_dict = get_issns_for_journal(nlm_id)
-        if nlm_issn_dict:
-            issn_dict.update(nlm_issn_dict)
+        nlm_issn_list = get_issns_for_journal(nlm_id)
+        if nlm_issn_list:
+            issn_dict['alternate_issns'] = nlm_issn_list
 
     return {
         "journal_title": journal_title,
