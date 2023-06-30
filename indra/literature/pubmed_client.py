@@ -636,7 +636,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     # Iterate over the articles and build the results dict
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
-    for art_ix, pm_article in enumerate(pm_articles):
+    for pm_article in pm_articles:
         medline_citation = pm_article.find('./MedlineCitation')
         pubmed_data = pm_article.find('PubmedData')
 
