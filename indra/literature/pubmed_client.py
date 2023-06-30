@@ -426,33 +426,27 @@ def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
     issue_info = _get_issue_info(journal)
 
     # Add the ISSN from the article record
-    issn_list = []
+    issn_set = set()
     issn = _find_elem_text(journal, 'ISSN')
     if issn:
-        issn_list.append(issn)
+        issn_set.add(issn)
 
     # Add the Linking ISSN from the article record
     issn_linking = _find_elem_text(medline_citation,
                                    'MedlineJournalInfo/ISSNLinking')
     if issn_linking:
-        issn_list.append(issn_linking)
+        issn_set.add(issn_linking)
 
     # Now get the list of ISSNs from the NLM Catalog
     nlm_id = _find_elem_text(medline_citation,
                              'MedlineJournalInfo/NlmUniqueID')
     if nlm_id and get_issns_from_nlm:
-        nlm_issn_dict = get_issns_for_journal(nlm_id)
-        if nlm_issn_dict:
-            values = []
-            for issn_type, issn_val in nlm_issn_dict.items():
-                if issn_type == 'other':
-                    values += issn_val
-                else:
-                    values.append(issn_val)
-            issn_list += values
+        nlm_issn_list = get_issns_for_journal(nlm_id)
+        if nlm_issn_list:
+            issn_set.update(v for _, v in nlm_issn_list)
 
     # Remove any duplicate issns
-    issn_list = list(set(issn_list))
+    issn_list = list(issn_set)
 
     return {
         'journal_title': journal_title,
@@ -789,26 +783,16 @@ def get_issns_for_journal(nlm_id):
     tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
-    issn_list = [(e.attrib.get("IssnType", "other"), e.text)
+    issn_list = [(e.attrib.get("IssnType", "other").lower(), e.text)
                  for e in tree.findall('.//ISSN')]
     issn_linking = tree.find('.//ISSNLinking')
-    issn_l = issn_linking.text if issn_linking else None
-    issn_dict = {}
-    for issn_type, issn in issn_list:
-        if issn_type.lower() in ('print', 'electronic'):
-            type_prefix = "p_" if issn_type.lower() == 'print' else "e_"
-            issn_dict[type_prefix + "issn"] = type_prefix + issn
-        elif issn != issn_l:
-            if 'other' in issn_dict:
-                issn_dict['other'].append(issn)
-            else:
-                issn_dict['other'] = [issn]
+    if issn_linking:
+        issn_list.append(("linking", issn_linking.text))
 
     # No ISSNs found!
-    if not any(issn_dict.values()):
+    if not any(v for k, v in issn_list):
         return None
-    else:
-        return issn_dict
+    return issn_list
 
 
 def expand_pagination(pages):
