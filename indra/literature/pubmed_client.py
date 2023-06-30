@@ -323,9 +323,9 @@ def _get_issue_info(journal: ET.Element):
         issue_year = None
 
     return {
-        "issue_volume": issue_volume,
-        "issue_issue": issue_issue,
-        "issue_year": issue_year
+        "volume": issue_volume,
+        "issue": issue_issue,
+        "year": issue_year
     }
 
 
@@ -365,9 +365,9 @@ def get_issn_info(
                 "other": [str, ...]
             },
             "issue_dict": {
-                "issue_volume": str,
+                "volume": str,
                 "issue": str,
-                "issue_year": int
+                "year": int
             }
         }
     """
@@ -466,9 +466,9 @@ def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
         'issn_list': issn_list,
         'issn_l': issn_linking,
         'journal_nlm_id': nlm_id,
-        'issue': issue_info['issue_issue'],
-        'issue_volume': issue_info['issue_volume'],
-        'issue_year': issue_info['issue_year'],
+        'issue': issue_info['issue'],
+        'volume': issue_info['volume'],
+        'year': issue_info['year'],
     }
 
 
@@ -631,7 +631,7 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         Dictionary indexed by PMID. Each value is a dict containing the
         following fields: 'doi', 'title', 'authors', 'journal_title',
         'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page',
-        'issue_volume', 'issue', 'issue_pub_date'.
+        'volume', 'issue', 'issue_pub_date'.
     """
     # Iterate over the articles and build the results dict
     results = {}
