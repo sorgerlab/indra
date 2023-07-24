@@ -847,7 +847,11 @@ def assert_no_cycle(
     assert False, msg
 
 
-def find_cycles(g: networkx.DiGraph, fpath: str) -> None:
+def find_cycles(
+    g: networkx.DiGraph,
+    fpath: str,
+    upload_to_s3: bool = True
+) -> None:
     from datetime import datetime
     logger.debug('Looking for cycles')
 
@@ -866,11 +870,12 @@ def find_cycles(g: networkx.DiGraph, fpath: str) -> None:
                 cs = ','.join([str(sc) for sc in c])
                 fp.write(f'{cs}\n')
         logger.debug(f'Cycles written to {fpath}')
-        from indra.util.aws import get_s3_client
-        s3 = get_s3_client(unsigned=False)
-        fname = f'indra-db/dumps/refinement_cycles_{dt.strftime("%Y%m%d")}'
-        s3.upload_file(fpath, 'bigmech', fname)
-        logger.debug(f'Cycles uploaded to {fname}')
+        if upload_to_s3:
+            from indra.util.aws import get_s3_client
+            s3 = get_s3_client(unsigned=False)
+            fname = f'indra-db/dumps/refinement_cycles_{dt.strftime("%Y%m%d")}'
+            s3.upload_file(fpath, 'bigmech', fname)
+            logger.debug(f'Cycles uploaded to {fname}')
     else:
         logger.debug('No cycles were found')
 

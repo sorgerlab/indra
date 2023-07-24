@@ -365,7 +365,7 @@ def test_write_cycles():
     sh2 = st2.get_hash()
 
     refinements_graph = build_refinements_graph(statements=[st1, st2])
-    find_cycles(g=refinements_graph, fpath='./cycles_test')
+    find_cycles(g=refinements_graph, fpath='./cycles_test', upload_to_s3=False)
     with open('./cycles_test') as f:
         cycles = f.readlines()
     cyc_sets = [set([int(h) for h in cl.split(',')]) for cl in cycles]
