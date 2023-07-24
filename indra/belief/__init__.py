@@ -873,7 +873,8 @@ def find_cycles(
         if upload_to_s3:
             from indra.util.aws import get_s3_client
             s3 = get_s3_client(unsigned=False)
-            fname = f'indra-db/dumps/refinement_cycles_{dt.strftime("%Y%m%d")}'
+            fname = f'indra-db/dumps/refinement_cycles_' \
+                    f'{dt.strftime("%Y%m%d%H%M%S")}'
             s3.upload_file(fpath, 'bigmech', fname)
             logger.debug(f'Cycles uploaded to {fname}')
     else:
