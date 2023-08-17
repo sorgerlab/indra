@@ -62,18 +62,18 @@ to be used as `url` in case NXML content is being read.
 
 Advantages:
 
-* Does not require setting up the pyjnius Python-Java bridge.
-* Does not require assembling a REACH JAR file.
-* Allows local control the REACH version and configuration used to run the
+- Does not require setting up the pyjnius Python-Java bridge.
+- Does not require assembling a REACH JAR file.
+- Allows local control the REACH version and configuration used to run the
   service.
-* REACH is running in a separate process and therefore does not need to
+- REACH is running in a separate process and therefore does not need to
   be initialized if a new Python session is started.
 
 Disadvantages:
 
-* First request might be time-consuming as REACH is loading additional
+- First request might be time-consuming as REACH is loading additional
   resources.
-* Only endpoints exposed by the REACH web server are available, i.e., no
+- Only endpoints exposed by the REACH web server are available, i.e., no
   full object-level access to REACH components.
 
 
