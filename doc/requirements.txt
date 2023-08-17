@@ -2,6 +2,7 @@ sphinx_rtd_theme>=0.5.1
 sphinx
 sphinx-argparse
 sphinx_autodoc_typehints
+sphinx-autoapi
 mock
 ipython
 matplotlib
