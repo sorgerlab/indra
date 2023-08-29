@@ -39,7 +39,7 @@ jobs:
         tar xzf bionetgen.tar.gz
         pip install git+https://github.com/pysb/pysb.git
         # Temporary fix. Ensure cython is installed before pyjnius
-        pip install cython
+        pip install "cython<3"
         # Now install INDRA with all its extras
         pip install .[all]
         # Run slow tests only if we're in the cron setting
