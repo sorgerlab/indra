@@ -13,14 +13,14 @@ def main():
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2,<3', 'pandas<2', 'ndex2==2.0.1', 'jinja2',
                     'markupsafe<2.1.0',
-                    'protmapper>=0.0.27', 'obonet',
+                    'protmapper>=0.0.28', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
 
     extras_require = {
                       # Inputs and outputs
                       'trips_offline': ['pykqml'],
-                      'reach_offline': ['cython', 'pyjnius==1.1.4'],
-                      'eidos_offline': ['cython', 'pyjnius==1.1.4'],
+                      'reach_offline': ['cython<3', 'pyjnius==1.1.4'],
+                      'eidos_offline': ['cython<3', 'pyjnius==1.1.4'],
                       'hypothesis': ['gilda>=0.10.2'],
                       'geneways': ['stemming', 'nltk<3.6'],
                       'bel': ['pybel>=0.15.0,<0.16.0'],
