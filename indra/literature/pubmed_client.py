@@ -307,23 +307,135 @@ def _find_elem_text(root, xpath_string):
     return None if elem is None else elem.text
 
 
-def _get_journal_info(medline_citation, get_issns_from_nlm):
+def _get_issue_info(journal: ET.Element):
+    # Issue info
+    issue = journal.find('JournalIssue')
+    issue_volume = _find_elem_text(issue, 'Volume')
+    issue_issue = _find_elem_text(issue, 'Issue')
+
+    issue_pub_date = issue.find('PubDate')
+    if issue_pub_date is not None:
+        # Get issue year
+        issue_year = _find_elem_text(issue_pub_date, 'Year')
+        issue_year = int(issue_year) if issue_year else None
+
+    else:
+        issue_year = None
+
+    return {
+        "volume": issue_volume,
+        "issue": issue_issue,
+        "year": issue_year
+    }
+
+
+def get_issn_info(
+    medline_citation: ET.Element,
+    get_issns_from_nlm: str = "never"
+):
+    """Given a medline citation, get the issn info from the article
+
+    Parameters
+    ----------
+    medline_citation : xml.etree.ElementTree.Element
+        The MedlineCitation element of the PubMed XML tree.
+    get_issns_from_nlm : Literal['never', 'missing', 'always']
+        Whether to recover ISSN values from the NLM catalog. Options are
+        'never', 'missing', and 'always'. If 'missing', then the ISSN
+        values will be recovered from the NLM catalog if they are not found
+        in the XML. If 'always', then the ISSN values will be recovered from
+        the NLM catalog regardless of whether they are found in the XML.
+        Default is 'never' (i.e., never recover from NLM catalog regardless
+        of whether they are found in the XML).
+
+    Returns
+    -------
+    dict
+        A dictionary journal, issue, and ISSN info. The structure is as
+        follows:
+        {
+            "journal_title": str,
+            "journal_abbrev": str,
+            "journal_nlm_id": str,
+            "issn_dict": {
+                "issn": str,
+                "issn_l": str,
+                "type": "print"|"electronic"|"other",
+            },
+            "issue_dict": {
+                "volume": str,
+                "issue": str,
+                "year": int
+            }
+        }
+    """
+    if get_issns_from_nlm not in ['never', 'missing', 'always']:
+        raise ValueError("get_issns_from_nlm must be one of 'never', "
+                         "'missing', or 'always'")
     # Journal info
     journal = medline_citation.find('Article/Journal')
     journal_title = _find_elem_text(journal, 'Title')
     journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
 
+    # Issue info
+    issue_info = _get_issue_info(journal)
+
+    # Get the ISSN from the article record
+    issn_dict = {}
+    issn_element = journal.find("ISSN")
+    if issn_element is not None:
+        issn_type = issn_element.attrib.get("IssnType", "other").lower()
+        issn = issn_element.text
+        issn_dict["issn"] = issn
+        issn_dict["type"] = issn_type
+
+    # Get the linking ISSN from the article record
+    issn_linking = _find_elem_text(medline_citation,
+                                   "MedlineJournalInfo/ISSNLinking")
+    if issn_linking:
+        issn_dict["issn_l"] = issn_linking
+
+    nlm_id = _find_elem_text(medline_citation,
+                             'MedlineJournalInfo/NlmUniqueID')
+
+    # Get ISSN values from the NLM catalog
+    if nlm_id and (
+            get_issns_from_nlm == 'always' or
+            get_issns_from_nlm == 'missing' and not any(issn_dict.values())
+    ):
+        nlm_issn_list = get_issns_for_journal(nlm_id)
+        if nlm_issn_list:
+            issn_dict['alternate_issns'] = nlm_issn_list
+
+    return {
+        "journal_title": journal_title,
+        "journal_abbrev": journal_abbrev,
+        "journal_nlm_id": nlm_id,
+        "issn_dict": issn_dict,
+        "issue_dict": issue_info,
+    }
+
+
+def _get_journal_info(medline_citation, get_issns_from_nlm: bool):
+    # Journal info
+    journal = medline_citation.find('Article/Journal')
+    journal_title = _find_elem_text(journal, 'Title')
+    journal_abbrev = _find_elem_text(journal, 'ISOAbbreviation')
+
+    # Issue info
+    issue_info = _get_issue_info(journal)
+
     # Add the ISSN from the article record
-    issn_list = []
+    issn_set = set()
     issn = _find_elem_text(journal, 'ISSN')
     if issn:
-        issn_list.append(issn)
+        issn_set.add(issn)
 
     # Add the Linking ISSN from the article record
     issn_linking = _find_elem_text(medline_citation,
                                    'MedlineJournalInfo/ISSNLinking')
     if issn_linking:
-        issn_list.append(issn_linking)
+        issn_set.add(issn_linking)
 
     # Now get the list of ISSNs from the NLM Catalog
     nlm_id = _find_elem_text(medline_citation,
@@ -331,13 +443,21 @@ def _get_journal_info(medline_citation, get_issns_from_nlm):
     if nlm_id and get_issns_from_nlm:
         nlm_issn_list = get_issns_for_journal(nlm_id)
         if nlm_issn_list:
-            issn_list += nlm_issn_list
+            issn_set.update(v for _, v in nlm_issn_list)
 
     # Remove any duplicate issns
-    issn_list = list(set(issn_list))
+    issn_list = list(issn_set)
 
-    return {'journal_title': journal_title, 'journal_abbrev': journal_abbrev,
-            'issn_list': issn_list, 'journal_nlm_id': nlm_id}
+    return {
+        'journal_title': journal_title,
+        'journal_abbrev': journal_abbrev,
+        'issn_list': issn_list,
+        'issn_l': issn_linking,
+        'journal_nlm_id': nlm_id,
+        'issue': issue_info['issue'],
+        'volume': issue_info['volume'],
+        'year': issue_info['year'],
+    }
 
 
 def _get_pubmed_publication_date(pubmed_data):
@@ -498,12 +618,13 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     dict of dicts
         Dictionary indexed by PMID. Each value is a dict containing the
         following fields: 'doi', 'title', 'authors', 'journal_title',
-        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page',
+        'volume', 'issue', 'issue_pub_date'.
     """
     # Iterate over the articles and build the results dict
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
-    for art_ix, pm_article in enumerate(pm_articles):
+    for pm_article in pm_articles:
         medline_citation = pm_article.find('./MedlineCitation')
         pubmed_data = pm_article.find('PubmedData')
 
@@ -651,7 +772,7 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
 
 @lru_cache(maxsize=1000)
 def get_issns_for_journal(nlm_id):
-    """Get a list of the ISSN numbers for a journal given its NLM ID.
+    """Get a dict of the ISSN numbers for a journal given its NLM ID.
 
     Information on NLM XML DTDs is available at
     https://www.nlm.nih.gov/databases/dtd/
@@ -662,14 +783,16 @@ def get_issns_for_journal(nlm_id):
     tree = send_request(pubmed_fetch, params)
     if tree is None:
         return None
-    issn_list = tree.findall('.//ISSN')
-    issn_linking = tree.findall('.//ISSNLinking')
-    issns = issn_list + issn_linking
+    issn_list = [(e.attrib.get("IssnType", "other").lower(), e.text)
+                 for e in tree.findall('.//ISSN')]
+    issn_linking = tree.find('.//ISSNLinking')
+    if issn_linking:
+        issn_list.append(("linking", issn_linking.text))
+
     # No ISSNs found!
-    if not issns:
+    if not any(v for k, v in issn_list):
         return None
-    else:
-        return [issn.text for issn in issns]
+    return issn_list
 
 
 def expand_pagination(pages):

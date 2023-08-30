@@ -36,7 +36,7 @@ non_registry = {
     'SDIS', 'SCHEM', 'SFAM', 'SCOMP', 'HMS-LINCS', 'NXPFA',
     'OMIM', 'LSPCI', 'UPLOC', 'BFO', 'CCLE', 'CLO', 'GENBANK', 'CALOHA',
     'DRUGBANK.SALT', 'SMILES', 'NIHREPORTER.PROJECT', 'GOOGLE.PATENT', 'SPINE',
-    'VO', 'EMAPA', 'INO', 'CIDO', 'OAE', 'OHPI', 'PHIPO'
+    'VO', 'EMAPA', 'INO', 'CIDO', 'OAE', 'OHPI', 'PHIPO', 'NLM', 'ISNI',
 }
 
 # These are reverse mappings from identifiers.org namespaces to INDRA
