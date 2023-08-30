@@ -92,7 +92,7 @@ def test_get_gene_name_no_gene_name():
 
 def test_get_gene_name_multiple_gene_names():
     gene_name = uniprot_client.get_gene_name('Q5VWM5')
-    assert gene_name == 'PRAMEF9'
+    assert gene_name == 'PRAMEF15'
 
 
 def test_is_human():
