@@ -4,7 +4,7 @@ Search and get metadata for articles in Pubmed.
 import logging
 import requests
 from time import sleep
-from typing import List, Literal
+from typing import List
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
@@ -331,7 +331,7 @@ def _get_issue_info(journal: ET.Element):
 
 def get_issn_info(
     medline_citation: ET.Element,
-    get_issns_from_nlm: Literal["never", "missing", "always"] = "never"
+    get_issns_from_nlm: str = "never"
 ):
     """Given a medline citation, get the issn info from the article
 
