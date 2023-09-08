@@ -246,7 +246,11 @@ class SignorProcessor(object):
                     # SIGNOR's format in which it leaves extra spaces around
                     # the ID, as in 'CID: 923'
                     id = id[4:].strip()
-                elif database == 'ChEBI' and id.startswith('SID:'):
+                # In older releases PubChem substance IDs were used with
+                # ChEBI as the source, these were later changed to use
+                # PUBCHEM
+                elif database in {'ChEBI', 'PUBCHEM'} \
+                        and id.startswith('SID:'):
                     gnd_type = 'PUBCHEM.SUBSTANCE'
                     id = id[4:].strip()
                 db_refs = {gnd_type: id}
