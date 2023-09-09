@@ -23,10 +23,12 @@ class UbiBrowserProcessor:
         # is called "E3"
         # There are some examples where a complex is implied (e.g., BMI1-RNF2),
         # for simplicity we just ignore these
-        if '-' in row['E3AC']:
+        if '-' in row['SwissProt AC (E3)']:
             return None
-        subj_agent = get_standard_agent(row['E3GENE'], {'UP': row['E3AC']})
-        obj_agent = get_standard_agent(row['SUBGENE'], {'UP': row['SUBAC']})
+        subj_agent = get_standard_agent(row['Gene Symbol (E3)'],
+                                        {'UP': row['SwissProt AC (E3)']})
+        obj_agent = get_standard_agent(row['Gene Symbol (Substrate)'],
+                                       {'UP': row['SwissProt AC (Substrate)']})
         if row['SOURCE'] == 'MEDLINE' and row['SOURCEID'] != 'UNIPROT':
             # Note: we sometimes get int here
             pmid = str(row['SOURCEID'])
