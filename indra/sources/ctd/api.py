@@ -2,7 +2,7 @@ import pandas
 from .processor import CTDProcessor, CTDChemicalDiseaseProcessor, \
     CTDGeneDiseaseProcessor, CTDChemicalGeneProcessor
 
-base_url = 'http://ctdbase.org/reports/'
+base_url = 'https://ctdbase.org/reports/'
 
 urls = {
     'chemical_gene': base_url + 'CTD_chem_gene_ixns.tsv.gz',
