@@ -1,5 +1,5 @@
 import logging
-import requests
+from tqdm import tqdm
 
 import gilda
 from indra.databases import uniprot_client, hgnc_client
@@ -40,7 +40,8 @@ class PhosphoElmProcessor(object):
             Default: True. If False, also create statements when upstream
             kinases in entry['kinases'] are not known.
         """
-        for entry in self._phosphoelm_data:
+        logger.info("Processing Phospho.ELM phosphorylations")
+        for entry in tqdm(self._phosphoelm_data):
             if entry['species'].lower() != 'homo sapiens' or\
                     skip_empty and not entry['kinases']:
                 # Skip entries without any kinases or if species is other
