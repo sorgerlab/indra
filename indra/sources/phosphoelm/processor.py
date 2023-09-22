@@ -1,13 +1,13 @@
 import logging
 import requests
 
+import gilda
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements.validate import validate_text_refs
 from indra.statements import Phosphorylation, Evidence, Agent
 
 from .phosphoelm_mapping import phosphoelm_mapping
 
-gilda_url = 'http://grounding.indra.bio/ground'
 logger = logging.getLogger(__name__)
 
 
@@ -156,17 +156,12 @@ def _agent_from_str(txt):
 
 def _gilda_grounder(txt):
     # Pre-process text for grounding
-    txt = txt.replace('_group', '')
-    txt = txt.replace('_', '-')
-    txt = txt.split('/')[0]
-    res = requests.post(gilda_url, json={'text': txt})
-    if res.status_code != 200:
-        logger.warning('Gilda service responded with status code %d' %
-                       res.status_code)
+    txt = txt.replace("_group", "")
+    txt = txt.replace("_", "-")
+    txt = txt.split("/")[0]
+    res = gilda.ground(txt)
+    if not res:
+        logger.warning(f"Gilda grounder returned no results for {txt}")
         return None
-    rj = res.json()
-    if not rj:
-        return None
-    top_term = rj[0]['term']
-    return top_term
-
+    top_term = res[0].term
+    return top_term.to_json()
