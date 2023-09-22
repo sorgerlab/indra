@@ -1,6 +1,8 @@
 import csv
 import logging
 
+from tqdm import tqdm
+
 from .processor import PhosphoElmProcessor
 
 logger = logging.getLogger(__name__)
@@ -36,7 +38,8 @@ def _get_json_from_entry_rows(row_iter):
     """Loop body to generate a json friendly structure"""
     ppelm_json = []
     columns = next(row_iter)
-    for entry in row_iter:
+    logger.info('Processing Phospho.ELM dump')
+    for entry in tqdm(row_iter):
         row_dict = {c: e for c, e in zip(columns, entry)}
         ppelm_json.append(row_dict)
     return ppelm_json
