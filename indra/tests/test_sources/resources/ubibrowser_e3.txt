@@ -1,6 +1,6 @@
-NUMBER	E3ID	SUBID	E3AC	SUBAC	E3GENE	SUBGENE	SOURCE	SOURCEID	SENTENCE	E3TYPE	COUNT	type	species
-1	AMFR2_HUMAN	A1AT_HUMAN	Q9UKV5	P01009	AMFR	SERPINA1	MEDLINE	16979136	Here we report that gp78, a ubiquitin ligase (E3) pairing with mammalian Ubc7 for ERAD, ubiquitinates and facilitates degradation of ATZ, the classic deficiency variant of AAT having a Z mutation (Glu 342 Lys)	RING	3	E3	H.sapiens
-15	AMFR2_HUMAN	HMDH_HUMAN	Q9UKV5	P04035	AMFR	HMGCR	MEDLINE	20458442	UBE2G2, a previously known E2 of gp78, is demonstrated to be involved in the sterol-regulated ubiquitination and degradation of HMGCR	RING	4	E3	H.sapiens
-300	BRCA1_HUMAN	BRCA1_HUMAN	P38398	P38398	BRCA1	BRCA1	UniProt	RNF8_BOVIN	Following DNA double-strand breaks (DSBs), it is recruited to the sites of damage by ATM-phosphorylated MDC1, mediates the ubiquitination of histones H2A and H2AX, thereby promoting the formation of TP53BP1 and BRCA1 ionizing radiation-induced foci (IRIF)	RING	21	E3	H.sapiens
-5642	HRD1_CAEEL	Q9BMU4_CAEEL	Q20798	Q9BMU4	sel-11	atln-1	MEDLINE	32916628	UbiNet 2.0	RING	1	E3	C.elegans
-5644	A0A2I4KBP1_DANRE	SHH_DANRE	A0A2I4KBP1	Q92008	gan	shha	MEDLINE	31503551	UbiNet 2.0	other	1	E3	D.rerio
+NUMBER	SwissProt ID (E3)	SwissProt ID (Substrate)	SwissProt AC (E3)	SwissProt AC (Substrate)	Gene Symbol (E3)	Gene Symbol (Substrate)	SOURCE	SOURCEID	SENTENCE	E3TYPE	COUNT	type	species
+109	HRD1_CAEEL	Q9BMU4_CAEEL	Q20798	Q9BMU4	sel-11	atln-1	MEDLINE	32916628	32916628	RING	1	Other	C.elegans
+167	A0A2I4KBP1_DANRE	SHH_DANRE	A0A2I4KBP1	Q92008	gan	shha	MEDLINE	31503551	31503551	Other	1	Other	D.rerio
+198	AMFR2_HUMAN	A1AT_HUMAN	Q9UKV5	P01009	AMFR	SERPINA1	MEDLINE	16979136	"Here we report that <span class=""match term0"">gp78</span>, a ubiquitin ligase (E3) pairing with mammalian Ubc7 for ERAD, ubiquitinates and facilitates degradation of ATZ, the classic deficiency variant of <span class=""match term1"">AAT</span> having a Z mutation (Glu 342 Lys)"	RING	1	Training data	H.sapiens
+1040	GAN_HUMAN	SHH_HUMAN	Q9H2C0	Q15465	GAN	SHH	MEDLINE	31503551	31503551	BTB_3	1	Other	H.sapiens
+2631	SYVN1_HUMAN	ATLA1_HUMAN	Q86TM6	Q8WXF7	SYVN1	ATL1	MEDLINE	32916628	"The E3 Ubiquitin Ligase <span class=""match term0"">SYVN1</span> Ubiquitinates Atlastins to Remodel the Endoplasmic Reticulum Network."	RING	1	Other	H.sapiens
