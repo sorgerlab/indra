@@ -67,6 +67,10 @@ def get_ids(search_term, **kwargs):
     that can be changed via the corresponding keyword argument. Note also
     the retstart argument along with retmax to page across batches of IDs.
 
+    PubMed's REST API makes it difficult to retrieve more than 10k
+    PMIDs systematically. See the `get_all_ids` function in this module
+    for a way to retrieve more than 10k IDs using the PubMed edirect CLI.
+
     Parameters
     ----------
     search_term : str
