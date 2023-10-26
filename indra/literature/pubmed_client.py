@@ -3,7 +3,7 @@ Search and get metadata for articles in Pubmed.
 """
 import logging
 import random
-
+import subprocess
 import requests
 from time import sleep
 from typing import List
@@ -850,3 +850,35 @@ def get_substance_annotations(pubmed_id: str) -> List[str]:
            for c in list(node) for b in c.iter('*')
            if 'UI' in b.attrib]
     return uid
+
+
+def get_all_ids(search_term):
+    """Return all PMIDs for a search term using the edirect CLI.
+
+    This function complements the `get_id` function which uses the PubMed
+    REST API but is limited to 10k results and is very difficult to
+    generalize to systematically fetch all IDs if there are more than 10k
+    results. This function uses the edirect CLI which implements logic
+    for paging over results.
+
+    This function only works if edirect is installed and is on your PATH.
+    See https://www.ncbi.nlm.nih.gov/books/NBK179288/ for instructions.
+
+    Parameters
+    ----------
+    search_term : str
+        A term for which the PubMed search should be performed.
+
+    Returns
+    -------
+    list[str]
+        A list of PMIDs for the given search term.
+    """
+    cmd = f'esearch -db pubmed -query "{search_term}" | efetch -format uid'
+    res = subprocess.getoutput(cmd)
+    # Output is divided by new lines
+    elements = res.split('\n')
+    # If there are more than 10k IDs, the CLI outputs a . for each
+    # iteration, these have to be filtered out
+    pmids = [e for e in elements if '.' not in e]
+    return pmids
