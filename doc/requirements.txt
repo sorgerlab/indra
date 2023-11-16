@@ -9,7 +9,7 @@ future
 requests
 pysb
 pandas
-rdflib==4.2.1
+rdflib
 jinja2
 protmapper
 pyyaml
