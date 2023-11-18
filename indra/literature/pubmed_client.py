@@ -1,6 +1,8 @@
 """
 Search and get metadata for articles in Pubmed.
 """
+import time
+import tqdm
 import logging
 import random
 import subprocess
@@ -10,7 +12,7 @@ from typing import List
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.util import pretty_save_xml
+from indra.util import batch_iter, pretty_save_xml
 
 
 logger = logging.getLogger(__name__)
@@ -777,6 +779,53 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
                                       prepend_title,
                                       detailed_authors=detailed_authors,
                                       references_included=references_included)
+
+
+def get_metadata_for_all_ids(pmid_list, get_issns_from_nlm=False,
+                             get_abstracts=False, prepend_title=False,
+                             detailed_authors=False, references_included=None):
+    """Get article metadata for up to 200 PMIDs from the Pubmed database.
+
+    Parameters
+    ----------
+    pmid_list : list of str
+        Can contain any number of PMIDs.
+    get_issns_from_nlm : bool
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to False, since it slows down performance.
+    get_abstracts : bool
+        Indicates whether to include the Pubmed abstract in the results.
+    prepend_title : bool
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text.
+    detailed_authors : bool
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
+
+    Returns
+    -------
+    dict of dicts
+        Dictionary indexed by PMID. Each value is a dict containing the
+        following fields: 'doi', 'title', 'authors', 'journal_title',
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
+    """
+    all_metadata = {}
+    for ids in tqdm.tqdm(batch_iter(pmid_list, 200), desc='Retrieving metadata'):
+        time.sleep(0.1)
+        metadata = get_metadata_for_ids(list(ids),
+                                        get_issns_from_nlm=get_issns_from_nlm,
+                                        get_abstracts=get_abstracts,
+                                        prepend_title=prepend_title,
+                                        detailed_authors=detailed_authors,
+                                        references_included=references_included)
+        if metadata is not None:
+            all_metadata.update(metadata)
+    return all_metadata
 
 
 @lru_cache(maxsize=1000)
