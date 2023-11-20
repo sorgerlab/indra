@@ -2,6 +2,8 @@
 Search and get metadata for articles in Pubmed.
 """
 import logging
+import random
+
 import requests
 from time import sleep
 from typing import List
@@ -19,7 +21,7 @@ pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
-def send_request(url, data):
+def send_request(url, data, retry_pause=0.5, max_tries=3):
     try:
         res = requests.get(url, params=data)
     except requests.exceptions.Timeout as e:
@@ -32,9 +34,12 @@ def send_request(url, data):
         logger.error('url: %s, data: %s' % (url, data))
         logger.error(e)
         return None
-    if res.status_code == 429:
-        sleep(0.5)
-        res = requests.get(url, params=data)
+    if res.status_code in {429, 502, 503} and max_tries > 0:
+        sleep(retry_pause)
+        # Increase the sleep time at random to avoid multiple clients
+        # retrying at the same time for e.g. tests
+        retry_pause += 1 + random.random()
+        return send_request(url, data, retry_pause, max_tries - 1)
     if not res.status_code == 200:
         logger.error('Got return code %d from pubmed client.'
                      % res.status_code)
