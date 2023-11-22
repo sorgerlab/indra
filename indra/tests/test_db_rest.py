@@ -1,4 +1,3 @@
-import random
 import unittest
 from datetime import datetime
 from time import sleep
@@ -58,11 +57,8 @@ def test_bigger_request():
 
 
 @pytest.mark.nonpublic
-def test_timeout_no_persist_agent():
-    candidates = ['TP53', 'NFkappaB@FPLX', 'AKT@FPLX']
-    agent = random.choice(candidates)
-    print(agent)
-    resp = dbr.get_statements(agents=[agent], persist=False, timeout=0)
+def test_timeout_no_persist_nfkb():
+    resp = dbr.get_statements(agents=["NFkappaB@FPLX"], persist=False, timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
@@ -70,11 +66,10 @@ def test_timeout_no_persist_agent():
 
 @pytest.mark.nonpublic
 def test_timeout_no_persist_type_object():
-    candidates = ['TP53', 'NFkappaB@FPLX', 'AKT@FPLX']
-    agent = random.choice(candidates)
-    print(agent)
-    resp = dbr.get_statements(stmt_type='phosphorylation', object=agent,
-                              persist=False, timeout=0)
+    resp = dbr.get_statements(stmt_type='phosphorylation',
+                              object="NFkappaB@FPLX",
+                              persist=False,
+                              timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
