@@ -17,7 +17,7 @@ from .processor import PybelProcessor
 
 logger = logging.getLogger(__name__)
 
-version = 'v1.0.0'
+version = 'v1.1.2'
 branch = 'https://github.com/cthoyt/selventa-knowledge/raw/' \
          '{}/selventa_knowledge/{}'
 large_corpus_url = branch.format(version, 'large_corpus.bel.nodelink.json.gz')

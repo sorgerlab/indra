@@ -251,7 +251,10 @@ def get_agent_from_entity_info(entity_info):
             refs['CHEBI'] = 'CHEBI:%s' % id_dict['idString']
         # These we take as is
         elif id_dict['source'] in ('MESH', 'OMIM'):
-            refs[id_dict['source']] = id_dict['idString']
+            if ';' in id_dict['idString']:
+                refs[id_dict['source']] = id_dict['idString'].split(';')[0]
+            else:
+                refs[id_dict['source']] = id_dict['idString']
         # CTD is sometimes used for MESH chemical IDs but can also be just '-'
         elif id_dict['source'] == 'CTD':
             if id_dict['idString'] != '-':

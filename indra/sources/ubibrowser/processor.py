@@ -10,23 +10,33 @@ class UbiBrowserProcessor:
         self.statements = []
 
     def extract_statements(self):
-        for df, stmt_type in [(self.e3_df, Ubiquitination),
-                              (self.dub_df, Deubiquitination)]:
+        for df, stmt_type, subj_suffix in \
+                [(self.e3_df, Ubiquitination, 'E3'),
+                 (self.dub_df, Deubiquitination, 'DUB')]:
             for _, row in df.iterrows():
-                stmt = self._process_row(row, stmt_type)
+                stmt = self._process_row(row, stmt_type, subj_suffix)
                 if stmt:
                     self.statements.append(stmt)
 
     @staticmethod
-    def _process_row(row, stmt_type):
+    def _process_row(row, stmt_type, subj_suffix):
         # Note that even in the DUB table the subject of the statement
         # is called "E3"
         # There are some examples where a complex is implied (e.g., BMI1-RNF2),
         # for simplicity we just ignore these
-        if '-' in row['E3AC']:
+        if '#' in row[f'SwissProt AC ({subj_suffix})']:
             return None
-        subj_agent = get_standard_agent(row['E3GENE'], {'UP': row['E3AC']})
-        obj_agent = get_standard_agent(row['SUBGENE'], {'UP': row['SUBAC']})
+        # Interestingly, some of the E3s are missing entirely, we skip these
+        elif row[f'SwissProt AC ({subj_suffix})'] == '-':
+            return None
+        # Some of the same corner cases apply to the substrate as well
+        if row['SwissProt AC (Substrate)'] == '-':
+            return None
+        subj_agent = \
+            get_standard_agent(row[f'Gene Symbol ({subj_suffix})'],
+                               {'UP': row[f'SwissProt AC ({subj_suffix})']})
+        obj_agent = get_standard_agent(row['Gene Symbol (Substrate)'],
+                                       {'UP': row['SwissProt AC (Substrate)']})
         if row['SOURCE'] == 'MEDLINE' and row['SOURCEID'] != 'UNIPROT':
             # Note: we sometimes get int here
             pmid = str(row['SOURCEID'])
