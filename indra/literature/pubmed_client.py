@@ -1,16 +1,18 @@
 """
 Search and get metadata for articles in Pubmed.
 """
+import time
+import tqdm
 import logging
 import random
-
+import subprocess
 import requests
 from time import sleep
 from typing import List
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.util import pretty_save_xml
+from indra.util import batch_iter, pretty_save_xml
 
 
 logger = logging.getLogger(__name__)
@@ -66,6 +68,10 @@ def get_ids(search_term, **kwargs):
     uses a retmax value of 10,000 by default (the maximum supported by PubMed)
     that can be changed via the corresponding keyword argument. Note also
     the retstart argument along with retmax to page across batches of IDs.
+
+    PubMed's REST API makes it difficult to retrieve more than 10k
+    PMIDs systematically. See the `get_all_ids` function in this module
+    for a way to retrieve more than 10k IDs using the PubMed edirect CLI.
 
     Parameters
     ----------
@@ -775,6 +781,53 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
                                       references_included=references_included)
 
 
+def get_metadata_for_all_ids(pmid_list, get_issns_from_nlm=False,
+                             get_abstracts=False, prepend_title=False,
+                             detailed_authors=False, references_included=None):
+    """Get article metadata for up to 200 PMIDs from the Pubmed database.
+
+    Parameters
+    ----------
+    pmid_list : list of str
+        Can contain any number of PMIDs.
+    get_issns_from_nlm : bool
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to False, since it slows down performance.
+    get_abstracts : bool
+        Indicates whether to include the Pubmed abstract in the results.
+    prepend_title : bool
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text.
+    detailed_authors : bool
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
+
+    Returns
+    -------
+    dict of dicts
+        Dictionary indexed by PMID. Each value is a dict containing the
+        following fields: 'doi', 'title', 'authors', 'journal_title',
+        'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
+    """
+    all_metadata = {}
+    for ids in tqdm.tqdm(batch_iter(pmid_list, 200), desc='Retrieving metadata'):
+        time.sleep(0.1)
+        metadata = get_metadata_for_ids(list(ids),
+                                        get_issns_from_nlm=get_issns_from_nlm,
+                                        get_abstracts=get_abstracts,
+                                        prepend_title=prepend_title,
+                                        detailed_authors=detailed_authors,
+                                        references_included=references_included)
+        if metadata is not None:
+            all_metadata.update(metadata)
+    return all_metadata
+
+
 @lru_cache(maxsize=1000)
 def get_issns_for_journal(nlm_id):
     """Get a dict of the ISSN numbers for a journal given its NLM ID.
@@ -850,3 +903,35 @@ def get_substance_annotations(pubmed_id: str) -> List[str]:
            for c in list(node) for b in c.iter('*')
            if 'UI' in b.attrib]
     return uid
+
+
+def get_all_ids(search_term):
+    """Return all PMIDs for a search term using the edirect CLI.
+
+    This function complements the `get_id` function which uses the PubMed
+    REST API but is limited to 10k results and is very difficult to
+    generalize to systematically fetch all IDs if there are more than 10k
+    results. This function uses the edirect CLI which implements logic
+    for paging over results.
+
+    This function only works if edirect is installed and is on your PATH.
+    See https://www.ncbi.nlm.nih.gov/books/NBK179288/ for instructions.
+
+    Parameters
+    ----------
+    search_term : str
+        A term for which the PubMed search should be performed.
+
+    Returns
+    -------
+    list[str]
+        A list of PMIDs for the given search term.
+    """
+    cmd = f'esearch -db pubmed -query "{search_term}" | efetch -format uid'
+    res = subprocess.getoutput(cmd)
+    # Output is divided by new lines
+    elements = res.split('\n')
+    # If there are more than 10k IDs, the CLI outputs a . for each
+    # iteration, these have to be filtered out
+    pmids = [e for e in elements if '.' not in e]
+    return pmids
