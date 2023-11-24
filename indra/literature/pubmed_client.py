@@ -944,6 +944,12 @@ def get_all_ids(search_term):
     """
     cmd = f'esearch -db pubmed -query "{search_term}" | efetch -format uid'
     res = subprocess.getoutput(cmd)
+    if not isinstance(res, str) or "esearch: command not found" in res:
+        raise RuntimeError("The esearch utility could not be found. "
+                           "This function only works if edirect is "
+                           "installed and is visible on your PATH. "
+                           "See https://www.ncbi.nlm.nih.gov/books/NBK179288/ "
+                           "for instructions.")
     # Output is divided by new lines
     elements = res.split('\n')
     # If there are more than 10k IDs, the CLI outputs a . for each
