@@ -57,10 +57,12 @@ def test_bigger_request():
 
 
 @pytest.mark.nonpublic
-def test_timeout_no_persist_nfkb():
-    resp = dbr.get_statements(agents=["NFkappaB@FPLX"], persist=False, timeout=0)
+def test_timeout_no_persist_gcg():
+    resp = dbr.get_statements(agents=["GCG"],
+                              persist=False,
+                              timeout=0,)
     assert resp.is_working(), "Lookup resolved too fast."
-    resp.wait_until_done(70)
+    resp.wait_until_done(40)  # typically 20-30 s when slow/uncached
     assert len(resp.statements) > 0.9*EXPECTED_BATCH_SIZE, len(resp.statements)
 
 
