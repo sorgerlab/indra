@@ -288,7 +288,7 @@ def test_get_statements_strict_stop_short():
 
 @pytest.mark.nonpublic
 def test_get_statements_strict_stop_long():
-    timeout = 40
+    timeout = 40  # Typically 20-30 s when slow/uncached
     start = datetime.now()
     p = dbr.get_statements("VEGF", timeout=timeout, strict_stop=True)
     end = datetime.now()
