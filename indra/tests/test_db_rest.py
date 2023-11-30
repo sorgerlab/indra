@@ -27,12 +27,12 @@ def __check_request(seconds, *args, **kwargs):
 
 @pytest.mark.nonpublic
 def test_simple_request():
-    __check_request(15, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
+    __check_request(40, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
 
 
 @pytest.mark.nonpublic
 def test_request_for_complex():
-    __check_request(30, agents=['MEK@FPLX', 'ERK@FPLX'], stmt_type='Complex')
+    __check_request(70, agents=['MEK@FPLX', 'ERK@FPLX'], stmt_type='Complex')
 
 
 @pytest.mark.nonpublic
