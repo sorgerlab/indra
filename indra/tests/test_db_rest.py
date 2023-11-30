@@ -20,6 +20,8 @@ def __check_request(seconds, *args, **kwargs):
     time_taken = datetime.now() - now
     if check_stmts:
         assert resp.statements, "Got no statements."
+    assert time_taken.total_seconds() < seconds, \
+        "Request took too long: %s" % time_taken.total_seconds()
     return resp
 
 
