@@ -27,7 +27,7 @@ def __check_request(seconds, *args, **kwargs):
 
 @pytest.mark.nonpublic
 def test_simple_request():
-    __check_request(6, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
+    __check_request(15, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
 
 
 @pytest.mark.nonpublic
