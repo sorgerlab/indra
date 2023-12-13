@@ -40,7 +40,7 @@ def send_request(url, data, retry_pause=0.5, max_tries=3):
         sleep(retry_pause)
         # Increase the sleep time at random to avoid multiple clients
         # retrying at the same time for e.g. tests
-        retry_pause += 1 + random.random()
+        retry_pause += 0.5 + 1.5 * random.random()
         return send_request(url, data, retry_pause, max_tries - 1)
     if not res.status_code == 200:
         logger.error('Got return code %d from pubmed client.'
