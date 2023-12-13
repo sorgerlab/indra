@@ -36,7 +36,7 @@ def send_request(url, data, retry_pause=0.5, max_tries=3):
         logger.error('url: %s, data: %s' % (url, data))
         logger.error(e)
         return None
-    if res.status_code in {429, 502, 503} and max_tries > 0:
+    if res.status_code in {400, 429, 502, 503} and max_tries > 0:
         sleep(retry_pause)
         # Increase the sleep time at random to avoid multiple clients
         # retrying at the same time for e.g. tests
