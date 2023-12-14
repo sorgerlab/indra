@@ -987,7 +987,7 @@ def generate_retractions_file(xml_path: str):
         tree = ET.XML(xml_str, parser=UTB())
         for article in tree.findall('.//PubmedArticle'):
             pub_types = get_publication_types(article)
-            if 'Retraction' in pub_types:
+            if "Retracted Publication" in pub_types:
                 pmid = int(article.find('.//PMID').text)
                 retractions.add(pmid)
 
