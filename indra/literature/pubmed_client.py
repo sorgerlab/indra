@@ -32,7 +32,7 @@ pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
 pubmed_archive_baseline = pubmed_archive + "/baseline/"
 pubmed_archive_update = pubmed_archive + "/updatefiles/"
-RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv"
+RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv.gz"
 
 
 # Send request can't be cached by lru_cache because it takes a dict
