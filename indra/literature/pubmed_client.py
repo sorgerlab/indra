@@ -935,3 +935,20 @@ def get_all_ids(search_term):
     # iteration, these have to be filtered out
     pmids = [e for e in elements if '.' not in e]
     return pmids
+
+
+def get_publication_types(article: ET.Element):
+    """Return the set of PublicationType for the article
+
+    Parameters
+    ----------
+    article :
+        The XML element for the article. Typically, this is a PubmedArticle
+        node.
+
+    Returns
+    -------
+    : set[str]
+        A set of publication type
+    """
+    return {pt.text for pt in article.find('.//PublicationTypeList')}
