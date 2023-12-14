@@ -985,9 +985,7 @@ def generate_retractions_file(xml_path: str):
     ):
         xml_str = gzip.open(xml_file).read()
         tree = ET.XML(xml_str, parser=UTB())
-        for article in tqdm.tqdm(
-            tree.findall('.//PubmedArticle'), unit_scale=True, unit='article'
-        ):
+        for article in tree.findall('.//PubmedArticle'):
             pub_types = get_publication_types(article)
             if 'Retraction' in pub_types:
                 pmid = int(article.find('.//PMID').text)
