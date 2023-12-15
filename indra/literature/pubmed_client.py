@@ -1,6 +1,7 @@
 """
 Search and get metadata for articles in Pubmed.
 """
+import csv
 import glob
 import gzip
 import os
@@ -993,7 +994,8 @@ def generate_retractions_file(xml_path: str):
 
     logger.info(f"Writing {len(retractions)} retractions to {RETRACTIONS_FILE}")
     with gzip.open(RETRACTIONS_FILE, 'wt') as fh:
-        fh.writelines(f'{pmid}\n' for pmid in retractions)
+        writer = csv.writer(fh, delimiter='\t')
+        writer.writerows((pmid,) for pmid in retractions)
 
 
 def ensure_xml_files(xml_path: str, retries: int = 3):
