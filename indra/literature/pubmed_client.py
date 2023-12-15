@@ -969,7 +969,7 @@ def get_publication_types(article: ET.Element):
     return {pt.text for pt in article.find('.//PublicationTypeList')}
 
 
-def generate_retractions_file(xml_path: str):
+def generate_retractions_file(xml_path: str, download_missing: bool = False):
     """Generate a CSV file of retracted papers from the PubMed XML.
 
     Parameters
@@ -977,8 +977,13 @@ def generate_retractions_file(xml_path: str):
     xml_path :
         Path to the directory holding the PubMed XML files. The files will
         be globbed from this directory using the pattern 'pubmed*.xml.gz'.
+    download_missing :
+        If True, download any missing XML files from the PubMed FTP server.
+        Default: False. Note: A full download of the PubMed XML files takes up
+        to 5 hours.
     """
-    ensure_xml_files(xml_path)
+    if download_missing:
+        ensure_xml_files(xml_path)
     retractions = set()
     for xml_file in tqdm.tqdm(
             glob.glob(os.path.join(xml_path, 'pubmed*.xml.gz')),
