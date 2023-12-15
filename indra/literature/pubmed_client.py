@@ -985,10 +985,12 @@ def generate_retractions_file(xml_path: str, download_missing: bool = False):
     if download_missing:
         ensure_xml_files(xml_path)
     retractions = set()
-    for xml_file in tqdm.tqdm(
-            glob.glob(os.path.join(xml_path, 'pubmed*.xml.gz')),
-            desc="Processing PubMed XML files"
-    ):
+
+    files = glob.glob(os.path.join(xml_path, 'pubmed*.xml.gz'))
+    if not files:
+        raise FileNotFoundError(f"No PubMed XML files found in {xml_path}")
+
+    for xml_file in tqdm.tqdm(files, desc="Processing PubMed XML files"):
         xml_str = gzip.open(xml_file).read()
         tree = ET.XML(xml_str, parser=UTB())
         for article in tree.findall('.//PubmedArticle'):
@@ -996,6 +998,10 @@ def generate_retractions_file(xml_path: str, download_missing: bool = False):
             if "Retracted Publication" in pub_types:
                 pmid = int(article.find('.//PMID').text)
                 retractions.add(pmid)
+
+    if not retractions:
+        logger.warning(f"No retractions found from {len(files)} XML files")
+        return
 
     logger.info(f"Writing {len(retractions)} retractions to {RETRACTIONS_FILE}")
     with gzip.open(RETRACTIONS_FILE, 'wt') as fh:
