@@ -34,6 +34,7 @@ pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
 pubmed_archive_baseline = pubmed_archive + "/baseline/"
 pubmed_archive_update = pubmed_archive + "/updatefiles/"
 RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv.gz"
+retractions = None
 
 
 # Send request can't be cached by lru_cache because it takes a dict
@@ -967,6 +968,26 @@ def get_publication_types(article: ET.Element):
         A set of publication type
     """
     return {pt.text for pt in article.find('.//PublicationTypeList')}
+
+
+def article_is_retracted(pmid: int) -> bool:
+    """Return True if the article with the given PMID has been retracted.
+
+    Parameters
+    ----------
+    pmid :
+        The PMID of the paper to check as an integer.
+
+    Returns
+    -------
+    :
+        True if the paper has been retracted, False otherwise.
+    """
+    global retractions
+    if retractions is None:
+        with gzip.open(RETRACTIONS_FILE, 'rt') as fh:
+            retractions = {int(row[0]) for row in csv.reader(fh, delimiter='\t')}
+    return pmid in retractions
 
 
 def generate_retractions_file(xml_path: str, download_missing: bool = False):
