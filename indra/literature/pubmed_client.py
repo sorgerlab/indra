@@ -18,9 +18,6 @@ from time import sleep
 from typing import List
 from functools import lru_cache
 import xml.etree.ElementTree as ET
-
-from bs4 import BeautifulSoup
-
 from indra.resources import RESOURCES_PATH
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import batch_iter, pretty_save_xml
@@ -1061,6 +1058,8 @@ def ensure_xml_files(xml_path: str, retries: int = 3):
 
 def _get_urls(url: str):
     """Get the paths to all XML files on the PubMed FTP server."""
+    from bs4 import BeautifulSoup
+
     logger.info("Getting URL paths from %s" % url)
 
     # Get page
