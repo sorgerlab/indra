@@ -290,6 +290,33 @@ def test_filter_source():
     assert (len(st_out) == 1)
 
 
+def test_filter_retracted_sources():
+    retracted_ev1 = Evidence(source_api='reach', pmid="24117248")
+    retracted_ev2 = Evidence(source_api='reach', pmid="22052876")
+    ev1 = Evidence(source_api='reach', pmid="12345678")
+    ev2 = Evidence(source_api='reach', pmid="87654321")
+
+    st1 = Activation(Agent('a'), Agent('b'), evidence=[retracted_ev1, ev1])
+    st2 = Activation(Agent('c'), Agent('d'), evidence=[retracted_ev2])
+    st3 = Activation(Agent('e'), Agent('f'), evidence=[ev2])
+
+    st_out = ac.filter_retracted_sources([st1, st2, st3])
+    assert len(st_out) == 2
+
+    st_out = ac.filter_retracted_sources([st1])
+    assert len(st_out) == 1
+    assert len(st_out[0].evidence) == 1
+    assert st_out[0].evidence[0].pmid == "12345678"
+
+    st_out = ac.filter_retracted_sources([st2])
+    assert len(st_out) == 0
+
+    st_out = ac.filter_retracted_sources([st3])
+    assert len(st_out) == 1
+    assert len(st_out[0].evidence) == 1
+    assert st_out[0].evidence[0].pmid == "87654321"
+
+
 def test_map_grounding():
     a = Agent('MEK', db_refs={'TEXT': 'MEK'})
     b = Agent('X', db_refs={'TEXT': 'ERK'})
