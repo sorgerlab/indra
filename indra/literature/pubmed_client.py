@@ -944,7 +944,7 @@ def get_all_ids(search_term):
     """
     cmd = f'esearch -db pubmed -query "{search_term}" | efetch -format uid'
     res = subprocess.getoutput(cmd)
-    if not isinstance(res, str) or "esearch: command not found" in res:
+    if not isinstance(res, str) or "not found" in res:
         raise RuntimeError("The esearch utility could not be found. "
                            "This function only works if edirect is "
                            "installed and is visible on your PATH. "
