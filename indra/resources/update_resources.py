@@ -972,6 +972,7 @@ def update_ec_code():
 
 
 def update_mgi():
+    # This provides basic ID and naming resources
     url = "http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt"
     df = pandas.read_csv(url, sep='\t')
     # MGI contains entries for various non-gene regions like enhancers
@@ -983,9 +984,21 @@ def update_mgi():
                        'Marker Symbol': 'symbol',
                        'Marker Synonyms (pipe-separated)': 'synonyms'},
               inplace=True)
-    fname = os.path.join(path, 'mgi_entries.tsv')
-    df.to_csv(fname, index=None, sep='\t')
+    df['ID'] = df['ID'].astype(str)
 
+    # This provides ENSEMBL mappings
+    url = "http://www.informatics.jax.org/downloads/reports/MRK_ENSEMBL.rpt"
+    df2 = pandas.read_csv(url, sep='\t', header=None)
+    mgi_col = 0
+    ensembl_col = 5
+    df2 = df2[[mgi_col, ensembl_col]]
+    df2.columns = ['ID', 'ensembl']
+    df2['ID'] = df2['ID'].str.replace('MGI:', '')
+    df2['ID'] = df2['ID'].astype(str)
+    df_merged = pandas.merge(df, df2, on='ID', how='left')
+
+    fname = os.path.join(path, 'mgi_entries.tsv')
+    df_merged.to_csv(fname, index=None, sep='\t')
 
 def main():
     update_famplex()
