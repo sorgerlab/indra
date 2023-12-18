@@ -967,7 +967,7 @@ def get_publication_types(article: ET.Element):
     return {pt.text for pt in article.find('.//PublicationTypeList')}
 
 
-def article_is_retracted(pmid: str) -> bool:
+def article_is_retracted(pmid: int) -> bool:
     """Return True if the article with the given PMID has been retracted.
 
     Parameters
@@ -982,9 +982,9 @@ def article_is_retracted(pmid: str) -> bool:
     """
     global retractions
     if retractions is None:
-        with gzip.open(RETRACTIONS_FILE, 'rt') as fh:
-            retractions = {row[0] for row in csv.reader(fh, delimiter='\t')}
-    return pmid in retractions
+        with open(RETRACTIONS_FILE, 'r') as fh:
+            retractions = {int(row[0]) for row in fh.read().splitlines()}
+    return int(pmid) in retractions
 
 
 def generate_retractions_file(xml_path: str, download_missing: bool = False):
