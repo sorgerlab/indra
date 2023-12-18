@@ -30,7 +30,7 @@ pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
 pubmed_archive_baseline = pubmed_archive + "/baseline/"
 pubmed_archive_update = pubmed_archive + "/updatefiles/"
-RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv.gz"
+RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv"
 retractions = None
 
 
@@ -1022,9 +1022,8 @@ def generate_retractions_file(xml_path: str, download_missing: bool = False):
         return
 
     logger.info(f"Writing {len(retractions)} retractions to {RETRACTIONS_FILE}")
-    with gzip.open(RETRACTIONS_FILE, 'wt') as fh:
-        writer = csv.writer(fh, delimiter='\t')
-        writer.writerows((pmid,) for pmid in retractions)
+    with open(RETRACTIONS_FILE, 'w') as fh:
+        fh.writelines(f"{p}\n" for p in sorted(retractions))
 
 
 def ensure_xml_files(xml_path: str, retries: int = 3):
