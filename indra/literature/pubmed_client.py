@@ -983,7 +983,7 @@ def article_is_retracted(pmid: int) -> bool:
     global retractions
     if retractions is None:
         with open(RETRACTIONS_FILE, 'r') as fh:
-            retractions = {int(row[0]) for row in fh.read().splitlines()}
+            retractions = {int(row) for row in fh.read().splitlines()}
     return int(pmid) in retractions
 
 
