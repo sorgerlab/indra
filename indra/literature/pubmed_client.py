@@ -543,6 +543,9 @@ def _parse_author(author_info, include_details=False):
             parsed_info["suffix"] = element.text
         elif element.tag == "Identifier":
             parsed_info["identifier"] = element.text
+        # This happens for some working groups credited as authors
+        elif element.tag == "CollectiveName":
+            parsed_info["collective_name"] = element.text
     parsed_info["affiliations"] = affiliations
     return parsed_info
 
@@ -826,7 +829,8 @@ def get_metadata_for_all_ids(pmid_list, get_issns_from_nlm=False,
         'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page'.
     """
     all_metadata = {}
-    for ids in tqdm.tqdm(batch_iter(pmid_list, 200), desc='Retrieving metadata'):
+    for ids in tqdm.tqdm(batch_iter(pmid_list, 200), desc='Retrieving metadata',
+                         total=len(pmid_list)//200+1):
         time.sleep(0.1)
         metadata = get_metadata_for_ids(list(ids),
                                         get_issns_from_nlm=get_issns_from_nlm,
@@ -940,6 +944,12 @@ def get_all_ids(search_term):
     """
     cmd = f'esearch -db pubmed -query "{search_term}" | efetch -format uid'
     res = subprocess.getoutput(cmd)
+    if not isinstance(res, str) or "not found" in res:
+        raise RuntimeError("The esearch utility could not be found. "
+                           "This function only works if edirect is "
+                           "installed and is visible on your PATH. "
+                           "See https://www.ncbi.nlm.nih.gov/books/NBK179288/ "
+                           "for instructions.")
     # Output is divided by new lines
     elements = res.split('\n')
     # If there are more than 10k IDs, the CLI outputs a . for each
