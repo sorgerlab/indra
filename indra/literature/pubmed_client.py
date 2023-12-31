@@ -7,8 +7,6 @@ import gzip
 import os
 import re
 import time
-from pathlib import Path
-
 import tqdm
 import logging
 import random
@@ -16,6 +14,7 @@ import subprocess
 import requests
 from time import sleep
 from typing import List
+from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
 from indra.resources import RESOURCES_PATH
@@ -30,7 +29,7 @@ pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
 pubmed_archive_baseline = pubmed_archive + "/baseline/"
 pubmed_archive_update = pubmed_archive + "/updatefiles/"
-RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv"
+RETRACTIONS_FILE = os.path.join(RESOURCES_PATH, "pubmed_retractions.tsv")
 
 
 # Send request can't be cached by lru_cache because it takes a dict
@@ -966,12 +965,12 @@ def get_publication_types(article: ET.Element):
     return {pt.text for pt in article.find('.//PublicationTypeList')}
 
 
-def article_is_retracted(pmid: str) -> bool:
+def is_retracted(pubmed_id: str) -> bool:
     """Return True if the article with the given PMID has been retracted.
 
     Parameters
     ----------
-    pmid :
+    pubmed_id :
         The PMID of the paper to check.
 
     Returns
@@ -979,7 +978,7 @@ def article_is_retracted(pmid: str) -> bool:
     :
         True if the paper has been retracted, False otherwise.
     """
-    return retractions.is_retracted(pmid)
+    return retractions.is_retracted(pubmed_id)
 
 
 def generate_retractions_file(xml_path: str, download_missing: bool = False):
