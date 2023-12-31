@@ -31,7 +31,6 @@ pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
 pubmed_archive_baseline = pubmed_archive + "/baseline/"
 pubmed_archive_update = pubmed_archive + "/updatefiles/"
 RETRACTIONS_FILE = RESOURCES_PATH + "/pmid_retractions.tsv"
-retractions = None
 
 
 # Send request can't be cached by lru_cache because it takes a dict
@@ -967,24 +966,20 @@ def get_publication_types(article: ET.Element):
     return {pt.text for pt in article.find('.//PublicationTypeList')}
 
 
-def article_is_retracted(pmid: int) -> bool:
+def article_is_retracted(pmid: str) -> bool:
     """Return True if the article with the given PMID has been retracted.
 
     Parameters
     ----------
     pmid :
-        The PMID of the paper to check as an integer.
+        The PMID of the paper to check.
 
     Returns
     -------
     :
         True if the paper has been retracted, False otherwise.
     """
-    global retractions
-    if retractions is None:
-        with open(RETRACTIONS_FILE, 'r') as fh:
-            retractions = {int(row) for row in fh.read().splitlines()}
-    return int(pmid) in retractions
+    return retractions.is_retracted(pmid)
 
 
 def generate_retractions_file(xml_path: str, download_missing: bool = False):
@@ -1014,7 +1009,7 @@ def generate_retractions_file(xml_path: str, download_missing: bool = False):
         for article in tree.findall('.//PubmedArticle'):
             pub_types = get_publication_types(article)
             if "Retracted Publication" in pub_types:
-                pmid = int(article.find('.//PMID').text)
+                pmid = article.find('.//PMID').text
                 retractions.add(pmid)
 
     if not retractions:
@@ -1023,7 +1018,7 @@ def generate_retractions_file(xml_path: str, download_missing: bool = False):
 
     logger.info(f"Writing {len(retractions)} retractions to {RETRACTIONS_FILE}")
     with open(RETRACTIONS_FILE, 'w') as fh:
-        fh.writelines(f"{p}\n" for p in sorted(retractions))
+        fh.write('\n'.join(sorted(retractions)))
 
 
 def ensure_xml_files(xml_path: str, retries: int = 3):
@@ -1115,3 +1110,17 @@ def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
         fh.write(resp.content)
 
     return True
+
+
+class Retractions:
+    def __init__(self):
+        self.retractions = None
+
+    def is_retracted(self, pmid):
+        if self.retractions is None:
+            with open(RETRACTIONS_FILE, 'r') as fh:
+                self.retractions = set(fh.read().splitlines())
+        return pmid in self.retractions
+
+
+retractions = Retractions()
