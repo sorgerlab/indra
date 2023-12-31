@@ -23,7 +23,7 @@ from indra.ontology.bio import bio_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 from indra.resources import get_resource_path
 from indra.statements.validate import print_validation_report
-from indra.literature.pubmed_client import article_is_retracted
+from indra.literature.pubmed_client import is_retracted
 import indra.tools.fix_invalidities
 
 
@@ -1277,6 +1277,7 @@ def filter_retracted_sources(stmts_in, **kwargs):
         A list of statements to filter.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
@@ -1287,7 +1288,7 @@ def filter_retracted_sources(stmts_in, **kwargs):
         ev_out = []
         for ev in stmt.evidence:
             pmid = ev.pmid or ev.text_refs.get('PMID')
-            if pmid and article_is_retracted(pmid):
+            if pmid and is_retracted(pmid):
                 continue
             ev_out.append(ev)
 

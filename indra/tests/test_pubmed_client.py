@@ -243,5 +243,5 @@ def test_get_substance_annotations():
 
 
 def test_is_retracted():
-    assert pubmed_client.article_is_retracted('35463694')
-    assert not pubmed_client.article_is_retracted('36938926')
+    assert pubmed_client.is_retracted('35463694')
+    assert not pubmed_client.is_retracted('36938926')
