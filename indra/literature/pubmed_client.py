@@ -1,6 +1,11 @@
 """
 Search and get metadata for articles in Pubmed.
 """
+import csv
+import glob
+import gzip
+import os
+import re
 import time
 import tqdm
 import logging
@@ -9,8 +14,10 @@ import subprocess
 import requests
 from time import sleep
 from typing import List
+from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
+from indra.resources import RESOURCES_PATH
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import batch_iter, pretty_save_xml
 
@@ -19,11 +26,15 @@ logger = logging.getLogger(__name__)
 
 pubmed_search = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+pubmed_archive = "https://ftp.ncbi.nlm.nih.gov/pubmed"
+pubmed_archive_baseline = pubmed_archive + "/baseline/"
+pubmed_archive_update = pubmed_archive + "/updatefiles/"
+RETRACTIONS_FILE = os.path.join(RESOURCES_PATH, "pubmed_retractions.tsv")
 
 
 # Send request can't be cached by lru_cache because it takes a dict
 # (a mutable/unhashable type) as an argument. We cache the callers instead.
-def send_request(url, data, retry_pause=0.5, max_tries=3):
+def send_request(url, data, retry_pause=1, max_tries=3):
     try:
         res = requests.get(url, params=data)
     except requests.exceptions.Timeout as e:
@@ -36,11 +47,11 @@ def send_request(url, data, retry_pause=0.5, max_tries=3):
         logger.error('url: %s, data: %s' % (url, data))
         logger.error(e)
         return None
-    if res.status_code in {429, 502, 503} and max_tries > 0:
+    if res.status_code in {400, 429, 502, 503} and max_tries > 0:
         sleep(retry_pause)
         # Increase the sleep time at random to avoid multiple clients
         # retrying at the same time for e.g. tests
-        retry_pause += 1 + random.random()
+        retry_pause += 0.5 + 1.5 * random.random()
         return send_request(url, data, retry_pause, max_tries - 1)
     if not res.status_code == 200:
         logger.error('Got return code %d from pubmed client.'
@@ -150,7 +161,7 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     """Get the curated set of articles for a gene in the Entrez database.
 
     Search parameters for the Gene database query can be passed in as
-    keyword arguments. 
+    keyword arguments.
 
     Parameters
     ----------
@@ -935,3 +946,180 @@ def get_all_ids(search_term):
     # iteration, these have to be filtered out
     pmids = [e for e in elements if '.' not in e]
     return pmids
+
+
+def get_publication_types(article: ET.Element):
+    """Return the set of PublicationType for the article
+
+    Parameters
+    ----------
+    article :
+        The XML element for the article. Typically, this is a PubmedArticle
+        node.
+
+    Returns
+    -------
+    : set[str]
+        A set of publication type
+    """
+    return {pt.text for pt in article.find('.//PublicationTypeList')}
+
+
+def is_retracted(pubmed_id: str) -> bool:
+    """Return True if the article with the given PMID has been retracted.
+
+    Parameters
+    ----------
+    pubmed_id :
+        The PMID of the paper to check.
+
+    Returns
+    -------
+    :
+        True if the paper has been retracted, False otherwise.
+    """
+    return retractions.is_retracted(pubmed_id)
+
+
+def generate_retractions_file(xml_path: str, download_missing: bool = False):
+    """Generate a CSV file of retracted papers from the PubMed XML.
+
+    Parameters
+    ----------
+    xml_path :
+        Path to the directory holding the PubMed XML files. The files will
+        be globbed from this directory using the pattern 'pubmed*.xml.gz'.
+    download_missing :
+        If True, download any missing XML files from the PubMed FTP server.
+        Default: False. Note: A full download of the PubMed XML files takes up
+        to 5 hours.
+    """
+    if download_missing:
+        ensure_xml_files(xml_path)
+    retractions = set()
+
+    files = glob.glob(os.path.join(xml_path, 'pubmed*.xml.gz'))
+    if not files:
+        raise FileNotFoundError(f"No PubMed XML files found in {xml_path}")
+
+    for xml_file in tqdm.tqdm(files, desc="Processing PubMed XML files"):
+        xml_str = gzip.open(xml_file).read()
+        tree = ET.XML(xml_str, parser=UTB())
+        for article in tree.findall('.//PubmedArticle'):
+            pub_types = get_publication_types(article)
+            if "Retracted Publication" in pub_types:
+                pmid = article.find('.//PMID').text
+                retractions.add(pmid)
+
+    if not retractions:
+        logger.warning(f"No retractions found from {len(files)} XML files")
+        return
+
+    logger.info(f"Writing {len(retractions)} retractions to {RETRACTIONS_FILE}")
+    with open(RETRACTIONS_FILE, 'w') as fh:
+        fh.write('\n'.join(sorted(retractions)))
+
+
+def ensure_xml_files(xml_path: str, retries: int = 3):
+    """Ensure that the XML files are downloaded and up to date.
+
+    Parameters
+    ----------
+    xml_path :
+        Path to the directory holding the PubMed XML files. The files will
+        be globbed from this directory using the pattern 'pubmed*.xml.gz'.
+    retries :
+        Number of times to retry downloading an individual XML file if there
+        is an HTTP error. Default: 3.
+    """
+    xml_path = Path(xml_path)
+    xml_path.mkdir(parents=True, exist_ok=True)
+
+    basefiles = [u for u in _get_urls(pubmed_archive_baseline)]
+    updatefiles = [u for u in _get_urls(pubmed_archive_update)]
+
+    # Count successfully downloaded files
+    for xml_url in tqdm.tqdm(
+            basefiles + updatefiles, desc="Downloading PubMed XML files"
+    ):
+        xml_file_path = xml_path.joinpath(xml_url.split("/")[-1])
+        if not xml_file_path.exists():
+            success = _download_xml_gz(xml_url, xml_file_path, retries=retries)
+            if not success:
+                tqdm.tqdm.write(f"Error downloading {xml_url}, skipping")
+
+
+def _get_urls(url: str):
+    """Get the paths to all XML files on the PubMed FTP server."""
+    from bs4 import BeautifulSoup
+
+    logger.info("Getting URL paths from %s" % url)
+
+    # Get page
+    response = requests.get(url)
+    response.raise_for_status()
+
+    # Make soup
+    # Todo: see if it's possible to get the lists of files directly from the
+    #  FTP server, rather than scraping the HTML
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Append trailing slash if not present
+    url = url if url.endswith("/") else url + "/"
+
+    # Loop over all links
+    for link in soup.find_all("a"):
+        href = link.get("href")
+        # yield if href matches
+        # 'pubmed<2 digit year>n<4 digit file index>.xml.gz'
+        # but skip the md5 files
+        if href and href.startswith("pubmed") and href.endswith(".xml.gz"):
+            yield url + href
+
+
+def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
+                     retries: int = 3) -> bool:
+    try:
+        resp = requests.get(xml_url)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        if retries > 0:
+            tqdm.tqdm.write(f"Error downloading {xml_url}, retrying." + str(e))
+            sleep(1)
+            return _download_xml_gz(xml_url, xml_file, md5_check, retries - 1)
+        else:
+            tqdm.tqdm.write(f"Error downloading {xml_url}, skipping")
+            return False
+
+    if md5_check:
+        from hashlib import md5
+        md5_resp = requests.get(xml_url + ".md5")
+        checksum = md5(resp.content).hexdigest()
+        expected_checksum = re.search(
+            r"[0-9a-z]+(?=\n)", md5_resp.content.decode("utf-8")
+        ).group()
+        if checksum != expected_checksum:
+            logger.warning(
+                f"Checksum mismatch for {xml_url}, skipping download"
+            )
+            raise ValueError("Checksum mismatch")
+
+    # Write the file xml.gz file
+    with xml_file.open("wb") as fh:
+        fh.write(resp.content)
+
+    return True
+
+
+class Retractions:
+    def __init__(self):
+        self.retractions = None
+
+    def is_retracted(self, pmid):
+        if self.retractions is None:
+            with open(RETRACTIONS_FILE, 'r') as fh:
+                self.retractions = set(fh.read().splitlines())
+        return pmid in self.retractions
+
+
+retractions = Retractions()

@@ -240,3 +240,8 @@ def test_get_substance_annotations():
     wrong_mesh_id = 'D0074447'
     assert example_mesh_id in mesh_ids
     assert wrong_mesh_id not in mesh_ids
+
+
+def test_is_retracted():
+    assert pubmed_client.is_retracted('35463694')
+    assert not pubmed_client.is_retracted('36938926')

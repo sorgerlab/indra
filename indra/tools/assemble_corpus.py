@@ -23,6 +23,7 @@ from indra.ontology.bio import bio_ontology
 from indra.preassembler import Preassembler, flatten_evidence
 from indra.resources import get_resource_path
 from indra.statements.validate import print_validation_report
+from indra.literature.pubmed_client import is_retracted
 import indra.tools.fix_invalidities
 
 
@@ -1260,6 +1261,41 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
             if not sources.intersection(source_apis):
                 stmts_out.append(st)
     logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
+@register_pipeline
+def filter_retracted_sources(stmts_in, **kwargs):
+    """Filter out evidence from retracted sources.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    stmts_out = []
+    for stmt in stmts_in:
+        ev_out = []
+        for ev in stmt.evidence:
+            pmid = ev.pmid or ev.text_refs.get('PMID')
+            if pmid and is_retracted(pmid):
+                continue
+            ev_out.append(ev)
+
+        if ev_out:
+            stmt.evidence = ev_out
+            stmts_out.append(stmt)
+
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
