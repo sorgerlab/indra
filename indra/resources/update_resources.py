@@ -601,7 +601,7 @@ def update_lincs_proteins():
         json.dump(prot_dict, fh, indent=1)
 
 
-MESH_YEAR = "2023"
+MESH_YEAR = "2024"
 
 
 def update_mesh_names():
