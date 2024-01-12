@@ -12,6 +12,13 @@ from indra.statements.validate import assert_valid_db_refs
 logger = logging.getLogger(__name__)
 
 
+EDGES_BLACKLIST = [
+    # Skips a relation in the 2024 MeSH hierarchy containing
+    # MESH:D015835 -[isa]-> MESH:D013285 -[isa]-> MESH:D015835
+    ('MESH:D015835', 'MESH:D013285', 'isa')
+]
+
+
 class BioOntology(IndraOntology):
     """Represents the ontology used for biology applications."""
     # The version is used to determine if the cached pickle is still valid
