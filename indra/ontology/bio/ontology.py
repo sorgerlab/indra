@@ -97,6 +97,9 @@ class BioOntology(IndraOntology):
         logger.info('Adding replacements...')
         self.add_uniprot_replacements()
         self.add_obo_replacements()
+        # Remove blacklisted edges
+        logger.info('Removing blacklisted edges...')
+        self.remove_edges(EDGES_BLACKLIST)
 
         # The graph is now initialized
         self._initialized = True
@@ -640,6 +643,21 @@ class BioOntology(IndraOntology):
             assert_valid_db_refs({db_ns: db_id})
         except Exception as e:
             logger.warning(e)
+
+    def remove_edges(self, edges_to_remove):
+        initial_edge_count = len(self.edges)
+        for source, target, e_type in edges_to_remove:
+            if (source, target) in self.edges:
+                # Check that the edge type matches
+                if self.edges[source, target]['type'] != e_type:
+                    continue
+
+                # Remove the edge
+                self.remove_edge(source, target)
+
+        final_edge_count = len(self.edges)
+        logger.info('Removed %d edges from the ontology' %
+                    (initial_edge_count - final_edge_count))
 
 
 def _get_uniprot_type(uc, uid):
