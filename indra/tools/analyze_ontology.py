@@ -24,6 +24,7 @@ def print_cycle(cycle):
             )
         )
 
+
 if __name__ == '__main__':
     # First, find strongly connected components in the xref graph where
     # a given namespace appears more than once.
@@ -52,13 +53,15 @@ if __name__ == '__main__':
     for ns, problems_ns in problems_by_ns.items():
         print(ns, len(problems_ns))
 
-
     # Next, find cycles in the isa/partof subgraph meaning circular
     # hierarchical relationships.
     hierarchy = [(e[0], e[1]) for e in bio_ontology.edges(data=True) if
                  e[2]['type'] in {'isa', 'partof'}]
     hierarchyg = bio_ontology.edge_subgraph(hierarchy)
     cycles = networkx.simple_cycles(hierarchyg)
-    for cycle in cycles:
+    if cycles:
         print('---')
-        print_cycle(cycle)
+        print('Hierarchical cycles')
+        for cycle in cycles:
+            print('---')
+            print_cycle(cycle)
