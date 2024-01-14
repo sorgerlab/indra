@@ -1,66 +1,53 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import os
+"""This is a client for the cBioPortal web service, with
+documentation at https://docs.cbioportal.org/web-api-and-clients/
+and Swagger definition at https://www.cbioportal.org/api/v2/api-docs.
+Note that the client implements direct requests to the API instead of
+adding an additional dependency to do so.
+"""
+__all__ = ["get_mutations", "get_case_lists", "get_profile_data",
+           "get_num_sequenced", "get_genetic_profiles",
+           "get_cancer_studies", "get_cancer_types", "get_ccle_mutations",
+           "get_ccle_lines_for_mutation", "get_ccle_cna",
+           "get_ccle_mrna"]
+
 import pandas
 import logging
 import requests
-from collections import defaultdict
-# Python3
-try:
-    from functools import lru_cache
-    from io import StringIO
-# Python2
-except ImportError:
-    from functools32 import lru_cache
-    from StringIO import StringIO
 
 
 logger = logging.getLogger(__name__)
 
-cbio_url = 'http://www.cbioportal.org/webservice.do'
+cbio_url = 'https://www.cbioportal.org/api'
 ccle_study = 'cellline_ccle_broad'
 
+# TODO: implement caching with json_data made immutable
+def send_request(method, endpoint, json_data):
+    """Return the results of a web service request to cBio portal.
 
-@lru_cache(maxsize=10000)
-def send_request(**kwargs):
-    """Return a data frame from a web service request to cBio portal.
+    Sends a web service request to the cBio portal with a specific endpoint,
+    method, and JSON data structure, and returns the resulting JSON
+    data structure on success.
 
-    Sends a web service requrest to the cBio portal with arguments given in
-    the dictionary data and returns a Pandas data frame on success.
-
-    More information about the service here:
-    http://www.cbioportal.org/web_api.jsp
+    More information about the service is available here:
+    https://www.cbioportal.org/api/v2/api-docs
 
     Parameters
     ----------
-    kwargs : dict
-        A dict of parameters for the query. Entries map directly to web service
-        calls with the exception of the optional 'skiprows' entry, whose value
-        is used as the number of rows to skip when reading the result data
-        frame.
+    TODO
 
     Returns
     -------
-    df : pandas.DataFrame
-        Response from cBioPortal as a Pandas DataFrame.
+    JSON
+        The JSON object returned by the web service call.
     """
-    skiprows = kwargs.pop('skiprows', None)
-    res = requests.get(cbio_url, params=kwargs)
-    if res.status_code == 200:
-        # Adaptively skip rows based on number of comment lines
-        if skiprows == -1:
-            lines = res.text.split('\n')
-            skiprows = 0
-            for line in lines:
-                if line.startswith('#'):
-                    skiprows += 1
-                else:
-                    break
-        csv_StringIO = StringIO(res.text)
-        df = pandas.read_csv(csv_StringIO, sep='\t', skiprows=skiprows)
-        return df
-    else:
+    if endpoint.startswith('/'):
+        endpoint = endpoint[1:]
+    request_fun = getattr(requests, method)
+    res = request_fun(cbio_url + '/' + endpoint, json=json_data)
+    if res.status_code != 200:
         logger.error('Request returned with code %d' % res.status_code)
+        return
+    return res.json()
 
 
 def get_mutations(study_id, gene_list, mutation_type=None,
@@ -242,20 +229,21 @@ def get_genetic_profiles(study_id, profile_filter=None):
         - MRNA_EXPRESSION
         - METHYLATION
         The genetic profiles can include "mutation", "CNA", "rppa",
-        "methylation", etc.
+        "methylation", etc. The filter is case insensitive.
 
     Returns
     -------
     genetic_profiles : list[str]
         A list of genetic profiles available  for the given study.
     """
-    data = {'cmd': 'getGeneticProfiles',
-            'cancer_study_id': study_id}
-    df = send_request(**data)
-    res = _filter_data_frame(df, ['genetic_profile_id'],
-                             'genetic_alteration_type', profile_filter)
-    genetic_profiles = list(res['genetic_profile_id'].values())
-    return genetic_profiles
+    res = send_request('post', 'molecular-profiles/fetch',
+                       {'studyIds': [study_id]})
+    if profile_filter:
+        res = [prof for prof in res
+               if (profile_filter.casefold()
+                   in prof['molecularAlterationType'].casefold())]
+    profile_ids = [prof['molecularProfileId'] for prof in res]
+    return profile_ids
 
 
 def get_cancer_studies(study_filter=None):
