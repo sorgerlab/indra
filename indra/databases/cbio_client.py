@@ -21,7 +21,7 @@ cbio_url = 'https://www.cbioportal.org/api'
 ccle_study = 'cellline_ccle_broad'
 
 # TODO: implement caching with json_data made immutable
-def send_request(method, endpoint, json_data):
+def send_request(method, endpoint, json_data=None):
     """Return the results of a web service request to cBio portal.
 
     Sends a web service request to the cBio portal with a specific endpoint,
@@ -113,6 +113,8 @@ def get_case_lists(study_id):
         A dict keyed to cases containing a dict keyed to genes
         containing int
     """
+    res = send_request('post', 'sample-lists/fetch',
+                       {'studyIds': [study_id]})
     data = {'cmd': 'getCaseLists',
             'cancer_study_id': study_id}
     df = send_request(**data)
@@ -236,8 +238,7 @@ def get_genetic_profiles(study_id, profile_filter=None):
     genetic_profiles : list[str]
         A list of genetic profiles available  for the given study.
     """
-    res = send_request('post', 'molecular-profiles/fetch',
-                       {'studyIds': [study_id]})
+    res = send_request('get', f'studies/{study_id}/molecular-profiles')
     if profile_filter:
         res = [prof for prof in res
                if (profile_filter.casefold()
