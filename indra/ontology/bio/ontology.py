@@ -12,6 +12,13 @@ from indra.statements.validate import assert_valid_db_refs
 logger = logging.getLogger(__name__)
 
 
+EDGES_BLACKLIST = [
+    # Skips a relation in the 2024 MeSH hierarchy containing
+    # MESH:D015835 -[isa]-> MESH:D013285 -[isa]-> MESH:D015835
+    ('MESH:D015835', 'MESH:D013285', 'isa')
+]
+
+
 class BioOntology(IndraOntology):
     """Represents the ontology used for biology applications."""
     # The version is used to determine if the cached pickle is still valid
@@ -19,7 +26,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.31'
+    version = '1.32'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido', 'mondo', 'eccode',
     ]
@@ -90,6 +97,9 @@ class BioOntology(IndraOntology):
         logger.info('Adding replacements...')
         self.add_uniprot_replacements()
         self.add_obo_replacements()
+        # Remove blacklisted edges
+        logger.info('Removing blacklisted edges...')
+        self.remove_edges(EDGES_BLACKLIST)
 
         # The graph is now initialized
         self._initialized = True
@@ -633,6 +643,21 @@ class BioOntology(IndraOntology):
             assert_valid_db_refs({db_ns: db_id})
         except Exception as e:
             logger.warning(e)
+
+    def remove_edges(self, edges_to_remove):
+        initial_edge_count = len(self.edges)
+        for source, target, e_type in edges_to_remove:
+            if (source, target) in self.edges:
+                # Check that the edge type matches
+                if self.edges[source, target]['type'] != e_type:
+                    continue
+
+                # Remove the edge
+                self.remove_edge(source, target)
+
+        final_edge_count = len(self.edges)
+        logger.info('Removed %d edges from the ontology' %
+                    (initial_edge_count - final_edge_count))
 
 
 def _get_uniprot_type(uc, uid):
