@@ -15,6 +15,7 @@ a single operation argument which can be as follows:
 * `clean`: delete the current version of the ontology from the cache
 * `clean-old`: delete all versions of the ontology except the current one
 * `clean-all`: delete all versions of the bio ontology from the cache
+* `version`: print the current version of the ontology and exit
 """
 import os
 import sys
@@ -28,7 +29,7 @@ logger = logging.getLogger('indra.ontology.bio')
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         logger.info('Operation missing. Supported operations: '
-                    'build, clean, clean-old, clean-all.')
+                    'build, clean, clean-old, clean-all, version.')
         sys.exit(1)
     operation = sys.argv[1]
     if operation == 'build':
