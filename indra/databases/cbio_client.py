@@ -266,11 +266,11 @@ def get_cancer_studies(study_filter=None):
         of study IDs with paad in their name like "paad_icgc", "paad_tcga",
         etc.
     """
-    data = {'cmd': 'getCancerStudies'}
-    df = send_request(**data)
-    res = _filter_data_frame(df, ['cancer_study_id'],
-                             'cancer_study_id', study_filter)
-    study_ids = list(res['cancer_study_id'].values())
+    studies = send_request('get', 'studies')
+    if study_filter:
+        studies = [s for s in studies
+                   if study_filter.casefold() in s['studyId'].casefold()]
+    study_ids = [s['studyId'] for s in studies]
     return study_ids
 
 
