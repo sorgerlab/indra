@@ -14,11 +14,14 @@ import pandas
 import logging
 import requests
 
+from indra.databases import hgnc_client
+
 
 logger = logging.getLogger(__name__)
 
 cbio_url = 'https://www.cbioportal.org/api'
 ccle_study = 'cellline_ccle_broad'
+
 
 # TODO: implement caching with json_data made immutable
 def send_request(method, endpoint, json_data=None):
@@ -43,14 +46,15 @@ def send_request(method, endpoint, json_data=None):
     if endpoint.startswith('/'):
         endpoint = endpoint[1:]
     request_fun = getattr(requests, method)
-    res = request_fun(cbio_url + '/' + endpoint, json=json_data)
+    res = request_fun(cbio_url + '/' + endpoint, json=json_data or {})
     if res.status_code != 200:
-        logger.error('Request returned with code %d' % res.status_code)
+        logger.error(f'Request returned with code {res.status_code}: '
+                     f'{res.text}')
         return
     return res.json()
 
 
-def get_mutations(study_id, gene_list, mutation_type=None,
+def get_mutations(study_id, gene_list=None, mutation_type=None,
                   case_id=None):
     """Return mutations as a list of genes and list of amino acid changes.
 
@@ -76,7 +80,26 @@ def get_mutations(study_id, gene_list, mutation_type=None,
         the second one a list of amino acid changes in those genes.
     """
     genetic_profile = get_genetic_profiles(study_id, 'mutation')[0]
-    gene_list_str = ','.join(gene_list)
+    breakpoint()
+
+    if gene_list:
+        hgnc_mappings = {g: hgnc_client.get_hgnc_id(g) for g in gene_list}
+        entrez_mappings = {hgnc_mappings[g]:
+                               hgnc_client.get_entrez_id(hgnc_mappings[g])
+                           for g in gene_list if hgnc_mappings[g] is not None}
+        entrez_ids = [e for e in entrez_mappings.values() if e is not None]
+    else:
+        entrez_ids = None
+
+    json_data = {'entrezGeneIds': entrez_ids} if entrez_ids else None
+
+    # FIXME: ERROR: [2024-01-14 17:18:15] indra.databases.cbio_client -
+    #  Request returned with code 400: {"message":"eitherSampleListIdOrSampleIdsPresent must be true"}
+    muts = send_request('post', f'molecular-profiles/{genetic_profile}/'
+                                f'mutations/fetch', json_data)
+    return muts
+#    if mutation_type:
+
 
     data = {'cmd': 'getMutationData',
             'case_set_id': study_id,
@@ -291,10 +314,11 @@ def get_cancer_types(cancer_filter=None):
         Example: for cancer_filter="pancreatic", the result includes
         "panet" (neuro-endocrine) and "paad" (adenocarcinoma)
     """
-    data = {'cmd': 'getTypesOfCancer'}
-    df = send_request(**data)
-    res = _filter_data_frame(df, ['type_of_cancer_id'], 'name', cancer_filter)
-    type_ids = list(res['type_of_cancer_id'].values())
+    cancer_types = send_request('get', 'cancer-types')
+    if cancer_filter:
+        cancer_types = [c for c in cancer_types
+                        if cancer_filter.casefold() in c['name'].casefold()]
+    type_ids = [c['cancerTypeId'] for c in cancer_types]
     return type_ids
 
 
