@@ -292,7 +292,7 @@ def update_chebi_accessions():
     # Here we need to map to primary ChEBI IDs
     from indra.databases.chebi_client import get_primary_id
     # This is a wrapper just to strip off the CHEBI prefix to
-    # keep the existing convetions
+    # keep the existing conventions
     def _get_primary_id_wrapper(chebi_id):
         return get_primary_id(chebi_id)[6:]
     df_cas.COMPOUND_ID = df_cas.COMPOUND_ID.apply(_get_primary_id_wrapper)
@@ -300,6 +300,9 @@ def update_chebi_accessions():
                            inplace=True)
     # Temporary fix, see https://github.com/ebi-chebi/ChEBI/issues/4149
     df_cas = df_cas[~df_cas['ACCESSION_NUMBER'].str.contains('/')]
+    # This is to avoid some weird entries like
+    # NMRShiftDB:60057454;PubChem:21593947...
+    df_cas = df_cas[~df_cas['ACCESSION_NUMBER'].str.contains(':')]
     df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
