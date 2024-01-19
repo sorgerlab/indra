@@ -384,10 +384,10 @@ class PyOboClient(OntologyClient):
                     dict(namespace=xref.prefix, id=xref.identifier)
                     for xref in term.xrefs
                 ],
-                'alt_ids': [
+                'alt_ids': sorted([
                     alt_id.identifier
                     for alt_id in term.alt_ids
-                ],
+                ]),
                 'relations': _get_pyobo_rels(
                     term,
                     include_relations=include_relations,
