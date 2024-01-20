@@ -83,9 +83,9 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
         the second one a list of amino acid changes in those genes.
     """
     genetic_profile = get_genetic_profiles(study_id, 'mutation')[0]
-    breakpoint()
 
-    entrez_ids = get_entrez_mappings(gene_list)
+    entrez_to_gene_symbol = get_entrez_mappings(gene_list)
+    entrez_ids = list(entrez_to_gene_symbol)
 
     json_data = {'entrezGeneIds': entrez_ids} if entrez_ids else None
 
@@ -233,13 +233,16 @@ def get_num_sequenced(study_id):
     num_case : int
         The number of sequenced tumors in the given study
     """
-    data = {'cmd': 'getCaseLists',
-            'cancer_study_id': study_id}
-    df = send_request(**data)
-    if df.empty:
-        return 0
-    row_filter = df['case_list_id'].str.contains('sequenced', case=False)
-    num_case = len(df[row_filter]['case_ids'].tolist()[0].split(' '))
+    # First we get all the case lists for the study
+    case_lists = get_case_lists(study_id)
+    # Then we find ones that have 'sequenced' in the name
+    sequencing_case_list = [cl for cl in case_lists if 'sequenced' in cl]
+    # Then we look at the sample IDs and count them
+    cases = set()
+    for cl in sequencing_case_list:
+        res = send_request('get', f'/sample-lists/{cl}/sample-ids')
+        cases |= set(res)
+    num_case = len(cases)
     return num_case
 
 
@@ -401,7 +404,7 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     return cell_lines
 
 
-def get_ccle_cna(gene_list, cell_lines):
+def get_ccle_cna(gene_list, cell_lines=None):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
     CNA values correspond to the following alterations
@@ -420,7 +423,7 @@ def get_ccle_cna(gene_list, cell_lines):
     ----------
     gene_list : list[str]
         A list of HGNC gene symbols to get mutations in
-    cell_lines : list[str]
+    cell_lines : Optional[list[str]]
         A list of CCLE cell line names to get mutations for.
 
     Returns
@@ -431,19 +434,18 @@ def get_ccle_cna(gene_list, cell_lines):
     """
     profile_data = get_profile_data(ccle_study, gene_list,
                                     'COPY_NUMBER_ALTERATION', 'all')
-    profile_data = dict((key, value) for key, value in profile_data.items()
-                        if key in cell_lines)
-    return profile_data
+    return {cell_line: value for cell_line, value in profile_data.items()
+            if cell_lines is None or cell_line in cell_lines}
 
 
-def get_ccle_mrna(gene_list, cell_lines):
+def get_ccle_mrna(gene_list, cell_lines=None):
     """Return a dict of mRNA amounts in given genes and cell lines from CCLE.
 
     Parameters
     ----------
     gene_list : list[str]
         A list of HGNC gene symbols to get mRNA amounts for.
-    cell_lines : list[str]
+    cell_lines : Optional[list[str]]
         A list of CCLE cell line names to get mRNA amounts for.
 
     Returns
@@ -452,27 +454,18 @@ def get_ccle_mrna(gene_list, cell_lines):
         A dict keyed to cell lines containing a dict keyed to genes
         containing float
     """
-    gene_list_str = ','.join(gene_list)
-    data = {'cmd': 'getProfileData',
-            'case_set_id': ccle_study + '_mrna',
-            'genetic_profile_id': ccle_study + '_mrna',
-            'gene_list': gene_list_str,
-            'skiprows': -1}
-    df = send_request(**data)
-    mrna_amounts = {cl: {g: [] for g in gene_list} for cl in cell_lines}
-    for cell_line in cell_lines:
-        if cell_line in df.columns:
-            for gene in gene_list:
-                value_cell = df[cell_line][df['COMMON'] == gene]
-                if value_cell.empty:
-                    mrna_amounts[cell_line][gene] = None
-                elif pandas.isnull(value_cell.values[0]):
-                    mrna_amounts[cell_line][gene] = None
-                else:
-                    value = value_cell.values[0]
-                    mrna_amounts[cell_line][gene] = value
-        else:
-            mrna_amounts[cell_line] = None
+    profile_data = get_profile_data(ccle_study, gene_list,
+                                    'MRNA_EXPRESSION', 'all')
+    mrna_amounts = {cell_line: value
+                    for cell_line, value in profile_data.items()
+                    if cell_lines is None or cell_line in cell_lines}
+    # This is to make sure that if cell_lines were specified then
+    # we return None if there is no data for a given cell line
+    # This matches the old behavior of the function
+    if cell_lines:
+        for cell_line in cell_lines:
+            if cell_line not in mrna_amounts:
+                mrna_amounts[cell_line] = None
     return mrna_amounts
 
 
