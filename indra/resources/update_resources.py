@@ -296,6 +296,8 @@ def update_chebi_accessions():
     def _get_primary_id_wrapper(chebi_id):
         return get_primary_id(chebi_id)[6:]
     df_cas.COMPOUND_ID = df_cas.COMPOUND_ID.apply(_get_primary_id_wrapper)
+    df_cas.ACCESSION_NUMBER = df_cas.ACCESSION_NUMBER.replace('0103-05-09',
+                                                              '103-05-9')
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
     # Temporary fix, see https://github.com/ebi-chebi/ChEBI/issues/4149
@@ -513,7 +515,7 @@ def update_ncit_map():
     ncit_swissprot_file = 'NCIt-SwissProt.txt'
     # These entries represent non-Uniprot (nuccode?) IDs and
     # we exclude them for validity
-    exclude_list = {'M74558', 'U37690', 'U65002'}
+    exclude_list = {'M74558', 'U37690', 'U65002', 'P0DTC1|P0DTD1'}
     save_from_http(url_swissprot, ncit_swissprot_file)
     df_uniprot = pandas.read_csv(ncit_swissprot_file, sep='\t',
                                  index_col=None)
