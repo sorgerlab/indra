@@ -46,7 +46,10 @@ def send_request(method, endpoint, json_data=None):
     if endpoint.startswith('/'):
         endpoint = endpoint[1:]
     request_fun = getattr(requests, method)
-    res = request_fun(cbio_url + '/' + endpoint, json=json_data or {})
+    full_url = cbio_url + '/' + endpoint
+    print('URL: %s' % full_url)
+    print('JSON: %s' % json_data)
+    res = request_fun(full_url, json=json_data or {})
     if res.status_code != 200:
         logger.error(f'Request returned with code {res.status_code}: '
                      f'{res.text}')
@@ -82,14 +85,7 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
     genetic_profile = get_genetic_profiles(study_id, 'mutation')[0]
     breakpoint()
 
-    if gene_list:
-        hgnc_mappings = {g: hgnc_client.get_hgnc_id(g) for g in gene_list}
-        entrez_mappings = {hgnc_mappings[g]:
-                               hgnc_client.get_entrez_id(hgnc_mappings[g])
-                           for g in gene_list if hgnc_mappings[g] is not None}
-        entrez_ids = [e for e in entrez_mappings.values() if e is not None]
-    else:
-        entrez_ids = None
+    entrez_ids = get_entrez_mappings(gene_list)
 
     json_data = {'entrezGeneIds': entrez_ids} if entrez_ids else None
 
@@ -116,9 +112,28 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
     return mutations
 
 
+def get_entrez_mappings(gene_list):
+    if gene_list:
+        # First we need to get HGNC IDs from HGNC symbols
+        hgnc_mappings = {g: hgnc_client.get_hgnc_id(g) for g in gene_list}
+        # Next, we map from HGNC symbols to Entrez IDs via the hgnc_mappings
+        entrez_mappings = {g: hgnc_client.get_entrez_id(hgnc_mappings[g])
+                           for g in gene_list if hgnc_mappings[g] is not None}
+        # Finally, we reverse the mapping, this will ensure that
+        # we can get the gene symbols back when generating results
+        entrez_to_gene_symbol = {v: k for k, v in entrez_mappings.items()
+                                 if v is not None and k is not None}
+    else:
+        entrez_to_gene_symbol = {}
+    return entrez_to_gene_symbol
+
+
 def get_case_lists(study_id):
     """Return a list of the case set ids for a particular study.
 
+    In v2 of the API these are called sample lists.
+
+    Old comment:
     TAKE NOTE the "case_list_id" are the same thing as "case_set_id"
     Within the data, this string is referred to as a "case_list_id".
     Within API calls it is referred to as a 'case_set_id'.
@@ -132,17 +147,12 @@ def get_case_lists(study_id):
 
     Returns
     -------
-    case_set_ids : dict[dict[int]]
-        A dict keyed to cases containing a dict keyed to genes
-        containing int
+    case_set_ids : list[str]
+        A list of case set IDs, e.g., ['cellline_ccle_broad_all',
+        'cellline_ccle_broad_cna', ...]
     """
-    res = send_request('post', 'sample-lists/fetch',
-                       {'studyIds': [study_id]})
-    data = {'cmd': 'getCaseLists',
-            'cancer_study_id': study_id}
-    df = send_request(**data)
-    case_set_ids = df['case_list_id'].tolist()
-    return case_set_ids
+    res = send_request('get', f'studies/{study_id}/sample-lists')
+    return [sl['sampleListId'] for sl in res]
 
 
 def get_profile_data(study_id, gene_list,
@@ -165,7 +175,7 @@ def get_profile_data(study_id, gene_list,
         - MRNA_EXPRESSION
         - METHYLATION
     case_set_filter : Optional[str]
-        A string that specifices which case_set_id to use, based on a complete
+        A string that specifies which case_set_id to use, based on a complete
         or partial match. If not provided, will look for study_id + '_all'
 
     Returns
@@ -179,29 +189,30 @@ def get_profile_data(study_id, gene_list,
         genetic_profile = genetic_profiles[0]
     else:
         return {}
-    gene_list_str = ','.join(gene_list)
     case_set_ids = get_case_lists(study_id)
     if case_set_filter:
         case_set_id = [x for x in case_set_ids if case_set_filter in x][0]
     else:
-        case_set_id = study_id + '_all'
         # based on looking at the cBioPortal, this is a common case_set_id
-    data = {'cmd': 'getProfileData',
-            'case_set_id': case_set_id,
-            'genetic_profile_id': genetic_profile,
-            'gene_list': gene_list_str,
-            'skiprows': -1}
-    df = send_request(**data)
-    case_list_df = [x for x in df.columns.tolist()
-                    if x not in ['GENE_ID', 'COMMON']]
-    profile_data = {case: {g: None for g in gene_list}
-                    for case in case_list_df}
-    for case in case_list_df:
-        profile_values = df[case].tolist()
-        df_gene_list = df['COMMON'].tolist()
-        for g, cv in zip(df_gene_list, profile_values):
-            if not pandas.isnull(cv):
-                profile_data[case][g] = cv
+        case_set_id = study_id + '_all'
+    entrez_to_gene_symbol = get_entrez_mappings(gene_list)
+    entrez_ids = list(entrez_to_gene_symbol)
+    res = send_request('post', f'molecular-profiles/{genetic_profile}/'
+                               f'molecular-data/fetch',
+                       {'sampleListId': case_set_id,
+                        'entrezGeneIds': entrez_ids})
+
+    profile_data = {}
+    # Each entry in the results contains something like
+    # {'entrezGeneId': 673, 'molecularProfileId': 'cellline_ccle_broad_cna',
+    #  'sampleId': '1321N1_CENTRAL_NERVOUS_SYSTEM',
+    #  'studyId': 'cellline_ccle_broad', 'value': 1, ...}
+    for sample in res:
+        sample_id = sample['sampleId']
+        if sample_id not in profile_data:
+            profile_data[sample_id] = {}
+        gene_symbol = entrez_to_gene_symbol[str(sample['entrezGeneId'])]
+        profile_data[sample_id][gene_symbol] = sample['value']
     return profile_data
 
 
