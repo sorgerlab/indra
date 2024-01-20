@@ -383,6 +383,7 @@ HTR
 HTR1
 HTR2
 HVCN
+ICAM
 IFITM
 IFNA
 IFNAR
@@ -625,6 +626,7 @@ PRKAC
 PRKAR
 PRKG
 PRMT
+PTEFb
 Propionyl_CoA_carboxylase
 Protease
 Proteasome
@@ -698,6 +700,7 @@ SMC1
 SMURF
 SNAI
 SOD
+Selectin
 Sodium_channels
 Sodium_voltage_gated_channel_alpha_subunits
 Sodium_voltage_gated_channel_beta_subunits
@@ -736,6 +739,7 @@ TIAM
 TIF_IB
 TIM22_complex
 TK
+TLE
 TLR
 TN
 TNF
