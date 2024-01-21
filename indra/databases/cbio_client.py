@@ -78,38 +78,38 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
 
     Returns
     -------
-    mutations : tuple[list]
-        A tuple of two lists, the first one containing a list of genes, and
-        the second one a list of amino acid changes in those genes.
+    mutations : dict
+        A dict with entries for each gene symbol and another list
+        with entries for each corresponding amino acid change.
     """
     genetic_profile = get_genetic_profiles(study_id, 'mutation')[0]
 
     entrez_to_gene_symbol = get_entrez_mappings(gene_list)
     entrez_ids = list(entrez_to_gene_symbol)
 
-    json_data = {'entrezGeneIds': entrez_ids} if entrez_ids else None
+    # Does this need to be parameterized?
+    case_set_id = study_id + '_all'
 
-    # FIXME: ERROR: [2024-01-14 17:18:15] indra.databases.cbio_client -
-    #  Request returned with code 400: {"message":"eitherSampleListIdOrSampleIdsPresent must be true"}
-    muts = send_request('post', f'molecular-profiles/{genetic_profile}/'
-                                f'mutations/fetch', json_data)
-    return muts
-#    if mutation_type:
+    mutations = send_request('post',
+                             f'molecular-profiles/{genetic_profile}/'
+                             f'mutations/fetch',
+                             {'sampleListId': case_set_id,
+                              'entrezGeneIds': entrez_ids})
 
-
-    data = {'cmd': 'getMutationData',
-            'case_set_id': study_id,
-            'genetic_profile_id': genetic_profile,
-            'gene_list': gene_list_str,
-            'skiprows': -1}
-    df = send_request(**data)
     if case_id:
-        df = df[df['case_id'] == case_id]
-    res = _filter_data_frame(df, ['gene_symbol', 'amino_acid_change'],
-                             'mutation_type', mutation_type)
-    mutations = {'gene_symbol': list(res['gene_symbol'].values()),
-                 'amino_acid_change': list(res['amino_acid_change'].values())}
-    return mutations
+        mutations = [m for m in mutations if m['case_id'] == case_id]
+
+    if mutation_type:
+        mutations = [m for m in mutations if (mutation_type.casefold()
+                                              in m['mutationType'].casefold())]
+
+    mutations_dict = {
+        'gene_symbol': [entrez_to_gene_symbol[str(m['entrezGeneId'])]
+                        for m in mutations],
+        'amino_acid_change': [m['proteinChange'] for m in mutations],
+        'sample_id': [m['sampleId'] for m in mutations],
+    }
+    return mutations_dict
 
 
 def get_entrez_mappings(gene_list):
@@ -254,6 +254,8 @@ def get_genetic_profiles(study_id, profile_filter=None):
     'cellline_ccle_broad_mutations' for mutations, 'cellline_ccle_broad_CNA'
     for copy number alterations, etc.
 
+    NOTE: In the v2 API, the genetic profiles are called molecular profiles.
+
     Parameters
     ----------
     study_id : str
@@ -393,15 +395,11 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     cell_lines : list
         A list of CCLE cell lines in which the given mutation occurs.
     """
-    data = {'cmd': 'getMutationData',
-            'case_set_id': ccle_study,
-            'genetic_profile_id': ccle_study + '_mutations',
-            'gene_list': gene,
-            'skiprows': 1}
-    df = send_request(**data)
-    df = df[df['amino_acid_change'] == amino_acid_change]
-    cell_lines = df['case_id'].unique().tolist()
-    return cell_lines
+    mutations = get_mutations(ccle_study, [gene], 'missense')
+    cell_lines = {cl for aac, cl
+                  in zip(mutations['amino_acid_change'], mutations['sample_id'])
+                  if aac == amino_acid_change}
+    return sorted(cell_lines)
 
 
 def get_ccle_cna(gene_list, cell_lines=None):
