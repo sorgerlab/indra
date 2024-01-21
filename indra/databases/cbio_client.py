@@ -63,7 +63,6 @@ def send_request(method, endpoint, json_data=None):
     return res.json()
 
 
-@lru_cache(maxsize=1000)
 def get_mutations(study_id, gene_list=None, mutation_type=None,
                   case_id=None):
     """Return mutations as a list of genes and list of amino acid changes.
@@ -104,7 +103,7 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
                               'entrezGeneIds': entrez_ids})
 
     if case_id:
-        mutations = [m for m in mutations if m['case_id'] == case_id]
+        mutations = [m for m in mutations if m['sampleId'] == case_id]
 
     if mutation_type:
         mutations = [m for m in mutations if (mutation_type.casefold()
@@ -119,7 +118,6 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
     return mutations_dict
 
 
-@lru_cache(maxsize=1000)
 def get_entrez_mappings(gene_list):
     if gene_list:
         # First we need to get HGNC IDs from HGNC symbols
@@ -136,7 +134,6 @@ def get_entrez_mappings(gene_list):
     return entrez_to_gene_symbol
 
 
-@lru_cache(maxsize=1000)
 def get_case_lists(study_id):
     """Return a list of the case set ids for a particular study.
 
@@ -164,7 +161,6 @@ def get_case_lists(study_id):
     return [sl['sampleListId'] for sl in res]
 
 
-@lru_cache(maxsize=1000)
 def get_profile_data(study_id, gene_list,
                      profile_filter, case_set_filter=None):
     """Return dict of cases and genes and their respective values.
@@ -226,7 +222,6 @@ def get_profile_data(study_id, gene_list,
     return profile_data
 
 
-@lru_cache(maxsize=1000)
 def get_num_sequenced(study_id):
     """Return number of sequenced tumors for given study.
 
@@ -257,7 +252,6 @@ def get_num_sequenced(study_id):
     return num_case
 
 
-@lru_cache(maxsize=1000)
 def get_genetic_profiles(study_id, profile_filter=None):
     """Return all the genetic profiles (data sets) for a given study.
 
@@ -298,7 +292,6 @@ def get_genetic_profiles(study_id, profile_filter=None):
     return profile_ids
 
 
-@lru_cache(maxsize=1000)
 def get_cancer_studies(study_filter=None):
     """Return a list of cancer study identifiers, optionally filtered.
 
@@ -326,7 +319,6 @@ def get_cancer_studies(study_filter=None):
     return study_ids
 
 
-@lru_cache(maxsize=1000)
 def get_cancer_types(cancer_filter=None):
     """Return a list of cancer types, optionally filtered.
 
@@ -352,7 +344,6 @@ def get_cancer_types(cancer_filter=None):
     return type_ids
 
 
-@lru_cache(maxsize=1000)
 def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
 
@@ -391,7 +382,6 @@ def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     return mutations
 
 
-@lru_cache(maxsize=1000)
 def get_ccle_lines_for_mutation(gene, amino_acid_change):
     """Return cell lines with a given point mutation in a given gene.
 
@@ -418,7 +408,6 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     return sorted(cell_lines)
 
 
-@lru_cache(maxsize=1000)
 def get_ccle_cna(gene_list, cell_lines=None):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
@@ -453,7 +442,6 @@ def get_ccle_cna(gene_list, cell_lines=None):
             if cell_lines is None or cell_line in cell_lines}
 
 
-@lru_cache(maxsize=1000)
 def get_ccle_mrna(gene_list, cell_lines=None):
     """Return a dict of mRNA amounts in given genes and cell lines from CCLE.
 
@@ -472,6 +460,11 @@ def get_ccle_mrna(gene_list, cell_lines=None):
     """
     profile_data = get_profile_data(ccle_study, gene_list,
                                     'MRNA_EXPRESSION', 'all')
+    # FIXME: we need a data structure like this
+    #         assert mrna['A375_SKIN'] is not None
+    #         assert mrna['A375_SKIN']['MAP2K1'] > 10
+    # >       assert mrna['A375_SKIN']['XYZ'] is None
+    # E       KeyError: 'XYZ'
     mrna_amounts = {cell_line: value
                     for cell_line, value in profile_data.items()
                     if cell_lines is None or cell_line in cell_lines}

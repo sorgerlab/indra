@@ -31,18 +31,6 @@ def test_get_num_sequenced():
 
 
 @pytest.mark.webservice
-def test_send_request_ccle():
-    """Sends a request and gets back a dataframe of all cases in ccle study.
-
-    Check that the dataframe is longer than one.
-    """
-    data = {'cmd': 'getCaseLists',
-            'cancer_study_id': 'cellline_ccle_broad'}
-    df = cbio_client.send_request(**data)
-    assert len(df) > 0
-
-
-@pytest.mark.webservice
 def test_get_ccle_lines_for_mutation():
     """Check how many lines have BRAF V600E mutations.
 
