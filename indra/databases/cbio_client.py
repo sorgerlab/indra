@@ -10,10 +10,9 @@ __all__ = ["get_mutations", "get_case_lists", "get_profile_data",
            "get_ccle_lines_for_mutation", "get_ccle_cna",
            "get_ccle_mrna"]
 
-import pandas
 import logging
 import requests
-
+from functools import lru_cache
 from indra.databases import hgnc_client
 
 
@@ -36,7 +35,14 @@ def send_request(method, endpoint, json_data=None):
 
     Parameters
     ----------
-    TODO
+    method : str
+        The HTTP method to use for the request.
+        Example: 'get' or 'post'
+    endpoint : str
+        The endpoint to use for the request.
+        Example: 'studies'
+    json_data : Optional[Dict]
+        The dict-like JSON data structure to send with the request.
 
     Returns
     -------
@@ -57,6 +63,7 @@ def send_request(method, endpoint, json_data=None):
     return res.json()
 
 
+@lru_cache(maxsize=1000)
 def get_mutations(study_id, gene_list=None, mutation_type=None,
                   case_id=None):
     """Return mutations as a list of genes and list of amino acid changes.
@@ -112,6 +119,7 @@ def get_mutations(study_id, gene_list=None, mutation_type=None,
     return mutations_dict
 
 
+@lru_cache(maxsize=1000)
 def get_entrez_mappings(gene_list):
     if gene_list:
         # First we need to get HGNC IDs from HGNC symbols
@@ -128,6 +136,7 @@ def get_entrez_mappings(gene_list):
     return entrez_to_gene_symbol
 
 
+@lru_cache(maxsize=1000)
 def get_case_lists(study_id):
     """Return a list of the case set ids for a particular study.
 
@@ -155,6 +164,7 @@ def get_case_lists(study_id):
     return [sl['sampleListId'] for sl in res]
 
 
+@lru_cache(maxsize=1000)
 def get_profile_data(study_id, gene_list,
                      profile_filter, case_set_filter=None):
     """Return dict of cases and genes and their respective values.
@@ -216,6 +226,7 @@ def get_profile_data(study_id, gene_list,
     return profile_data
 
 
+@lru_cache(maxsize=1000)
 def get_num_sequenced(study_id):
     """Return number of sequenced tumors for given study.
 
@@ -246,6 +257,7 @@ def get_num_sequenced(study_id):
     return num_case
 
 
+@lru_cache(maxsize=1000)
 def get_genetic_profiles(study_id, profile_filter=None):
     """Return all the genetic profiles (data sets) for a given study.
 
@@ -286,6 +298,7 @@ def get_genetic_profiles(study_id, profile_filter=None):
     return profile_ids
 
 
+@lru_cache(maxsize=1000)
 def get_cancer_studies(study_filter=None):
     """Return a list of cancer study identifiers, optionally filtered.
 
@@ -313,6 +326,7 @@ def get_cancer_studies(study_filter=None):
     return study_ids
 
 
+@lru_cache(maxsize=1000)
 def get_cancer_types(cancer_filter=None):
     """Return a list of cancer types, optionally filtered.
 
@@ -338,6 +352,7 @@ def get_cancer_types(cancer_filter=None):
     return type_ids
 
 
+@lru_cache(maxsize=1000)
 def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     """Return a dict of mutations in given genes and cell lines from CCLE.
 
@@ -376,6 +391,7 @@ def get_ccle_mutations(gene_list, cell_lines, mutation_type=None):
     return mutations
 
 
+@lru_cache(maxsize=1000)
 def get_ccle_lines_for_mutation(gene, amino_acid_change):
     """Return cell lines with a given point mutation in a given gene.
 
@@ -402,6 +418,7 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
     return sorted(cell_lines)
 
 
+@lru_cache(maxsize=1000)
 def get_ccle_cna(gene_list, cell_lines=None):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
@@ -436,6 +453,7 @@ def get_ccle_cna(gene_list, cell_lines=None):
             if cell_lines is None or cell_line in cell_lines}
 
 
+@lru_cache(maxsize=1000)
 def get_ccle_mrna(gene_list, cell_lines=None):
     """Return a dict of mRNA amounts in given genes and cell lines from CCLE.
 
@@ -465,56 +483,3 @@ def get_ccle_mrna(gene_list, cell_lines=None):
             if cell_line not in mrna_amounts:
                 mrna_amounts[cell_line] = None
     return mrna_amounts
-
-
-def _filter_data_frame(df, data_col, filter_col, filter_str=None):
-    """Return a filtered data frame as a dictionary."""
-    if filter_str is not None:
-        relevant_cols = data_col + [filter_col]
-        df.dropna(inplace=True, subset=relevant_cols)
-        row_filter = df[filter_col].str.contains(filter_str, case=False)
-        data_list = df[row_filter][data_col].to_dict()
-    else:
-        data_list = df[data_col].to_dict()
-    return data_list
-
-
-# Deactivate this section for the time being, can be reinstated
-# once these are fully integrated
-'''
-
-def _read_ccle_cna():
-    fname = os.path.dirname(os.path.abspath(__file__)) + \
-        '/../../data/ccle_CNA.txt'
-    try:
-        df = pandas.read_csv(fname, sep='\t')
-    except Exception:
-        df = None
-    return df
-
-ccle_cna_df = _read_ccle_cna()
-
-
-def _read_ccle_mrna():
-    fname = os.path.dirname(os.path.abspath(__file__)) + \
-        '/../../data/ccle_expression_median.txt'
-    try:
-        df = pandas.read_csv(fname, sep='\t')
-    except Exception:
-        df = None
-    return df
-
-ccle_mrna_df = _read_ccle_mrna()
-
-
-def _read_ccle_mutations():
-    fname = os.path.dirname(os.path.abspath(__file__)) + \
-        '/../../data/ccle_mutations_extended.txt'
-    try:
-        df = pandas.read_csv(fname, sep='\t', skiprows=2)
-    except Exception:
-        df = None
-    return df
-
-ccle_mutations_df = _read_ccle_mutations()
-'''
