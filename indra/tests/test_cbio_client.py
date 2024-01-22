@@ -1,5 +1,4 @@
 import pytest
-pytest.skip("cBio client needs to be ypdated", allow_module_level=True)
 
 from indra.databases import cbio_client
 
