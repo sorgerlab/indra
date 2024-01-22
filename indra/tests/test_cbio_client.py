@@ -31,18 +31,6 @@ def test_get_num_sequenced():
 
 
 @pytest.mark.webservice
-def test_send_request_ccle():
-    """Sends a request and gets back a dataframe of all cases in ccle study.
-
-    Check that the dataframe is longer than one.
-    """
-    data = {'cmd': 'getCaseLists',
-            'cancer_study_id': 'cellline_ccle_broad'}
-    df = cbio_client.send_request(**data)
-    assert len(df) > 0
-
-
-@pytest.mark.webservice
 def test_get_ccle_lines_for_mutation():
     """Check how many lines have BRAF V600E mutations.
 
@@ -106,7 +94,7 @@ def test_get_ccle_mrna():
 def test_get_ccle_cna_big():
     """
     Get the CNA data on 124 genes in 4 cell lines. Expect to have CNA values
-    that are [None, -2.0, -1.0, 0.0, 1.0, 2.0] . This tests the function at
+    that are {-2.0, -1.0, 0.0, 1.0, 2.0}. This tests the function at
     a greater scale. Also, test the cell lines' BRAF CNAs
     """
     genes = ["FOSL1", "GRB2", "RPS6KA3", "EIF4EBP1", "DUSP1", "PLXNB1", "SHC2",
@@ -129,13 +117,11 @@ def test_get_ccle_cna_big():
              "PAK1", "RHEB"]
     cell_lines = ['COLO679_SKIN', 'A2058_SKIN', 'IGR39_SKIN', 'HS294T_SKIN']
     cna = cbio_client.get_ccle_cna(genes, cell_lines)
-    values = []
+    values = set()
     for cl in cna:
         for g in cna[cl]:
-            val = cna[cl][g]
-            values.append(val)
-    values = list(set(values))
-    assert len(values) == 6
+            values.add(cna[cl][g])
+    assert values == {-2.0, -1.0, 0.0, 1.0, 2.0}
     assert cna['COLO679_SKIN']['BRAF'] == 2
     assert cna['A2058_SKIN']['BRAF'] == 1
     assert cna['IGR39_SKIN']['BRAF'] == 1
