@@ -460,11 +460,6 @@ def get_ccle_mrna(gene_list, cell_lines=None):
     """
     profile_data = get_profile_data(ccle_study, gene_list,
                                     'MRNA_EXPRESSION', 'all')
-    # FIXME: we need a data structure like this
-    #         assert mrna['A375_SKIN'] is not None
-    #         assert mrna['A375_SKIN']['MAP2K1'] > 10
-    # >       assert mrna['A375_SKIN']['XYZ'] is None
-    # E       KeyError: 'XYZ'
     mrna_amounts = {cell_line: value
                     for cell_line, value in profile_data.items()
                     if cell_lines is None or cell_line in cell_lines}
@@ -475,4 +470,8 @@ def get_ccle_mrna(gene_list, cell_lines=None):
         for cell_line in cell_lines:
             if cell_line not in mrna_amounts:
                 mrna_amounts[cell_line] = None
+            else:
+                for gene in gene_list:
+                    if gene not in mrna_amounts[cell_line]:
+                        mrna_amounts[cell_line][gene] = None
     return mrna_amounts
