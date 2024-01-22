@@ -37,8 +37,8 @@ def test_id_from_label_or_synonym():
 
 
 def test_isa():
-    assert go_client._client.entries['GO:0001671']['relations']['is_a'] == \
-        ['GO:0140677', 'GO:0060590']
+    rel = set(go_client._client.entries['GO:0001671']['relations']['is_a'])
+    assert  rel == {'GO:0140677', 'GO:0060590'}
 
 
 def test_xrefs():
