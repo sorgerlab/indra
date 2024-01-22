@@ -10,6 +10,7 @@ __all__ = ["get_mutations", "get_case_lists", "get_profile_data",
            "get_ccle_lines_for_mutation", "get_ccle_cna",
            "get_ccle_mrna"]
 
+import json
 import logging
 import requests
 from functools import lru_cache
@@ -22,7 +23,6 @@ cbio_url = 'https://www.cbioportal.org/api'
 ccle_study = 'cellline_ccle_broad'
 
 
-# TODO: implement caching with json_data made immutable
 def send_request(method, endpoint, json_data=None):
     """Return the results of a web service request to cBio portal.
 
@@ -49,13 +49,20 @@ def send_request(method, endpoint, json_data=None):
     JSON
         The JSON object returned by the web service call.
     """
+    json_data_str = json.dumps(json_data) if json_data else None
+    res = _send_request_cached(method, endpoint, json_data_str)
+    return res
+
+
+@lru_cache(maxsize=1000)
+def _send_request_cached(method, endpoint, json_data_str=None):
+    """The actual function running the request, using caching"""
     if endpoint.startswith('/'):
         endpoint = endpoint[1:]
+    json_data = json.loads(json_data_str) if json_data_str else {}
     request_fun = getattr(requests, method)
     full_url = cbio_url + '/' + endpoint
-    print('URL: %s' % full_url)
-    print('JSON: %s' % json_data)
-    res = request_fun(full_url, json=json_data or {})
+    res = request_fun(full_url, json=json_data)
     if res.status_code != 200:
         logger.error(f'Request returned with code {res.status_code}: '
                      f'{res.text}')
@@ -139,12 +146,6 @@ def get_case_lists(study_id):
 
     In v2 of the API these are called sample lists.
 
-    Old comment:
-    TAKE NOTE the "case_list_id" are the same thing as "case_set_id"
-    Within the data, this string is referred to as a "case_list_id".
-    Within API calls it is referred to as a 'case_set_id'.
-    The documentation does not make this explicitly clear.
-
     Parameters
     ----------
     study_id : str
@@ -161,8 +162,8 @@ def get_case_lists(study_id):
     return [sl['sampleListId'] for sl in res]
 
 
-def get_profile_data(study_id, gene_list,
-                     profile_filter, case_set_filter=None):
+def get_profile_data(study_id, gene_list, profile_filter,
+                     case_set_filter=None):
     """Return dict of cases and genes and their respective values.
 
     Parameters
@@ -187,8 +188,9 @@ def get_profile_data(study_id, gene_list,
     Returns
     -------
     profile_data : dict[dict[int]]
-        A dict keyed to cases containing a dict keyed to genes
-        containing int
+        A dict keyed to cases (cell lines if using CCLE) in turn
+        containing a dict keyed by genes, with values corresponding to
+        the given profile (e.g., CNA, mutations).
     """
     genetic_profiles = get_genetic_profiles(study_id, profile_filter)
     if genetic_profiles:
