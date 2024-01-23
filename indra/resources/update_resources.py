@@ -688,6 +688,7 @@ def _get_term_name_str(record, name):
             terms = concept.findall('TermList/Term')
             for term in terms:
                 term_name = term.find('String').text
+                term_name = term_name.strip()
                 if term_name != name:
                     all_term_names.append(term_name)
     # Append a list of term names separated by pipes to the table
