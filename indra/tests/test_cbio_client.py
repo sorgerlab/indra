@@ -1,8 +1,6 @@
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-from indra.databases import cbio_client
 import pytest
 
+from indra.databases import cbio_client
 
 @pytest.mark.webservice
 def test_get_cancer_studies():

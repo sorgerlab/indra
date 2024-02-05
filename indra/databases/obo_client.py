@@ -290,7 +290,7 @@ class OboClient(OntologyClient):
                 'namespace': namespace,
                 'id': node,
                 'name': data['name'],
-                'synonyms': synonyms,
+                'synonyms': sorted(set(synonyms), key=lambda x: x.casefold()),
                 'xrefs': xrefs,
                 'alt_ids': alts,
                 'relations': rels_dict,
@@ -323,7 +323,10 @@ class OboClient(OntologyClient):
 
         def sort_key(x):
             val = x['id']
-            if not remove_prefix:
+            # The second condition here is relevant
+            # for external prefixed (and allowed) terms like
+            # BFO
+            if not remove_prefix or ':' in val:
                 val = val.split(':')[1]
             try:
                 val = int(val)
@@ -379,15 +382,18 @@ class PyOboClient(OntologyClient):
             {
                 'id': term.identifier,
                 'name': term.name,
-                'synonyms': [synonym.name for synonym in term.synonyms],
+                # Synonyms can be duplicated in OBO due to different provenance
+                # so we deduplicate here
+                'synonyms': sorted({synonym.name for synonym in term.synonyms},
+                                   key=lambda x: x.casefold()),
                 'xrefs': [
                     dict(namespace=xref.prefix, id=xref.identifier)
                     for xref in term.xrefs
                 ],
-                'alt_ids': [
+                'alt_ids': sorted([
                     alt_id.identifier
                     for alt_id in term.alt_ids
-                ],
+                ]),
                 'relations': _get_pyobo_rels(
                     term,
                     include_relations=include_relations,
