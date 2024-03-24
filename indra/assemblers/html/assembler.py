@@ -250,11 +250,12 @@ class HtmlAssembler(object):
             if not beliefs else standardize_counts(beliefs)
         self.source_counts = get_available_source_counts(self.statements,
                                                          custom_source_list) \
-            if source_counts is None else standardize_counts(source_counts)
+            if source_counts is None \
+            else complete_source_counts(standardize_counts(source_counts))
         self.available_sources = available_sources_stmts(self.statements,
                                                          custom_source_list) if \
             source_counts is None else available_sources_src_counts(
-            source_counts, custom_source_list)
+                source_counts, custom_source_list)
         self.sort_by = sort_by
         self.curation_dict = {} if curation_dict is None else curation_dict
         self.db_rest_url = db_rest_url
@@ -919,3 +920,20 @@ def tag_text(text, tag_info_list):
     # Add the last section of text
     format_text += text[start_pos:]
     return format_text
+
+
+def complete_source_counts(source_counts):
+    """Return source counts that are complete with respect to all sources.
+
+    This is necessary because the statement presentation module expects
+    that all sources that appear in any statement source count appear
+    in all statement source counts (even if the count is 0).
+    """
+    all_sources = set()
+    for stmt_source_counts in source_counts.values():
+        all_sources |= set(stmt_source_counts)
+    for stmt_source_counts in source_counts.values():
+        missing_sources = all_sources - set(stmt_source_counts)
+        for source in missing_sources:
+            stmt_source_counts[source] = 0
+    return source_counts

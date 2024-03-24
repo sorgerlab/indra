@@ -822,3 +822,14 @@ def test_sort_group_by_agent_pair_custom_function():
     assert list(json_model.keys()) == ['Fez-Baz', 'Bar-Baz', 'Fez-Bar']
 
     ha.make_model(grouping_level='agent-pair')
+
+
+def test_incomplete_source_counts():
+    stmt1 = make_stmt()
+    stmt2 = make_stmt()
+    stmt2.enz.db_refs = {'FPLX': 'XXX'}
+    stmt2.get_hash(refresh=True)
+    source_counts = {stmt1.get_hash(): {'reach': 1},
+                     stmt2.get_hash(): {'sparser': 1}}
+    ha = HtmlAssembler([stmt1, stmt2], source_counts=source_counts)
+    ha.make_model()
