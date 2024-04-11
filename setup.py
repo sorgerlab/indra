@@ -12,7 +12,6 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2,<3', 'pandas<2', 'ndex2==2.0.1', 'jinja2',
-                    'markupsafe<2.1.0',
                     'protmapper>=0.0.29', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
 
@@ -37,7 +36,8 @@ def main():
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
                       'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
-                              'docstring-parser', 'gunicorn'],
+                              'docstring-parser', 'gunicorn',
+                              'markupsafe<2.1.0'],
                       'sklearn_belief': ['scikit-learn'],
                       'owl': ['pronto'],
                       'tests': ['pytest', 'pytest-cov'],
