@@ -12,7 +12,6 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2,<3', 'pandas<2', 'ndex2==2.0.1', 'jinja2',
-                    'markupsafe<2.1.0',
                     'protmapper>=0.0.29', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
 
