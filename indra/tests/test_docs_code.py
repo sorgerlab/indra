@@ -16,13 +16,11 @@ def _get_gene_network_stmts():
     return gn.get_statements()
 
 
-gn_stmts = _get_gene_network_stmts()
-
 # CODE IN README.md #
 
 # From stmt assembly pipeline description in README.md
 def test_readme_pipeline():
-    stmts = gn_stmts  # Added only here, not in docs
+    stmts = _get_gene_network_stmts()  # Added only here, not in docs
     from indra.tools import assemble_corpus as ac
     stmts = ac.filter_no_hypothesis(stmts)
     stmts = ac.map_grounding(stmts)
@@ -180,7 +178,7 @@ def test_gene_network():
     # Chunk 6
     from indra.tools import assemble_corpus as ac
     # stmts = biopax_stmts + bel_stmts + literature_stmts  # tested elsewhere
-    stmts = gn_stmts + literature_stmts  # Added instead of above line
+    stmts = _get_gene_network_stmts() + literature_stmts  # Added instead of above line
     stmts = ac.map_grounding(stmts)
     stmts = ac.map_sequence(stmts)
     stmts = ac.run_preassembly(stmts)
@@ -263,7 +261,7 @@ def test_getting_started6():
 @pytest.mark.nogha
 def test_getting_started7_8():
     # Chunk 7
-    stmts = gn_stmts  # Added only in this test, not in docs
+    stmts = _get_gene_network_stmts()  # Added only in this test, not in docs
     from indra.assemblers.pysb import PysbAssembler
     pa = PysbAssembler()
     pa.add_statements(stmts)
@@ -281,7 +279,7 @@ def test_getting_started9_10():
 
     # Chunk 10
     from indra.assemblers.indranet import IndraNetAssembler
-    indranet_assembler = IndraNetAssembler(statements=gn_stmts)
+    indranet_assembler = IndraNetAssembler(statements=_get_gene_network_stmts())
     indranet = indranet_assembler.make_model(method='df')
     assert len(indranet.nodes) > 0, 'indranet contains no nodes'
     assert len(indranet.edges) > 0, 'indranet contains no edges'
