@@ -28,6 +28,9 @@ UniProt client (:py:mod:`indra.databases.uniprot_client`)
 .. automodule:: indra.databases.uniprot_client
     :members:
 
+See also https://protmapper.readthedocs.io/en/latest/modules/uniprot.html
+whose functions this module imports and exposes.
+
 ChEBI client (:py:mod:`indra.databases.chebi_client`)
 -----------------------------------------------------
 
