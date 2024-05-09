@@ -1,6 +1,7 @@
 import random
 import pickle
 import numpy as np
+import pandas as pd
 from copy import copy
 from os.path import join, abspath, dirname
 from collections import defaultdict, Counter
@@ -37,8 +38,7 @@ with open(test_stmt_cur_path, 'rb') as f:
     test_stmts_cur, y_arr_stmts_cur = pickle.load(f)
 
 
-with open(test_df_path, 'rb') as f:
-    test_df, y_arr_df = pickle.load(f)
+test_df, y_arr_df = pd.read_pickle(test_df_path)
 
 
 # A set of statements derived from Signor used for testing purposes.
