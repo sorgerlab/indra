@@ -40,7 +40,12 @@ def main():
                               'markupsafe<2.1.0'],
                       'sklearn_belief': ['scikit-learn'],
                       'owl': ['pronto'],
-                      'tests': ['pytest', 'pytest-cov'],
+                      'tests':
+                        ['pytest',
+                         'pytest-cov',
+                         'pynose'  # This is needed for PySB with_model in
+                                   # some tests
+                        ],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
@@ -117,6 +122,8 @@ def main():
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.10"]
+        python-version: ["3.8", "3.12"]
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
@@ -91,7 +91,7 @@ jobs:
         #export NOSE_IGNORE_FILES="find_full_text_sentence.py";
         #- cd $TRAVIS_BUILD_DIR
         # Now run all INDRA tests
-        pytest -v -m "$PYTESTMARKS" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 indra/tests
+        pytest -v -m "$PYTESTMARKS" --ignore-glob='*tees*' --ignore-glob='*isi*' --ignore-glob='*test_reach*' --cov=indra --cov-report=term-missing --doctest-modules --durations=10 --continue-on-collection-errors indra/tests
         pytest -v -m "$PYTESTMARKS" indra/tests/test_reach.py
         # TEES tests
         #- python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
