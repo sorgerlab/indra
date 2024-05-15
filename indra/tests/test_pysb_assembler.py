@@ -1272,7 +1272,9 @@ def test_contact_map_cycles_1():
     assert len(graph.nodes()) == 9, len(graph.nodes)
     assert len(graph.edges()) == 9, len(graph.edges)
 
-    cycles = get_cm_cycles(graph)
+    # Specify the root node to be 0 - corresponding to Agent 'a' - to
+    # ensure that the order of the output cycles is predictable
+    cycles = get_cm_cycles(graph, root_node=0)
     assert len(cycles) == 1, cycles
     assert cycles[0] == ['a(b)', 'b(a)', 'b(c)', 'c(b)', 'c(a)', 'a(c)']
 
