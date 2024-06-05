@@ -320,7 +320,7 @@ class AssemblyPipeline():
             new_kwargs['statements'] = statements
         if kwargs:
             for k, v in kwargs.items():
-                if k not in new_kwargs and k in inspect.getargspec(func).args:
+                if k not in new_kwargs and k in inspect.getfullargspec(func).args:
                     new_kwargs[k] = v
         return self.run_simple_function(func, *new_args, **new_kwargs)
 
