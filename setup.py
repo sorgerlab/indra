@@ -36,8 +36,7 @@ def main():
                       'plot': ['matplotlib'],
                       'isi': ['nltk<3.6', 'unidecode'],
                       'api': ['flask>=3.0,4.0', 'flask_restx<0.4', 'flask_cors',
-                              'docstring-parser', 'gunicorn',
-                              'markupsafe<2.1.0'],
+                              'docstring-parser', 'gunicorn'],
                       # scikit-learn 1.5.0 breaks DisambManager.run_adeft_disambiguation
                       # see: https://github.com/gyorilab/adeft/issues/80
                       'sklearn_belief': ['scikit-learn<1.5.0'],
