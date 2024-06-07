@@ -38,7 +38,9 @@ def main():
                       'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
                               'docstring-parser', 'gunicorn',
                               'markupsafe<2.1.0'],
-                      'sklearn_belief': ['scikit-learn'],
+                      # scikit-learn 1.5.0 breaks DisambManager.run_adeft_disambiguation
+                      # see: https://github.com/gyorilab/adeft/issues/80
+                      'sklearn_belief': ['scikit-learn<1.5.0'],
                       'owl': ['pronto'],
                       'tests':
                         ['pytest',
