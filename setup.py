@@ -11,7 +11,7 @@ with open(readme_path, 'r', encoding='utf-8') as fh:
 def main():
     install_list = ['pysb>=1.3.0', 'objectpath',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx>=2,<3', 'pandas', 'ndex2==2.0.1', 'jinja2',
+                    'networkx>=3', 'pandas>=2', 'ndex2==2.0.1', 'jinja2',
                     'protmapper>=0.0.29', 'obonet',
                     'tqdm', 'pybiopax>=0.0.5']
 
@@ -38,7 +38,9 @@ def main():
                       'api': ['flask<2.0', 'flask_restx<0.4', 'flask_cors',
                               'docstring-parser', 'gunicorn',
                               'markupsafe<2.1.0'],
-                      'sklearn_belief': ['scikit-learn'],
+                      # scikit-learn 1.5.0 breaks DisambManager.run_adeft_disambiguation
+                      # see: https://github.com/gyorilab/adeft/issues/80
+                      'sklearn_belief': ['scikit-learn<1.5.0'],
                       'owl': ['pronto'],
                       'tests':
                         ['pytest',
