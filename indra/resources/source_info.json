@@ -299,6 +299,16 @@
             "background-color": "#6600cc"
         }
     },
+    "evex": {
+        "name": "EVEX",
+        "link": "http://evexdb.org/",
+        "type": "reader",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#295c8d"
+        }
+    },
     "creeds": {
         "name": "CREEDS",
         "link": "https://maayanlab.cloud/CREEDS/",
