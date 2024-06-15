@@ -985,6 +985,20 @@ def update_ec_code():
     PyOboClient.update_by_prefix("ec-code", indra_prefix='eccode')
 
 
+def update_rgd():
+    url = "https://download.rgd.mcw.edu/data_release/GENES_RAT.txt"
+    df = pandas.read_csv(url, sep='\t', comment='#', dtype=str)
+    df = df[['GENE_RGD_ID', 'SYMBOL', 'OLD_SYMBOL', 'ENSEMBL_ID']]
+    df.rename(columns={'GENE_RGD_ID': 'ID',
+                       'SYMBOL': 'symbol',
+                       'OLD_SYMBOL': 'synonyms',
+                       'ENSEMBL_ID': 'ensembl'},
+              inplace=True)
+    df['ID'] = df['ID'].astype(str)
+    fname = os.path.join(path, 'rgd_entries.tsv')
+    df.to_csv(fname, index=None, sep='\t')
+
+
 def update_mgi():
     # This provides basic ID and naming resources
     url = "http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt"
