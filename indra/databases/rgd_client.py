@@ -36,8 +36,6 @@ def get_name_from_id(rgd_id: str) -> Union[str, None]:
     :
         The RGD symbol for the given ID or None if not available.
     """
-    if rgd_id and rgd_id.startswith('RGD:'):
-        rgd_id = rgd_id[4:]
     return rgd_id_to_name.get(rgd_id)
 
 
@@ -55,8 +53,6 @@ def get_synonyms(rgd_id: str) -> List[str]:
         The list of synonyms corresponding to the RGD ID, or an empty list
         if not available.
     """
-    if rgd_id and rgd_id.startswith('RGD:'):
-        rgd_id = rgd_id[4:]
     return rgd_synonyms.get(rgd_id, [])
 
 
