@@ -149,3 +149,8 @@ MGI client (:py:mod:`indra.databases.mgi_client`)
 -------------------------------------------------
 .. automodule:: indra.databases.mgi_client
     :members:
+
+RGD client (:py:mod:`indra.databases.rgd_client`)
+-------------------------------------------------
+.. automodule:: indra.databases.rgd_client
+    :members:
