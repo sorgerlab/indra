@@ -175,10 +175,10 @@ def test_to_digraph():
             'Activation', 'Phosphorylation', 'Inhibition', 'IncreaseAmount'}
     assert all(digraph.edges[e].get('belief', False) for e in digraph.edges)
     assert all(isinstance(digraph.edges[e]['belief'],
-                          (float, np.longfloat)) for e in digraph.edges)
+                          (float, np.longdouble)) for e in digraph.edges)
     assert all(digraph.edges[e].get('weight', False) for e in digraph.edges)
     assert all(isinstance(digraph.edges[e]['weight'],
-                          (float, np.longfloat)) for e in digraph.edges)
+                          (float, np.longdouble)) for e in digraph.edges)
     digraph_from_df = IndraNet.digraph_from_df(df)
     assert nx.is_isomorphic(digraph, digraph_from_df)
 
@@ -206,11 +206,11 @@ def test_to_signed_graph():
     assert all(signed_graph.edges[e].get('belief', False) for e in
                signed_graph.edges)
     assert all(isinstance(signed_graph.edges[e]['belief'],
-                          (float, np.longfloat)) for e in signed_graph.edges)
+                          (float, np.longdouble)) for e in signed_graph.edges)
     assert all(signed_graph.edges[e].get('weight', False) for e in
                signed_graph.edges)
     assert all(isinstance(signed_graph.edges[e]['weight'],
-                          (float, np.longfloat)) for e in signed_graph.edges)
+                          (float, np.longdouble)) for e in signed_graph.edges)
 
 
 def _weight_mapping(G):

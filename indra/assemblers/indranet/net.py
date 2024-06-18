@@ -327,8 +327,8 @@ def _simple_scorer_update(G, edge):
     # Catch underflow
     except FloatingPointError as err:
         # Numpy precision
-        NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision
-        logger.warning('%s: Resetting ag_belief to 10*np.longfloat precision '
+        NP_PRECISION = 10 ** -np.finfo(np.longdouble).precision
+        logger.warning('%s: Resetting ag_belief to 10*np.longdouble precision '
                        '(%.0e)' % (err, Decimal(NP_PRECISION * 10)))
         ag_belief = NP_PRECISION * 10
     return ag_belief
@@ -337,14 +337,14 @@ def _simple_scorer_update(G, edge):
 def _complementary_belief(G, edge):
     # Aggregate belief score: 1-prod(1-belief_i)
     np.seterr(all='raise')
-    NP_PRECISION = 10 ** -np.finfo(np.longfloat).precision  # Numpy precision
+    NP_PRECISION = 10 ** -np.finfo(np.longdouble).precision  # Numpy precision
     belief_list = [s['belief'] for s in G.edges[edge]['statements']]
     try:
-        ag_belief = np.longfloat(1.0) - np.prod(np.fromiter(
-            map(lambda belief: np.longfloat(1.0) - belief, belief_list),
-            dtype=np.longfloat))
+        ag_belief = np.longdouble(1.0) - np.prod(np.fromiter(
+            map(lambda belief: np.longdouble(1.0) - belief, belief_list),
+            dtype=np.longdouble))
     except FloatingPointError as err:
-        logger.warning('%s: Resetting ag_belief to 10*np.longfloat precision '
+        logger.warning('%s: Resetting ag_belief to 10*np.longdouble precision '
                        '(%.0e)' % (err, Decimal(NP_PRECISION * 10)))
         ag_belief = NP_PRECISION * 10
     return ag_belief

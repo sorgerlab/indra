@@ -71,7 +71,7 @@ def _setup_unsigned_graph():
     # Add belief
     for e in dg.edges:
         dg.edges[e]['belief'] = edge_beliefs[e]
-        dg.edges[e]['weight'] = -np.log(edge_beliefs[e], dtype=np.longfloat)
+        dg.edges[e]['weight'] = -np.log(edge_beliefs[e], dtype=np.longdouble)
     
     # Add edge_by_hash
     dg.graph['hashes'] = hashes
