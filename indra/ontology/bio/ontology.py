@@ -26,7 +26,7 @@ class BioOntology(IndraOntology):
     # should be incremented to "force" rebuilding the ontology to be consistent
     # with the underlying resource files.
     name = 'bio'
-    version = '1.33'
+    version = '1.34'
     ontology_namespaces = [
         'go', 'efo', 'hp', 'doid', 'chebi', 'ido', 'mondo', 'eccode',
     ]
@@ -147,11 +147,15 @@ class BioOntology(IndraOntology):
         from indra.databases import hgnc_client
         from indra.databases import uniprot_client
         edges = []
-        for hid, uid in hgnc_client.uniprot_ids.items():
-            uids = uid.split(', ')
+        for hid, upid in hgnc_client.uniprot_ids.items():
+            uids = upid.split(', ')
+            preferred = hgnc_client.uniprot_ids_preferred.get(hid)
+            if preferred:
+                uids = [preferred]
             for uid in uids:
+                edge_data = {'type': 'xref', 'source': 'hgnc'}
                 edges.append((self.label('HGNC', hid), self.label('UP', uid),
-                              {'type': 'xref', 'source': 'hgnc'}))
+                              edge_data))
         self.add_edges_from(edges)
 
         edges = [(self.label('UP', uid), self.label('HGNC', hid),
