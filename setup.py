@@ -13,7 +13,7 @@ def main():
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=3', 'pandas>=2', 'ndex2==2.0.1', 'jinja2',
                     'protmapper>=0.0.29', 'obonet',
-                    'tqdm', 'pybiopax>=0.0.5']
+                    'tqdm', 'pybiopax>=0.0.5', 'numpy<2']
 
     extras_require = {
                       # Inputs and outputs
