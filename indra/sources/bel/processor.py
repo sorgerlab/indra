@@ -546,28 +546,17 @@ def get_db_refs_by_name(ns, name, node_data):
         if up_id:
             db_refs = {'UP': up_id}
     # Map Selventa families and complexes to FamPlex
-    elif ns == 'SFAM':
+    elif ns in {'SFAM', 'SCOMP'}:
         try:
-            sfam_id, xrefs = selventa_lookup[('SFAM', name)]
-            db_refs = {"SFAM": sfam_id}
+            selventa_id, xrefs = selventa_lookup[(ns, name)]
+            db_refs = {ns: selventa_id}
             indra_name = bel_to_indra.get(name)
         except KeyError:
             indra_name = None
             db_refs = None
-
         if indra_name is None:
-            logger.info('Could not find mapping for BEL/SFAM family: '
-                        '%s (%s)' % (name, node_data))
-        else:
-            db_refs['FPLX'] = indra_name
-            name = indra_name
-    elif ns == 'SCOMP':
-        scomp_id, xrefs = selventa_lookup[('SCOMP', name)]
-        db_refs = {'SCOMP': scomp_id}
-        indra_name = bel_to_indra.get(name)
-        if indra_name is None:
-            logger.info('Could not find mapping for BEL/SCOMP complex: '
-                        '%s (%s)' % (name, node_data))
+            logger.info('Could not find mapping for BEL/%s family: '
+                        '%s (%s)' % (ns, name, node_data))
         else:
             db_refs['FPLX'] = indra_name
             name = indra_name
