@@ -312,7 +312,8 @@ MOCK_MODULES = [
     'pygraphviz', 'jnius', 'jnius_config', 'flask',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
     'functools32', 'ndex2', 'ndex2.client', 'ndex2.nice_cx_network',
-    'nltk', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
+    'nltk', 'nltk.stem', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib',
+    'reportlab.lib.enums',
     'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
     'reportlab.lib.units'
     ]
