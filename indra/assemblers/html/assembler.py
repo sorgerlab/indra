@@ -194,7 +194,10 @@ class HtmlAssembler(object):
         the default ones present in indra/resources/source_info.json
         The structure of the input must conform to:
 
-        {
+        .. code-block:: json
+
+          {
+
             "source_key": {
                 "name": "Source Name",
                 "link": "<url>",
@@ -206,7 +209,7 @@ class HtmlAssembler(object):
                 }
             },
             ...
-        }
+          }
 
         Where <text color> and <badge color> must be color names or color
         codes allowed in an html document per the CSS3 specification:
