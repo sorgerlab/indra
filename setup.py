@@ -20,7 +20,7 @@ def main():
                       'trips_offline': ['pykqml'],
                       'reach_offline': ['cython<3', 'pyjnius==1.1.4'],
                       'eidos_offline': ['cython<3', 'pyjnius==1.1.4'],
-                      'hypothesis': ['gilda>=0.10.2'],
+                      'hypothesis': ['gilda>1.0.0'],
                       'geneways': ['stemming', 'nltk<3.6'],
                       'bel': ['pybel>=0.15.0,<0.16.0'],
                       'sbml': ['python-libsbml'],
@@ -28,7 +28,7 @@ def main():
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml>=5.1.0',
                                   'click'],
                       'explanation': ['kappy==4.1.2', 'paths-graph'],
-                      'grounding': ['adeft', 'gilda>=0.10.2'],
+                      'grounding': ['adeft', 'gilda>1.0.0'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
                       # Utilities
