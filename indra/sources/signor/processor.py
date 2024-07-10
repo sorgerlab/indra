@@ -573,6 +573,9 @@ def process_uniprot_entry(up_id):
     # As of 4/2023, the ID is formatted as P12345-PRO_12345 or P12345-1.
     if up_id == 'P17861_P17861-2':
         up_id = 'P17861-2'
+    # Fix for a July 2024 release issue
+    if up_id == 'MDM2':
+        return {'UP': 'Q00987'}
     parts = up_id.split('-')
     if len(parts) == 1:
         return {'UP': up_id}
