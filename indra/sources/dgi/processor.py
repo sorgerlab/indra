@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Set, Type
 
 import pandas as pd
 
+from ...ontology.bio import bio_ontology
 from ...ontology.standardize import get_standard_agent
 from ...statements import (
     default_ns_order,
@@ -97,7 +98,13 @@ class DGIProcessor:
         pmids,
     ) -> Iterable[Statement]:
         """Convert a row in the DGI dataframe to a statement."""
-        gene_agent = get_standard_agent(gene_name, {"EGID": ncbigene_id})
+        if bio_ontology.get_id_from_name('HGNC', gene_name):
+            _, gene_id = bio_ontology.get_id_from_name('HGNC', gene_name)
+            gene_agent = get_standard_agent(gene_name, {"HGNC": gene_id})
+        else:
+            self.skipped += 1
+            return
+
 
         try:
             drug_namespace, drug_identifier = drug_curie.split(":", 1)
@@ -133,9 +140,9 @@ class DGIProcessor:
 def process_df(df: pd.DataFrame) -> pd.DataFrame:
     """Process the DGI interactions dataframe."""
     # remove rows with missing information
-    df = df[df["entrez_id"].notna()]
+    df = df[df["gene_concept_id"].notna()]
     df = df[df["drug_concept_id"].notna()]
-    df["PMIDs"] = df["PMIDs"].map(_safe_split)
+    df['pmids'] = None
     return df
 
 
@@ -257,6 +264,8 @@ SKIP_TYPES = {
     "multitarget",
     "vaccine",
     "nan",
+    'immunotherapy',
+    'other/unknown',
 }
 
 _UNHANDLED = set()
