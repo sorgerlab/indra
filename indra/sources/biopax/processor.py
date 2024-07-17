@@ -118,10 +118,10 @@ class BiopaxProcessor(object):
                    if f.uid in self._mod_conditions}
         to_mods = {mc.matches_key(): mc for mc in to_mods}
 
-        gained_mods = {to_mods[k] for k in
-                       set(to_mods.keys()) - set(from_mods.keys())}
-        lost_mods = {from_mods[k] for k in
-                     set(from_mods.keys()) - set(to_mods.keys())}
+        gained_mods = [to_mods[k] for k in
+                       set(to_mods.keys()) - set(from_mods.keys())]
+        lost_mods = [from_mods[k] for k in
+                     set(from_mods.keys()) - set(to_mods.keys())]
         return gained_mods, lost_mods, activity_change
 
     def _extract_features(self):
@@ -661,10 +661,15 @@ class BiopaxProcessor(object):
 
     @staticmethod
     def _get_reference_primary_id(entref: bp.EntityReference):
+        from indra.databases import bioregistry_client
         # This is a simple check to see if we should treat this as a URL
         if not entref.uid.startswith('http'):
             return None, None
-        primary_ns, primary_id = parse_identifiers_url(entref.uid)
+        url = entref.uid
+        if 'bioregistry' in url:
+            primary_ns, primary_id = bioregistry_client.get_ns_id_from_bioregistry_curie(url.split("/")[-1])
+        else:
+            primary_ns, primary_id = parse_identifiers_url(url)
         return primary_ns, primary_id
 
     @staticmethod
