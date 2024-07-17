@@ -84,6 +84,11 @@ def process_jsonl_file(filename, doc_id_type=None):
         rp.extract_statements()
     return rp
 
+def process_line(line):
+    try:
+        return json.loads(line)
+    except json.JSONDecodeError:
+        return None
 
 def process_jsonl_str(jsonl_str, doc_id_type=None):
     """Process RLIMSP extractions from a JSON-L string.
@@ -105,7 +110,13 @@ def process_jsonl_str(jsonl_str, doc_id_type=None):
         An RlimspProcessor which contains a list of extracted INDRA Statements
         in its statements attribute.
     """
-    json_list = [json.loads(line) for line in jsonl_str.splitlines()]
+    from multiprocessing import Pool
+    import os
+    num_processes = os.cpu_count()
+    with Pool(num_processes) as pool:
+        json_list = pool.map(process_line, jsonl_str.splitlines())
+    json_list = [obj for obj in json_list if obj is not None]
+    #json_list = [json.loads(line) for line in jsonl_str.splitlines()]
     rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
     rp.extract_statements()
     return rp
