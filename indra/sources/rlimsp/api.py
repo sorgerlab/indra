@@ -4,9 +4,11 @@ __all__ = ['process_from_webservice',
            'process_from_json_file',
            'process_from_jsonish_str']
 
+import os
 import json
 import logging
 import requests
+from multiprocessing import Pool
 
 from .processor import RlimspProcessor
 
@@ -90,7 +92,7 @@ def process_line(line):
     except json.JSONDecodeError:
         return None
 
-def process_jsonl_str(jsonl_str, doc_id_type=None):
+def process_jsonl_str(jsonl_str, doc_id_type=None, num_processes=None):
     """Process RLIMSP extractions from a JSON-L string.
 
     Parameters
@@ -103,6 +105,11 @@ def process_jsonl_str(jsonl_str, doc_id_type=None):
         'pmcid' explicitly, instead if contains a 'docId' key. This parameter
         allows defining what ID type 'docId' sould be interpreted as. Its
         values should be 'pmid' or 'pmcid' or None if not used.
+    num_processes : Optional[int]
+        The number of processes to use for parallel processing of the JSON-L
+        lines. If None, the number of processes is set to the number of CPUs
+        on the machine. If 1, no parallel processing is done.
+        Otherwise the provided nmber of processes is used.
 
     Returns
     -------
@@ -110,13 +117,14 @@ def process_jsonl_str(jsonl_str, doc_id_type=None):
         An RlimspProcessor which contains a list of extracted INDRA Statements
         in its statements attribute.
     """
-    from multiprocessing import Pool
-    import os
-    num_processes = os.cpu_count()
-    with Pool(num_processes) as pool:
-        json_list = pool.map(process_line, jsonl_str.splitlines())
+    if num_processes is None:
+        num_processes = os.cpu_count()
+    if num_processes > 1:
+        with Pool(num_processes) as pool:
+            json_list = pool.map(process_line, jsonl_str.splitlines())
+    else:
+        json_list = [process_line(line) for line in jsonl_str.splitlines()]
     json_list = [obj for obj in json_list if obj is not None]
-    #json_list = [json.loads(line) for line in jsonl_str.splitlines()]
     rp = RlimspProcessor(json_list, doc_id_type=doc_id_type)
     rp.extract_statements()
     return rp
