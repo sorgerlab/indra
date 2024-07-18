@@ -315,12 +315,12 @@ class BiopaxProcessor(object):
             assert isinstance(agent, Agent)
             if gained_mods:
                 ag = copy.deepcopy(agent)
-                ag.mods = gained_mods
+                ag.mods = list(gained_mods)
                 stmt = ActiveForm(ag, 'activity', is_active, evidence=ev)
                 self.statements.append(stmt)
             if lost_mods:
                 ag = copy.deepcopy(agent)
-                ag.mods = lost_mods
+                ag.mods = list(lost_mods)
                 stmt = ActiveForm(ag, 'activity', not is_active, evidence=ev)
                 self.statements.append(stmt)
 
