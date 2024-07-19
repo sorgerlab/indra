@@ -718,12 +718,12 @@ def _get_agent_type(agent):
 
 def _fix_evidence_text(txt):
     """Eliminate some symbols to have cleaner supporting text."""
-    txt = re.sub('[ ]?\( xref \)', '', txt)
+    txt = re.sub(r'[ ]?\( xref \)', '', txt)
     # This is to make [ xref ] become [] to match the two readers
-    txt = re.sub('\[ xref \]', '[]', txt)
-    txt = re.sub('[\(]?XREF_BIBR[\)]?[,]?', '', txt)
-    txt = re.sub('[\(]?XREF_FIG[\)]?[,]?', '', txt)
-    txt = re.sub('[\(]?XREF_SUPPLEMENT[\)]?[,]?', '', txt)
+    txt = re.sub(r'\[ xref \]', '[]', txt)
+    txt = re.sub(r'[\(]?XREF_BIBR[\)]?[,]?', '', txt)
+    txt = re.sub(r'[\(]?XREF_FIG[\)]?[,]?', '', txt)
+    txt = re.sub(r'[\(]?XREF_SUPPLEMENT[\)]?[,]?', '', txt)
     txt = txt.strip()
     return txt
 

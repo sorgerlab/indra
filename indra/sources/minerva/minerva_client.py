@@ -32,7 +32,7 @@ def get_latest_project_id(map_name=default_map_name):
     if '_' not in map_name:
         map_name = map_name.replace('map', '_map')
     # Find projects that start with the map name and end with the date
-    p = '%s_\d{2}[a-zA-Z]{3}\d{2}$' % map_name
+    p = r'%s_\d{2}[a-zA-Z]{3}\d{2}$' % map_name
     # Pick project with latest creation date
     latest_project = max(
         [pr for pr in projects if re.match(p, pr['projectId'])],

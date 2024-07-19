@@ -24,8 +24,8 @@ def test_dgi_processor():
     assert statement.obj.db_refs['EGID'] == '1022'
     assert statement.obj.db_refs['HGNC'] == '1778'
     assert statement.subj.name == \
-        ('N-(5-\{[(5-tert-butyl-1,3-oxazol-2-yl)methyl]sulfanyl\}-1,3-'
-         'thiazol-2-yl)piperidine-4-carboxamide'), statement.subj.name
+        (r'N-(5-\{[(5-tert-butyl-1,3-oxazol-2-yl)methyl]sulfanyl\}-1,3-'
+         r'thiazol-2-yl)piperidine-4-carboxamide'), statement.subj.name
     assert statement.subj.db_refs['CHEMBL'] == 'CHEMBL296468'
     assert 1 == len(statement.evidence)
     evidence = statement.evidence[0]

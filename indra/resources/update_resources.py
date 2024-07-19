@@ -493,13 +493,13 @@ def update_ncit_map():
         return df
 
     df_hgnc = get_ncit_df(url_hgnc)
-    df_hgnc.replace('HGNC:(\d*)\s*', '\\1', inplace=True, regex=True)
+    df_hgnc.replace(r'HGNC:(\d*)\s*', '\\1', inplace=True, regex=True)
     df_go = get_ncit_df(url_go)
     df_go.rename(columns={'Source Code': 'Target Code',
-                       'Target Code': 'Source Code',
-                       'Source Coding Scheme': 'Target Coding Scheme',
-                       'Target Coding Scheme': 'Source Coding Scheme'},
-              inplace=True)
+                          'Target Code': 'Source Code',
+                          'Source Coding Scheme': 'Target Coding Scheme',
+                          'Target Coding Scheme': 'Source Coding Scheme'},
+                 inplace=True)
     df_chebi = get_ncit_df(url_chebi)
     df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
 
