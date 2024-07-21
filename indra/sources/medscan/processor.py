@@ -223,7 +223,7 @@ D_INHIBITION_VERBS = ['DirectRegulation-negative',
 # All inhibition verbs
 ALL_INHIBITION_VERBS = INHIBITION_VERBS + D_INHIBITION_VERBS
 
-PMID_PATT = re.compile('info:pmid/(\d+)')
+PMID_PATT = re.compile(r'info:pmid/(\d+)')
 
 
 class MedscanProcessor(object):

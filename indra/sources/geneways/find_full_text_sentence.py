@@ -37,7 +37,7 @@ class FullTextMention(object):
         for element in root_element:
             if not self.any_ends_with(block_tags, element.tag):
                 # tag not in block_tags
-                if element.text is not None and not re.match('^\s*$',
+                if element.text is not None and not re.match(r'^\s*$',
                                                              element.text):
                     sentences.extend(self.sentence_tokenize(element.text))
                 sentences.extend(self.get_sentences(element, block_tags))
@@ -136,7 +136,7 @@ class FullTextMention(object):
 
     def string_matches_sans_whitespace(self, str1, str2_fuzzy_whitespace):
         """Check if two strings match, modulo their whitespace."""
-        str2_fuzzy_whitespace = re.sub('\s+', '\s*', str2_fuzzy_whitespace)
+        str2_fuzzy_whitespace = re.sub(r'\s+', r'\s*', str2_fuzzy_whitespace)
         return re.search(str2_fuzzy_whitespace, str1) is not None
 
     def sentence_matches(self, sentence_text):

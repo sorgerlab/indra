@@ -2,6 +2,7 @@ import json
 from indra.sources import bel, biopax
 from collections import OrderedDict
 
+
 def get_bel_statistics(bp):
     if bp is None:
         return 0, 0
@@ -9,14 +10,16 @@ def get_bel_statistics(bp):
     num_extracted = len(bp.converted_direct_stmts)
     return num_all, num_extracted
 
+
 def get_biopax_statistics(bp):
     if bp is None:
         return 0, 0
     num_all, num_extracted = bp.get_coverage()
     return num_all, num_extracted
 
+
 def print_stats(stats):
-    header = ['Gene', 'BPXtot', 'BPXext', 'BPX\%', 'BELtot', 'BELext', 'BEL\%']
+    header = ['Gene', 'BPXtot', 'BPXext', 'BPX\\%', 'BELtot', 'BELext', 'BEL\\%']
     print(' & '.join(header) + '\\\\')
     for group, gene_stats in stats.items():
         for gene, gene_stats in gene_stats.items():
@@ -32,6 +35,7 @@ def print_stats(stats):
                                     if gene_stats['bel'][0] else 'N/A')]
             print(' & '.join([gene] + bpx_vals + bel_vals) + '\\\\')
         print('\\hline')
+
 
 if __name__ == '__main__':
     all_genes = \
