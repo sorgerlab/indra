@@ -13,12 +13,11 @@ logger = logging.getLogger(__name__)
 
 USECOLS = [
     "gene_name",
-    "entrez_id",
-    "interaction_claim_source",
-    "interaction_types",
+    "gene_concept_id",
+    "interaction_source_db_name",
+    "interaction_type",
     "drug_name",
     "drug_concept_id",
-    "PMIDs",
 ]
 
 
@@ -87,9 +86,10 @@ def get_version_df(version: Optional[str] = None) -> Tuple[str, pd.DataFrame]:
         else:
             version = bioversions.get_version("Drug Gene Interaction Database")
     if version is None:
-        version = "2021-Jan"
-        logger.warning(f"Could not find version with bioregistry, using"
+        version = "latest"
+        logger.warning(f"Could not find version with bioregistry, using "
                        f"version {version}.")
-    url = f"https://www.dgidb.org/data/monthly_tsvs/{version}/interactions.tsv"
+    url = f"https://www.dgidb.org/data/{version}/interactions.tsv"
     df = pd.read_csv(url, usecols=USECOLS, sep="\t", dtype=str)
+    df = df[USECOLS]
     return version, df

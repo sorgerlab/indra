@@ -14,7 +14,7 @@ from indra.statements.validate import print_validation_report, \
     assert_valid_db_refs, validate_id
 from indra.ontology.standardize import standardize_name_db_refs
 from indra.databases import hgnc_client, uniprot_client, chebi_client, \
-    parse_identifiers_url
+    parse_identifiers_url, bioregistry_client
 
 logger = logging.getLogger(__name__)
 
@@ -315,12 +315,12 @@ class BiopaxProcessor(object):
             assert isinstance(agent, Agent)
             if gained_mods:
                 ag = copy.deepcopy(agent)
-                ag.mods = gained_mods
+                ag.mods = list(gained_mods)
                 stmt = ActiveForm(ag, 'activity', is_active, evidence=ev)
                 self.statements.append(stmt)
             if lost_mods:
                 ag = copy.deepcopy(agent)
-                ag.mods = lost_mods
+                ag.mods = list(lost_mods)
                 stmt = ActiveForm(ag, 'activity', not is_active, evidence=ev)
                 self.statements.append(stmt)
 
@@ -664,7 +664,14 @@ class BiopaxProcessor(object):
         # This is a simple check to see if we should treat this as a URL
         if not entref.uid.startswith('http'):
             return None, None
-        primary_ns, primary_id = parse_identifiers_url(entref.uid)
+        url = entref.uid
+        if 'bioregistry' in url:
+            primary_ns, primary_id = \
+                bioregistry_client.get_ns_id_from_bioregistry_curie(
+                    url.split("/")[-1]
+                )
+        else:
+            primary_ns, primary_id = parse_identifiers_url(url)
         return primary_ns, primary_id
 
     @staticmethod
