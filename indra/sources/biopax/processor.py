@@ -40,6 +40,16 @@ class BiopaxProcessor(object):
     ----------
     model : org.biopax.paxtools.model.Model
         A BioPAX model object (java object)
+    use_conversion_level_evidence : Optional[bool]
+        If True, the evidence for each Statement is taken from the
+        conversion that the Statement was extracted from. If False,
+        the evidence is taken from the individual control that the
+        Statement was extracted from. Setting this toi True
+        could have unintended consequences because e.g., a
+        Phosphorylation could be extracted from a Conversion
+        that has multiple controls, and the evidence for the
+        Phosphorylation would generally not be specific
+        to the kinase in the statement. Default is False.
 
     Attributes
     ----------
