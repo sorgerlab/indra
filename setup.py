@@ -87,6 +87,7 @@ def main():
                     'indra.sources.crog', 'indra.sources.ctd',
                     'indra.sources.dgi',
                     'indra.sources.drugbank', 'indra.sources.eidos',
+                    'indra.sources.evex',
                     'indra.sources.geneways', 'indra.sources.gnbr',
                     'indra.sources.hprd', 'indra.sources.hypothesis',
                     'indra.sources.index_cards',
