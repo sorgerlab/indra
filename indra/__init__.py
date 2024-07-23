@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 import logging
 import os
 import sys
-__version__ = '1.22.0'
+__version__ = '1.23.0'
 
 __all__ = ['assemblers', 'belief', 'databases', 'explanation', 'literature',
            'mechlinker', 'preassembler', 'sources', 'tools', 'util']
