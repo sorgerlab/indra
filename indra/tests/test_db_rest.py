@@ -244,7 +244,7 @@ def test_get_statement_queries():
 
 @pytest.mark.nonpublic
 def test_get_statements_end_on_limit():
-    p = dbr.get_statements(subject="TNF", limit=1400, timeout=1)
+    p = dbr.get_statements(subject="STAT5", limit=1400, timeout=1)
     try:
         t = 0
         violations = 0
