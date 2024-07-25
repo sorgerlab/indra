@@ -853,7 +853,7 @@ def test_reach_process_json():
 
 @pytest.mark.nogha
 def test_reach_process_pmc():
-    res = _call_api('post', 'reach/process_pmc', json={'pmcid': 'PMC4338247'})
+    res = _call_api('post', 'reach/process_pmc', json={'pmc_id': 'PMC4338247'})
     res_json = json.loads(res.get_data())
     assert 'statements' in res_json.keys(), res_json
     stmts = stmts_from_json(res_json['statements'])
