@@ -18,8 +18,8 @@ def main():
     extras_require = {
                       # Inputs and outputs
                       'trips_offline': ['pykqml'],
-                      'reach_offline': ['cython<3', 'pyjnius==1.1.4'],
-                      'eidos_offline': ['cython<3', 'pyjnius==1.1.4'],
+                      'reach_offline': ['cython', 'pyjnius'],
+                      'eidos_offline': ['cython', 'pyjnius'],
                       'hypothesis': ['gilda>1.0.0'],
                       'geneways': ['stemming', 'nltk<3.6'],
                       'bel': ['pybel>=0.15.0,<0.16.0'],
