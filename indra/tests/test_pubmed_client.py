@@ -47,8 +47,8 @@ def test_get_id_mesh():
 @pytest.mark.webservice
 def test_get_id_mesh_supc():
     time.sleep(0.5)
-    ids = pubmed_client.get_ids_for_mesh('D000086382')
-    assert len(ids) > 100, len(ids)
+    ids = pubmed_client.get_ids_for_mesh('C000111')
+    assert len(ids) > 8, len(ids)
 
 
 @pytest.mark.webservice
