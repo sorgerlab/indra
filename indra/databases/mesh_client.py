@@ -22,6 +22,8 @@ mesh_name_to_id = {}
 mesh_name_to_id_name = {}
 mesh_id_to_tree_numbers = {}
 mesh_supp_to_primary = {}
+mesh_to_ncbitaxon = {}
+ncbitaxon_to_mesh = {}
 
 
 def _load_mesh_file(path, supplementary):
@@ -31,7 +33,15 @@ def _load_mesh_file(path, supplementary):
             mesh_id, mesh_label, mesh_terms_str, mapped_to_str = terms
             mesh_supp_to_primary[mesh_id] = mapped_to_str.split(',')
         else:
-            mesh_id, mesh_label, mesh_terms_str, tree_number_str = terms
+            mesh_id, mesh_label, mesh_terms_str, \
+                tree_number_str, taxon_ids = terms
+            if taxon_ids:
+                taxon_ids = taxon_ids.split('|')
+                for taxon_id in taxon_ids:
+                    # Note that these seem to be one-to-one so
+                    # we don't need to worry about overwriting
+                    ncbitaxon_to_mesh[taxon_id] = mesh_id
+                mesh_to_ncbitaxon[mesh_id] = taxon_ids
             # This is a rare corner case where an entry is outside the
             # tree structure, e.g., D005260, D008297
             if not tree_number_str:
