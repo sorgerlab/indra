@@ -199,6 +199,31 @@ def get_ids_for_gene(hgnc_name, **kwargs):
     return ids
 
 
+def get_mesh_term_search_str(mesh_id, major_topic=False):
+    """Return a search string for a given MeSH ID.
+
+    Parameters
+    ----------
+    mesh_id : str
+        The MeSH ID of a term to search for, e.g., D009101.
+    major_topic : bool
+        If True, the given MeSH ID is considered as a major topic.
+        Default: False
+    """
+    from indra.databases import mesh_client
+    mesh_name = mesh_client.get_mesh_name(mesh_id)
+    if not mesh_name:
+        logger.error('Could not get MeSH name for ID %s' % mesh_id)
+        return None
+    if mesh_id.startswith('C') and not major_topic:
+        # Get pmids for supplementary concepts as well
+        search_term = f'{mesh_name} [nm]'
+        return search_term
+    suffix = 'majr' if major_topic else 'mh'
+    search_term = '%s [%s]' % (mesh_name, suffix)
+    return search_term
+
+
 def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
     """Return PMIDs that are annotated with a given MeSH ID.
 
@@ -214,19 +239,35 @@ def get_ids_for_mesh(mesh_id, major_topic=False, **kwargs):
         Any further PudMed search arguments that are passed to
         get_ids.
     """
-    from indra.databases import mesh_client
-    mesh_name = mesh_client.get_mesh_name(mesh_id)
-    if not mesh_name:
-        logger.error('Could not get MeSH name for ID %s' % mesh_id)
+    search_str = get_mesh_term_search_str(mesh_id, major_topic)
+    ids = get_ids(search_str, use_text_word=False, **kwargs)
+    return ids
+
+
+def get_ids_for_mesh_terms(mesh_terms, major_topics=None, **kwargs):
+    """Return PMIDs that are annotated with a given list of MeSH terms.
+
+    Parameters
+    ----------
+    mesh_terms : list of str
+        A list of MeSH IDs of terms to search for, e.g., ['D009101', 'D009102'].
+    major_topics : Optional[list of bool]
+        A list of booleans indicating whether the corresponding MeSH term
+        should be considered as a major topic. If None, all terms are considered
+        as major topics.
+    **kwargs
+        Any further PudMed search arguments that are passed to
+        get_ids.
+    """
+    if major_topics is None:
+        major_topics = [False] * len(mesh_terms)
+    search_strs = [get_mesh_term_search_str(mesh_id, major_topic)
+                   for mesh_id, major_topic in zip(mesh_terms, major_topics)]
+    search_strs = [s for s in search_strs if s is not None]
+    if not search_strs:
         return []
-    suffix = 'majr' if major_topic else 'mh'
-    search_term = '%s [%s]' % (mesh_name, suffix)
-    ids = get_ids(search_term, use_text_word=False, **kwargs)
-    if mesh_id.startswith('C') and not major_topic:
-        # Get pmids for supplementary concepts as well
-        search_term = '%s [nm]' % mesh_name
-        ids2 = get_ids(search_term, use_text_word=False, **kwargs)
-        ids = list(set(ids) | set(ids2))
+    search_str = ' AND '.join([f'({s})' for s in search_strs])
+    ids = get_ids(search_str, use_text_word=False, **kwargs)
     return ids
 
 
