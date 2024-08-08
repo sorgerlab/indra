@@ -631,11 +631,16 @@ def update_mesh_names():
     for record in et.iterfind('DescriptorRecord'):
         # We first get the ID and the name
         uid = record.find('DescriptorUI').text
+        txid_tags = record.findall('ConceptList/Concept/RelatedRegistry'
+                                   'NumberList/RelatedRegistryNumber')
+        txids = [txid.text[4:] for txid in txid_tags
+                 if txid.text.startswith('txid')]
+        txids_str = '|'.join(txids)
         name = record.find('DescriptorName/String').text
         term_name_str = _get_term_name_str(record, name)
         tree_numbers = record.findall('TreeNumberList/TreeNumber')
         tree_numbers_str = '|'.join([t.text for t in tree_numbers])
-        rows.append((uid, name, term_name_str, tree_numbers_str))
+        rows.append((uid, name, term_name_str, tree_numbers_str, txids_str))
 
     fname = os.path.join(path, 'mesh_id_label_mappings.tsv')
     write_unicode_csv(fname, sorted(rows), delimiter='\t')
