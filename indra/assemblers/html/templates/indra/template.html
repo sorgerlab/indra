@@ -121,9 +121,10 @@
         }
 
         .side-info h4 {
-          font-size: 12pt;
+          font-size: 10pt;
           display: block;
           text-decoration: none;
+          margin-bottom: 0;
         }
 
         #sources-explanation {
@@ -133,12 +134,12 @@
         .source-desc {
           border-radius: 4px;
           padding: 0em 0em;
-          font-size: 0.8em;
-          margin: 4px;
+          font-size: 0.6em;
+          margin: 1px;
         }
 
         h3.bg-white {
-          font-size: 15pt;
+          font-size: 13pt;
         }
 
         {% for category, data in source_colors %}
@@ -161,13 +162,13 @@
 
         @media (max-width: 1800px) {
           .right {
-            width: 20%;
+            width: 15%;
           }
           .container {
             float: left;
           }
           .footer {
-              right: 20%;
+              right: 15%;
           }
         }
 
@@ -275,9 +276,10 @@
         data-target="#sources-explanation">
       Our Sources:
     </h3>
-    <p id="sources-explanation" class="collapse">
-      INDRA allows us to combine the results from a multitude of sources. In
-      particular, the INDRA Database draws on the following...
+    <p id="sources-explanation" >
+      INDRA allows us to combine the results from a multitude of sources.
+      After each statement, we show how many pieces of evidence came from which sources.
+      In particular, the INDRA Database draws on the following...
     </p>
   </div>
   {% for category, data in source_colors %}
