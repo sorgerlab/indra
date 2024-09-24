@@ -227,6 +227,7 @@
   {% endblock %}
 </div>
 
+{% endif %}
 
 <!-- THE MAIN BODY -->
 <main role="main" class="container">
@@ -246,7 +247,7 @@
   </div>
 </main>
 
-{% endif %}
+{% if not simple %}
 <!-- THE FOOTER -->
 <footer class="footer bg-white">
 
@@ -267,7 +268,6 @@
 </footer>
 
 
-{% if not simple %}
 <!-- THE RIGHT SIDEBAR -->
 <div class="side-info right bg-white" id="right-side-panel">
   <div class="side-info-block">
