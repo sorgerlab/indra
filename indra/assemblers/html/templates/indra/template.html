@@ -98,7 +98,7 @@
             color: #007bff;
         }
 
-        #about-this-service, #about-this-project p, #about-this-project a {
+        #about-this-project p, #about-this-project a {
             font-size: 9pt;
             margin-bottom: 0;
         }
@@ -252,16 +252,8 @@
 <footer class="footer bg-white">
 
   <div class="side-info-block">
-    <h4 class="bg-white">This Service</h4>
-    <div id="about-this-service">
-      {% block header_desc %}
-      {% endblock %}
-    </div>
-
-    <h4 class="bg-white">This Project</h4>
     <div id="about-this-project">
-      <p>INDRA is developed by <a class="parent-a" href="https://indralab.github.io/">gyorilab</a>.
-      {% block additional_footer %}
+      {% block header_desc %}
       {% endblock %}
     </div>
   </div>
@@ -274,12 +266,13 @@
     <h3 class="bg-white"
         type="button" data-toggle="collapse"
         data-target="#sources-explanation">
-      Our Sources:
+      INDRA sources:
     </h3>
     <p id="sources-explanation" >
-      INDRA allows us to combine the results from a multitude of sources.
-      After each statement, we show how many pieces of evidence came from which sources.
-      In particular, the INDRA Database draws on the following...
+      Colored badges next to statement headings correspond to evidence counts
+      from knowledge sources, as shown below. Badges to the left of the | separator
+      correspond to curated knowledge base sources, and badges to the
+      right of it correspond to machine reading systems.
     </p>
   </div>
   {% for category, data in source_colors %}
