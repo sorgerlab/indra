@@ -648,7 +648,7 @@ class HtmlAssembler(object):
 
         Parameters
         ----------
-        fname : str
+        fname : str | Path
             The path to the file to save the HTML into.
         """
         if self.model is None:
