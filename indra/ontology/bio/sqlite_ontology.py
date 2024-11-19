@@ -1,6 +1,8 @@
 """This module implements an SQLite back end to the
 INDRA BioOntology."""
+
 import os
+import json
 import sqlite3
 import logging
 from collections import defaultdict
@@ -23,9 +25,6 @@ class SqliteOntology(IndraOntology):
         conn = sqlite3.connect(db_path)
         self.cur = conn.cursor()
 
-    def initialize(self):
-        self._initialized = True
-
     def isa_or_partof(self, ns1, id1, ns2, id2):
         q = """SELECT 1 FROM relationships
                WHERE child_id=? AND child_ns=? AND parent_id=? AND parent_ns=?
@@ -47,8 +46,12 @@ class SqliteOntology(IndraOntology):
     def get_parents(self, ns, id):
         return list(self.parent_rel(ns, id, {'isa', 'partof'}))
 
-    def get_children(self, ns, id):
-        return list(self.child_rel(ns, id, {'isa', 'partof'}))
+    def get_children(self, ns, id, ns_filter=None):
+        children = list(self.child_rel(ns, id, {'isa', 'partof'}))
+        if ns_filter:
+            children = [(cns, cid) for cns, cid in children
+                        if cns in ns_filter]
+        return children
 
     def parent_rel(self, ns, id, rel_types):
         q = """SELECT parents FROM parent_lookup
@@ -62,7 +65,15 @@ class SqliteOntology(IndraOntology):
             yield from [tuple(x.split(':', 1)) for x in res[0].split(',')]
 
     def get_node_property(self, ns, id, property):
-        return None
+        q = """SELECT properties FROM node_properties
+               WHERE id=? AND ns=?
+               LIMIT 1;"""
+        self.cur.execute(q, (id, ns))
+        res = self.cur.fetchone()
+        if res is None:
+            return None
+        props = json.loads(res[0])
+        return props.get(property)
 
     def get_id_from_name(self, ns, name):
         return None
@@ -72,6 +83,13 @@ def build_sqlite_ontology(db_path=DEFAULT_SQLITE_ONTOLOGY, force=False):
     # If the database already exists and we are not forcing a rebuild, return
     if os.path.exists(db_path) and not force:
         return
+
+    if force:
+        try:
+            logger.info('Removing existing SQLite ontology at %s' % db_path)
+            os.remove(db_path)
+        except FileNotFoundError:
+            pass
 
     # Initialize the bio ontology and build the transitive closure
     bio_ontology.initialize()
@@ -143,6 +161,23 @@ def build_sqlite_ontology(db_path=DEFAULT_SQLITE_ONTOLOGY, force=False):
     q = """CREATE INDEX idx_parent_lookup ON parent_lookup 
         (child_id, child_ns);"""
     cur.execute(q)
+
+    # Create node property table
+    # Here we just keep track of the namespace and ID,
+    # and then put all the data into a json string
+    q = """CREATE TABLE node_properties (
+        id TEXT NOT NULL,
+        ns TEXT NOT NULL,
+        properties TEXT NOT NULL,
+        UNIQUE (id, ns)
+    );"""
+    cur.execute(q)
+
+    for node in bio_ontology.nodes:
+        ns, id = bio_ontology.get_ns_id(node)
+        props = json.dumps(bio_ontology.nodes[node])
+        cur.execute("INSERT INTO node_properties (id, ns, properties) "
+                    "VALUES (?, ?, ?);", (id, ns, props))
 
     conn.commit()
     conn.close()
