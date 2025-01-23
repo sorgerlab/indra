@@ -4,7 +4,7 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - $(aws ecr get-login-password --region $AWS_DEFAULT_REGION --no-include-email)
       - echo Getting Sparser
       - aws s3 cp s3://bigmech/sparser_core/save-semantics.sh .
       - aws s3 cp s3://bigmech/sparser_core/r3.core .
