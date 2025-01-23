@@ -1,0 +1,31 @@
+version: 0.1
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - echo Getting Sparser
+      - aws s3 cp s3://bigmech/sparser_core/save-semantics.sh .
+      - aws s3 cp s3://bigmech/sparser_core/r3.core .
+      - aws s3 cp s3://bigmech/sparser_core/version.txt .
+      - echo Getting Reach
+      - aws s3 cp s3://bigmech/reach-1.6.3-e48717.jar .
+      - aws s3 cp s3://bigmech/travis/mti_jars_v2.zip ./mti_jars.zip
+  build:
+    commands:
+      # This is to help with the pull rate limit
+      - docker login -u "${DOCKERHUB_USER}" -p "${DOCKERHUB_PWD}"
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build --build-arg BUILD_BRANCH=$BUILD_BRANCH --build-arg READING_BRANCH=$READING_BRANCH -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image to ECR...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo Pushing the Docker image to Dockerhub...
+      - docker login -u "${DOCKERHUB_USER}" -p "${DOCKERHUB_PWD}"
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG labsyspharm/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker push labsyspharm/$IMAGE_REPO_NAME:$IMAGE_TAG
