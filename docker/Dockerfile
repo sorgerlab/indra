@@ -28,6 +28,11 @@ ENV LC_ALL en_US.UTF-8  #
 ENV BNGPATH=$DIRPATH/BioNetGen-2.4.0
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
+# Create python virtual environment
+ENV VENV_PATH=$DIRPATH/venv
+RUN python3 -m venv $VENV_PATH
+ENV PATH="$VENV_PATH/bin:$PATH"
+
 # Install INDRA and dependencies
 RUN git clone https://github.com/sorgerlab/indra.git && \
     cd indra && \
