@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:24.04
 
 ARG BUILD_BRANCH
 ARG READING_BRANCH
