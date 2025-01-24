@@ -44,7 +44,7 @@ RUN git clone https://github.com/sorgerlab/indra.git && \
     # Install Python dependencies
     pip install --upgrade pip && \
     # Install cython first for pyjnius
-    pip install "cython<3.0" && \
+    pip install "cython<3.0" "setuptools" "setuptools_scm" "wheel" && \
     python -m cython --version && \
     pip install -e .[all] && \
     pip uninstall -y enum34 && \
