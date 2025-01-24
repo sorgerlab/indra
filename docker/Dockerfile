@@ -45,6 +45,7 @@ RUN git clone https://github.com/sorgerlab/indra.git && \
     pip install --upgrade pip && \
     # Install cython first for pyjnius
     pip install "cython<3.0" && \
+    python -m cython --version && \
     pip install -e .[all] && \
     pip uninstall -y enum34 && \
     # Pre-build the bio ontology
