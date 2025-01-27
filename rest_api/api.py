@@ -74,7 +74,7 @@ genes_model = api.model('Genes', {
     'genes': fields.List(fields.String, example=['BRAF', 'MAP2K1'])})
 
 # Store the arguments by type
-int_args = ['poolsize', 'size_cutoff']
+int_args = ['members_allowed', 'protocol', 'poolsize', 'size_cutoff']
 float_args = ['score_threshold', 'belief_cutoff']
 boolean_args = [
     'do_rename', 'use_adeft', 'do_methionine_offset', 'do_orthology_mapping',
