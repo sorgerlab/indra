@@ -89,6 +89,8 @@ list_args = [
 dict_args = [
     'grounding_map', 'misgrounding_map', 'whitelist', 'mutations']
 
+str_args = {'stmt_type': "Modification", 'policy': 'all'}
+
 
 def _return_stmts(stmts):
     if stmts:
@@ -225,6 +227,8 @@ def make_preassembly_model(func):
                         fields.String, example=default)
             elif arg in dict_args:
                 model_fields[arg] = fields.Nested(dict_model)
+            elif arg in str_args.keys():
+                model_fields[arg] = fields.String(example=str_args[arg])
             else:
                 model_fields[arg] = fields.String(example=default)
     new_model = api.inherit(
