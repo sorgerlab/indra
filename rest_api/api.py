@@ -320,6 +320,7 @@ reach_pmc_model = api.model('ReachPMC', {
 @sources_ns.expect(reach_text_model)
 @sources_ns.route('/reach/process_text')
 class ReachProcessText(Resource):
+    # TODO: REACH web service is down. Need to use a local Reach
     @api.doc(False)
     def options(self):
         return {}
@@ -401,6 +402,7 @@ class ReachProcessJson(Resource):
 @sources_ns.expect(reach_pmc_model)
 @sources_ns.route('/reach/process_pmc')
 class ReachProcessPmc(Resource):
+    #TODO: REACH web service is down. Need to use a local Reach
     @api.doc(False)
     def options(self):
         return {}
