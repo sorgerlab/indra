@@ -59,7 +59,7 @@ def test_get_license_links():
 @pytest.mark.webservice
 def test_get_url():
     url = crossref_client.get_url(test_doi)
-    assert url == 'http://dx.doi.org/10.1016/j.ccell.2016.02.010'
+    assert url == 'https://doi.org/10.1016/j.ccell.2016.02.010'
     assert unicode_strs(url)
     url = crossref_client.get_url('xyz')
     assert url is None
