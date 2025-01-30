@@ -95,57 +95,65 @@ class WormBaseProcessor(object):
                         for item in row][:len(columns)]
             wb_row = _WormBaseRow(*filt_row)
 
-            # Filter out non-physical interactions if desired
-            # if self.physical_only and wb_row.exp_system_type != 'physical':
-            #     continue
+            # Get names of agents using wb_row.aliases_interactor_a
+            # and aliases_interactor_b
 
-            # Ground agents
-            agent_a = self._make_agent(wb_row.symbol_a, wb_row.entrez_a,
-                                       wb_row.swissprot_a, wb_row.trembl_a)
-            agent_b = self._make_agent(wb_row.symbol_b, wb_row.entrez_b,
-                                       wb_row.swissprot_b, wb_row.trembl_b)
+            # Get db_refs using the wormbase ID and entrez ID in
+            # wb_row.ids_interactor_a and wb_row.ids_interactor_b
 
 
+        #
+        #     # Filter out non-physical interactions if desired
+        #     # if self.physical_only and wb_row.exp_system_type != 'physical':
+        #     #     continue
+        #
+        #     # Ground agents
+        #     agent_a = self._make_agent(wb_row.symbol_a, wb_row.entrez_a,
+        #                                wb_row.swissprot_a, wb_row.trembl_a)
+        #     agent_b = self._make_agent(wb_row.symbol_b, wb_row.entrez_b,
+        #                                wb_row.swissprot_b, wb_row.trembl_b)
 
-    def _make_agent(self, symbol, entrez_id, swissprot_id, trembl_id):
-        """Make an Agent object, appropriately grounded.
 
-        Parameters
-        ----------
-        entrez_id : str
-            Entrez id number
-        swissprot_id : str
-            Swissprot (reviewed UniProt) ID.
-        trembl_id : str
-            Trembl (unreviewed UniProt) ID.
-        symbol : str
-            A plain text symbol, or None if not listed.
 
-        Returns
-        -------
-        agent : indra.statements.Agent
-            A grounded agent object.
-        """
-        db_refs = {}
-        name = symbol
-        if swissprot_id:
-            if '|' not in swissprot_id:
-                db_refs['UP'] = swissprot_id
-        elif trembl_id:
-            if '|' not in trembl_id:
-                db_refs['UP'] = trembl_id
-        if entrez_id:
-            db_refs['EGID'] = entrez_id
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-
-        # At the time of writing this, the name was never None but
-        # just in case
-        if name is None:
-            return None
-
-        return Agent(name, db_refs=db_refs)
+    # def _make_agent(self, symbol, entrez_id, swissprot_id, trembl_id):
+    #     """Make an Agent object, appropriately grounded.
+    #
+    #     Parameters
+    #     ----------
+    #     entrez_id : str
+    #         Entrez id number
+    #     swissprot_id : str
+    #         Swissprot (reviewed UniProt) ID.
+    #     trembl_id : str
+    #         Trembl (unreviewed UniProt) ID.
+    #     symbol : str
+    #         A plain text symbol, or None if not listed.
+    #
+    #     Returns
+    #     -------
+    #     agent : indra.statements.Agent
+    #         A grounded agent object.
+    #     """
+    #     db_refs = {}
+    #     name = symbol
+    #     if swissprot_id:
+    #         if '|' not in swissprot_id:
+    #             db_refs['UP'] = swissprot_id
+    #     elif trembl_id:
+    #         if '|' not in trembl_id:
+    #             db_refs['UP'] = trembl_id
+    #     if entrez_id:
+    #         db_refs['EGID'] = entrez_id
+    #     standard_name, db_refs = standardize_name_db_refs(db_refs)
+    #     if standard_name:
+    #         name = standard_name
+    #
+    #     # At the time of writing this, the name was never None but
+    #     # just in case
+    #     if name is None:
+    #         return None
+    #
+    #     return Agent(name, db_refs=db_refs)
 
 
     def _download_wormbase_data(url):
