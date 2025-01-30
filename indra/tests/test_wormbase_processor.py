@@ -4,37 +4,45 @@ from io import StringIO
 import sys
 import os
 
+from sympy.codegen.ast import continue_
+
 # Get the path dynamically (e.g., if relative to the current script)
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Current script directory
-project_root = os.path.dirname(script_dir)  # Navigate one level up (Aging_Project)
-path_to_sources = os.path.join(project_root, 'sources')  # Adjust as per your structure
+project_root = os.path.dirname(script_dir)  # Navigate one level up (indra)
+path_to_sources = os.path.join(project_root, 'sources')
 sys.path.append(path_to_sources)
 
 from wormbase.processor import WormBaseProcessor
 
 class TestWormBaseProcessor(TestCase):
-    def test_download_wormbase_data_real(self):
-        """Test the `_download_wormbase_data` function with the actual WormBase URL."""
+    def __init__(self, methodName: str = "runTest"):
+        super().__init__(methodName)
+        self.test_data = None
+
+    def setUp(self):
+        self.test_file_path = os.path.join(project_root, "tests/wormbase_tests_data/INTERACTION-GEN_WB_test.tsv")
+
+    def test_download_wormbase_data(self):
+        """Test the `_download_wormbase_data` function with the actual
+        WormBase URL."""
         # Define the real WormBase data URL
         url = 'https://fms.alliancegenome.org/download/INTERACTION-GEN_WB.tsv.gz'
 
-        print("\nStarting test for _download_wormbase_data with real WormBase data...")
+        print("\nStarting test for _download_wormbase_data...")
 
         try:
             # Invoke the actual function
-            csv_reader = WormBaseProcessor._download_wormbase_data(url)
-
-            # Read the rows into a list
-            rows = list(csv_reader)
-
-            # Print some of the rows for visual inspection
-            print("\nSample rows from WormBase data:")
-            for i, row in enumerate(rows[:5]):  # Print the first 5 rows
-                print(f"Row {i + 1}: {row}")
+            rows = WormBaseProcessor._download_wormbase_data(url)
 
             # Assert there are rows (basic validation)
-            print(f"Number of rows found in the WormBase file: {len(rows)}")
-            self.assertGreater(len(rows), 0, "No data rows found in the WormBase file.")
+            print(f"Number of rows found in the test file: {len(rows)}")
+            self.assertGreater(len(rows), 0, "No data rows found "
+                                             "in the test file.")
+
+            # Print some of the rows for visual inspection
+            print("\nSample rows from test data:")
+            for i, row in enumerate(rows[:5]):  # Print the first 5 rows
+                print(f"Row {i + 1}: {row}")
 
             # Assert the structure of the rows
             expected_columns = 42
@@ -44,57 +52,95 @@ class TestWormBaseProcessor(TestCase):
                 f"Expected {expected_columns} columns; found {len(rows[0])}."
             )
 
-            print("\nTest passed: WormBase data downloaded and validated successfully.")
+            print("\nTest passed: Data downloaded and validated "
+                  "successfully.")
 
         except Exception as e:
             # Fail the test if an exception occurs
             self.fail(f"Test failed due to an exception: {e}")
 
-    def test_print_agent_data_in_init(self):
-        """Test the __init__ method to inspect name_agent_a, wormbase_id_agent_a, and entrez_id_agent_a."""
+    def test_read_wormbase_data(self):
+        """Test the `_read_wormbase_data` function with a locally
+        downloaded WormBase tsv file named INTERACTION-GEN_WB_test.tsv.
+        """
+        print("\nStarting test for _read_wormbase_data...")
 
-        # Define the WormBase data URL
-        url = 'https://fms.alliancegenome.org/download/INTERACTION-GEN_WB.tsv.gz'
+        # test_file_path = os.path.join(path_to_wb_test_data_dir, "INTERACTION-GEN_WB_test.tsv")
 
         try:
-            # Download the WormBase data
-            csv_reader = WormBaseProcessor._download_wormbase_data(url)
-            rows = list(csv_reader)
+            rows = WormBaseProcessor(wormbase_file=self.test_file_path)._read_wormbase_data()
 
-            # Ensure there is at least one data row
-            self.assertGreater(len(rows), 0, "No data rows found in the WormBase file.")
+            # Assert there are rows (basic validation)
+            print(f"Number of rows found in the test file: {len(rows)}")
+            self.assertGreater(len(rows), 0, "No data rows found in "
+                                             "the test file.")
 
-            # Use the first row in the downloaded data
-            first_row = rows[0]
+            # Print some of the rows for visual inspection
+            print("\nSample rows from test data:")
+            for i, row in enumerate(rows[:5]):  # Print the first 5 rows
+                print(f"Row {i + 1}: {row}")
 
-            # Convert the first row into a test file (optional)
-            test_file_path = os.path.join(os.path.dirname(__file__), "test_wormbase_data.tsv")
-            with open(test_file_path, "w") as f:
-                f.write("\t".join(first_row) + "\n")
+            # Assert the structure of the rows
+            expected_columns = 42
+            self.assertEqual(
+                len(rows[0]),
+                expected_columns,
+                f"Expected {expected_columns} columns; found {len(rows[0])}."
+            )
 
-            # Capture the output of the print statements
-            with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
-                # Instantiate WormBaseProcessor with the test file
-                processor = WormBaseProcessor(wormbase_file=test_file_path)
-
-                # Fetch and store the captured output
-                output = mock_stdout.getvalue()
-
-            # Print the captured output for inspection
-            print("\nCaptured Output:\n", output)
-
-            # Add assertions to check for specific print content (optional)
-            if len(first_row) >= 5:  # Example assumption on available columns for aliases
-                self.assertIn(first_row[0], output, f"Expected {first_row[0]} in output for name_agent_a.")
-            if len(first_row) >= 42:  # Example assumption WormBase schema
-                self.assertIn(first_row[41], output, f"Expected {first_row[41]} in output for identification method.")
+            print("\nTest passed: Data read and validated successfully.")
 
         except Exception as e:
+            # Fail the test if an exception occurs
             self.fail(f"Test failed due to an exception: {e}")
-        finally:
-            # Clean up the test file
-            if os.path.exists(test_file_path):
-                os.remove(test_file_path)
+
+    def test_agent_extraction(self):
+        """Test extraction of agent data from a row in WormBaseProcessor."""
+
+        print("\nStarting test for Agent extraction "
+              "(WormBaseProcessor.__init__)...")
+
+        try:
+            processor = WormBaseProcessor(wormbase_file=self.test_file_path)
+            rows = processor._read_wormbase_data()
+
+            sample = rows[0]
+
+            # aliases_interactor_a
+            name_info_agent_a = processor._alias_conversion(sample[4])
+            name_agent_a = name_info_agent_a.get("public_name")
+
+            # ids_interactor_a
+            db_id_info_agent_a = processor._id_conversion(sample[0])
+            worm_base_id_agent_a = db_id_info_agent_a.get("wormbase")
+            entrez_id_agent_a = db_id_info_agent_a.get("entrez gene/locuslink")
+
+            # Assertions for value validation
+            self.assertIsInstance(name_info_agent_a, dict)
+            # self.assertIn("public_name", name_info_agent_a)
+            self.assertIsNotNone(name_info_agent_a)
+            print(f"name_info_agent_a: {name_info_agent_a}")
+
+            self.assertIsNotNone(name_agent_a)
+            print(f"name_agent_a: {name_agent_a}")
+
+            self.assertIsInstance(db_id_info_agent_a, dict)
+            self.assertIn("wormbase", db_id_info_agent_a)
+            print(f"db_id_info_agent_a: {db_id_info_agent_a}")
+
+            self.assertIsNotNone(worm_base_id_agent_a)
+            print(f"wormbase_id_agent_a: {worm_base_id_agent_a}")
+
+            # Entrez ID is None in the first row of the test data
+            self.assertIsNone(entrez_id_agent_a)
+            print(f"entrez_id_agent_a: {entrez_id_agent_a}")
+
+            print("\nTest passed: Agent extraction successful.")
+
+
+        except Exception as e:
+            # Fail the test if an exception occurs
+            self.fail(f"Test failed due to an exception: {e}")
 
 
 if __name__ == "__main__":
