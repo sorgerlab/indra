@@ -1,32 +1,25 @@
 from unittest import TestCase
-from unittest.mock import patch
-from io import StringIO
 import sys
 import os
 
-from sympy.codegen.ast import continue_
-
-# Get the path dynamically (e.g., if relative to the current script)
+# Get path to wormbase module
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Current script directory
 project_root = os.path.dirname(script_dir)  # Navigate one level up (indra)
 path_to_sources = os.path.join(project_root, 'sources')
 sys.path.append(path_to_sources)
 
-from wormbase.processor import WormBaseProcessor
+from wormbase.processor import WormBaseProcessor, wormbase_file_url
 
 class TestWormBaseProcessor(TestCase):
-    def __init__(self, methodName: str = "runTest"):
-        super().__init__(methodName)
-        self.test_data = None
-
     def setUp(self):
         self.test_file_path = os.path.join(project_root, "tests/wormbase_tests_data/INTERACTION-GEN_WB_test.tsv")
 
     def test_download_wormbase_data(self):
         """Test the `_download_wormbase_data` function with the actual
         WormBase URL."""
-        # Define the real WormBase data URL
-        url = 'https://fms.alliancegenome.org/download/INTERACTION-GEN_WB.tsv.gz'
+
+        #  URL to WormBase data
+        url = wormbase_file_url
 
         print("\nStarting test for _download_wormbase_data...")
 
