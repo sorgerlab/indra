@@ -12,7 +12,6 @@ from io import BytesIO, StringIO
 import gzip
 from collections import namedtuple
 # from indra.util import read_unicode_csv
-# from indra.sources.wormbase.parse_wormbase import parse_wormbase_mitab
 # from indra.util import read_mitab_csv
 # from indra.statements import Agent, Complex, Evidence
 # from indra.ontology.standardize import standardize_name_db_refs
@@ -95,11 +94,20 @@ class WormBaseProcessor(object):
                         for item in row][:len(columns)]
             wb_row = _WormBaseRow(*filt_row)
 
-            # Get names of agents using wb_row.aliases_interactor_a
-            # and aliases_interactor_b
+            # Get names of agents using wb_row.aliases_interactor_a and aliases_interactor_b
+            name_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a)
+            name_agent_a = name_info_agent_a.get('public_name')
+            name_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b)
+            name_agent_b = name_info_agent_b.get('public_name')
 
-            # Get db_refs using the wormbase ID and entrez ID in
-            # wb_row.ids_interactor_a and wb_row.ids_interactor_b
+            # Get db_refs using the wormbase ID and entrez ID in wb_row.ids_interactor_a and wb_row.ids_interactor_b
+            db_id_info_agent_a = self._id_conversion(wb_row.ids_interactor_a)
+            wormbase_id_agent_a = db_id_info_agent_a.get('wormbase')
+            entrez_id_agent_a = db_id_info_agent_a.get('entrez gene/locuslink')
+            db_id_info_agent_b = self._id_conversion(wb_row.ids_interactor_b)
+            wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')
+            entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
+
 
 
         #
@@ -114,52 +122,109 @@ class WormBaseProcessor(object):
         #                                wb_row.swissprot_b, wb_row.trembl_b)
 
 
+    def _make_agent(self, symbol, wormbase_id, entrez_id):
+        """Make an Agent object, appropriately grounded.
 
-    # def _make_agent(self, symbol, entrez_id, swissprot_id, trembl_id):
-    #     """Make an Agent object, appropriately grounded.
-    #
-    #     Parameters
-    #     ----------
-    #     entrez_id : str
-    #         Entrez id number
-    #     swissprot_id : str
-    #         Swissprot (reviewed UniProt) ID.
-    #     trembl_id : str
-    #         Trembl (unreviewed UniProt) ID.
-    #     symbol : str
-    #         A plain text symbol, or None if not listed.
-    #
-    #     Returns
-    #     -------
-    #     agent : indra.statements.Agent
-    #         A grounded agent object.
-    #     """
-    #     db_refs = {}
-    #     name = symbol
-    #     if swissprot_id:
-    #         if '|' not in swissprot_id:
-    #             db_refs['UP'] = swissprot_id
-    #     elif trembl_id:
-    #         if '|' not in trembl_id:
-    #             db_refs['UP'] = trembl_id
-    #     if entrez_id:
-    #         db_refs['EGID'] = entrez_id
-    #     standard_name, db_refs = standardize_name_db_refs(db_refs)
-    #     if standard_name:
-    #         name = standard_name
-    #
-    #     # At the time of writing this, the name was never None but
-    #     # just in case
-    #     if name is None:
-    #         return None
-    #
-    #     return Agent(name, db_refs=db_refs)
+        Parameters
+        ----------
+        wormbase_id : str
+            WormBase identifier
+        entrez_id : str
+            Entrez id number
+        symbol : str
+            A plain text symbol, or None if not listed.
+
+        Returns
+        -------
+        agent : indra.statements.Agent
+            A grounded agent object.
+        """
+        db_refs = {}
+        name = symbol
+        if wormbase_id:
+            db_refs['WB'] = wormbase_id
+        if entrez_id:
+            db_refs['EGID'] = entrez_id
+        standard_name, db_refs = standardize_name_db_refs(db_refs)
+        if standard_name:
+            name = standard_name
+
+        # At the time of writing this, the name was never None but
+        # just in case
+        if name is None:
+            return None
+
+        return Agent(name, db_refs=db_refs)
+
+
+    def _alias_conversion(self, raw_value: str):
+        """Return dictionary with keys corresponding to name types and values
+        to agent names (or aliases) by decomposing the string value in Alias(es) interact A
+        or Alias(es) interactor B.
+
+        Example string value: 'wormbase:dpy-21(public_name)|wormbase:Y59A8B.1(sequence_name)'
+
+        Parameters
+        ----------
+        raw_value : str
+            The raw value in 'Alias(es) interactor A' or 'Alias(es) interactor B'
+            for a particular row.
+
+        Returns
+        -------
+        name_info : dict
+            Dictionary with name types as keys and agent names as values (for C. elegans interaction data, the
+            primary name and the one used corresponds with the key 'public_name').
+        """
+        # import re
+        if not raw_value:
+            return {}
+        name_info = {}
+        for sub in raw_value.split('|'): # 'Alias(es) interactor _' can contain multiple aliases separated by "|".
+            if ':' in sub and '(' in sub:
+                match = re.search(r'\(([^)]+)\)', sub)  # Extract text inside parentheses
+                if match:
+                    key = match.group(1)
+                    val = sub.split(':')[1].split('(')[0]
+                    name_info[key] = val
+        return name_info
+
+
+    def _id_conversion(self, raw_value: str):
+        """Decompose the string value in columns 'ID(s) interactor A', 'ID(s) interactor B',
+        or 'Publication ID(s)' and return dictionary with keys corresponding to database/source names and values
+        to identifiers.
+
+        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272', 'pubmed:36969515'.
+
+        Parameters
+        ----------
+        raw_value : str
+            The raw value in 'ID(s) interactor A' or 'ID(s) interactor B'
+
+        Returns
+        -------
+        source_id_info : dict
+            Dictionary with database/source names as keys and identifiers as values. Unique keys for
+            'ID(s) interactor _' in C. elegans interaction data are 'wormbase' and 'entrez gene/locuslink'.
+            Unique keys for 'Publication ID(s)' in C. elegans interaction data are 'pubmed'.
+        """
+        # import re
+        if not raw_value:
+            return {}
+        id_info = {}
+        for sub in raw_value.split('|'):
+            if ':' in sub:
+                key = sub.split(':')[0]
+                val = sub.split(':')[1]
+                id_info[key] = val
+        return id_info
 
 
     def _download_wormbase_data(url):
         """Downloads gzipped, tab-separated WormBase data in .tab2 format.
 
-        Parameters:
+        Parameters
         -----------
         url : str
             URL of the WormBase gzip file.
