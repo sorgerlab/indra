@@ -75,11 +75,12 @@ class WormBaseProcessor(object):
 
     def __init__(self, wormbase_file=None, physical_only=True):
         self.statements = []
+        self.wormbase_file = wormbase_file
         self.physical_only = physical_only
 
         # If a path to the file is included, process it, skipping the header
-        if wormbase_file:
-            rows = self._read_wormbase_csv(wormbase_file)
+        if self.wormbase_file:
+            rows = self._read_wormbase_csv(self.wormbase_file)
         # If no file is provided, download from web
         else:
             logger.info('No data file specified, downloading from WormBase '
@@ -100,15 +101,14 @@ class WormBaseProcessor(object):
             name_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b)
             name_agent_b = name_info_agent_b.get('public_name')
 
-            # Get db_refs using the wormbase ID and entrez ID in wb_row.ids_interactor_a and wb_row.ids_interactor_b
+            # Get db_refs using the wormbase ID and entrez ID in wb_row.ids_interactor_a
+            # and wb_row.ids_interactor_b
             db_id_info_agent_a = self._id_conversion(wb_row.ids_interactor_a)
             wormbase_id_agent_a = db_id_info_agent_a.get('wormbase')
             entrez_id_agent_a = db_id_info_agent_a.get('entrez gene/locuslink')
             db_id_info_agent_b = self._id_conversion(wb_row.ids_interactor_b)
             wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')
             entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
-
-
 
         #
         #     # Filter out non-physical interactions if desired
@@ -122,39 +122,39 @@ class WormBaseProcessor(object):
         #                                wb_row.swissprot_b, wb_row.trembl_b)
 
 
-    def _make_agent(self, symbol, wormbase_id, entrez_id):
-        """Make an Agent object, appropriately grounded.
-
-        Parameters
-        ----------
-        wormbase_id : str
-            WormBase identifier
-        entrez_id : str
-            Entrez id number
-        symbol : str
-            A plain text symbol, or None if not listed.
-
-        Returns
-        -------
-        agent : indra.statements.Agent
-            A grounded agent object.
-        """
-        db_refs = {}
-        name = symbol
-        if wormbase_id:
-            db_refs['WB'] = wormbase_id
-        if entrez_id:
-            db_refs['EGID'] = entrez_id
-        standard_name, db_refs = standardize_name_db_refs(db_refs)
-        if standard_name:
-            name = standard_name
-
-        # At the time of writing this, the name was never None but
-        # just in case
-        if name is None:
-            return None
-
-        return Agent(name, db_refs=db_refs)
+    # def _make_agent(self, symbol, wormbase_id, entrez_id):
+    #     """Make an Agent object, appropriately grounded.
+    #
+    #     Parameters
+    #     ----------
+    #     wormbase_id : str
+    #         WormBase identifier
+    #     entrez_id : str
+    #         Entrez id number
+    #     symbol : str
+    #         A plain text symbol, or None if not listed.
+    #
+    #     Returns
+    #     -------
+    #     agent : indra.statements.Agent
+    #         A grounded agent object.
+    #     """
+    #     db_refs = {}
+    #     name = symbol
+    #     if wormbase_id:
+    #         db_refs['WB'] = wormbase_id
+    #     if entrez_id:
+    #         db_refs['EGID'] = entrez_id
+    #     standard_name, db_refs = standardize_name_db_refs(db_refs)
+    #     if standard_name:
+    #         name = standard_name
+    #
+    #     # At the time of writing this, the name was never None but
+    #     # just in case
+    #     if name is None:
+    #         return None
+    #
+    #     return Agent(name, db_refs=db_refs)
 
 
     def _alias_conversion(self, raw_value: str):
@@ -220,7 +220,7 @@ class WormBaseProcessor(object):
                 id_info[key] = val
         return id_info
 
-
+    @staticmethod
     def _download_wormbase_data(url):
         """Downloads gzipped, tab-separated WormBase data in .tab2 format.
 
@@ -253,8 +253,8 @@ class WormBaseProcessor(object):
                     # header_line = line.strip('#').strip()
                     header_index = i
 
-            if header_index is None:
-                raise Exception('Header not found in the file.')
+            # if header_index is None:
+            #     raise Exception('Header not found in the file.')
 
             # Reset the file pointer to the beginning after locating the header
             gzip_bytes.seek(0)
@@ -264,10 +264,11 @@ class WormBaseProcessor(object):
             for _ in range(header_index + 1):  # Skip all rows up to and including the header
                 next(gz_file)
 
-            csv_reader = csv.reader(gz_file, delimiter='\t')  # Read TSV content
+            # csv_reader = csv.reader(gz_file, delimiter='\t')  # Read TSV content
+            csv_reader = list(csv.reader(gz_file, delimiter='\t'))  # Read TSV content
             return csv_reader  # Return csv.reader for iteration
 
-    def _read_wormbase_csv(file_path: str) -> csv.reader:
+    def _read_wormbase_csv(self, file_path):
         """Return a csv.reader for a TSV file.
 
             Parameters
@@ -292,8 +293,8 @@ class WormBaseProcessor(object):
                         # header_line = line.strip('#').strip()
                         header_index = i
 
-                if header_index is None:
-                    raise Exception('Header not found in the file.')
+                # if header_index is None:
+                #     raise Exception('Header not found in the file.')
 
                 # Reset the file pointer to the beginning after locating the header
                 file.seek(0)
@@ -302,5 +303,9 @@ class WormBaseProcessor(object):
                 for _ in range(header_index + 1):  # Skip all rows up to and including the header
                     next(file)
 
-                csv_reader = csv.reader(file, delimiter='\t')  # Read TSV content
+                # csv_reader = csv.reader(file, delimiter='\t')  # Read TSV content
+                csv_reader = list(csv.reader(file, delimiter='\t'))  # Read TSV content
                 return csv_reader  # Return csv.reader for iteration
+
+        except Exception as e:
+            raise Exception(f"Error occurred while reading WormBase CSV: {e}")
