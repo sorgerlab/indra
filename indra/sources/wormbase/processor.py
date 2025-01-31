@@ -11,17 +11,17 @@ from io import BytesIO, StringIO
 # from zipfile import ZipFile
 import gzip
 from collections import namedtuple
-# from indra.util import read_unicode_csv
-# from indra.util import read_mitab_csv
+from indra.statements import Agent
 # from indra.statements import Agent, Complex, Evidence
-# from indra.ontology.standardize import standardize_name_db_refs
+from indra.ontology.standardize import standardize_name_db_refs
+
+# comment
 
 logger = logging.getLogger(__name__)
 
 
 wormbase_file_url = ('https://fms.alliancegenome.org/download/'
                      'INTERACTION-GEN_WB.tsv.gz')
-
 
 # The explanation for each column of the tsv file is here:
 # https://github.com/HUPO-PSI/miTab/blob/master/PSI-MITAB27Format.md
@@ -73,14 +73,13 @@ class WormBaseProcessor(object):
             statement processing.
         """
 
-    def __init__(self, wormbase_file=None, physical_only=True):
+    def __init__(self, wormbase_file=None):
         self.statements = []
         self.wormbase_file = wormbase_file
-        self.physical_only = physical_only
 
         # If a path to the file is included, process it, skipping the header
         if self.wormbase_file:
-            rows = self._read_wormbase_csv(self.wormbase_file)
+            rows = self._read_wormbase_data()
         # If no file is provided, download from web
         else:
             logger.info('No data file specified, downloading from WormBase '
@@ -111,28 +110,23 @@ class WormBaseProcessor(object):
             entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
 
         #
-        #     # Filter out non-physical interactions if desired
-        #     # if self.physical_only and wb_row.exp_system_type != 'physical':
-        #     #     continue
-        #
         #     # Ground agents
         #     agent_a = self._make_agent(wb_row.symbol_a, wb_row.entrez_a,
         #                                wb_row.swissprot_a, wb_row.trembl_a)
         #     agent_b = self._make_agent(wb_row.symbol_b, wb_row.entrez_b,
         #                                wb_row.swissprot_b, wb_row.trembl_b)
 
-
     # def _make_agent(self, symbol, wormbase_id, entrez_id):
     #     """Make an Agent object, appropriately grounded.
     #
     #     Parameters
     #     ----------
+    #     symbol : str
+    #         A plain text symbol, or None if not listed.
     #     wormbase_id : str
     #         WormBase identifier
     #     entrez_id : str
     #         Entrez id number
-    #     symbol : str
-    #         A plain text symbol, or None if not listed.
     #
     #     Returns
     #     -------
@@ -231,81 +225,70 @@ class WormBaseProcessor(object):
 
         Returns
         -------
-        csv.reader
-            A csv.reader object for iterating over the rows (header has already
+        csv_reader : list
+            An iterable list of rows in the file (header has already
             been skipped).
         """
-        res = requests.get(wormbase_file_url)
+        res = requests.get(url)
         if res.status_code != 200:
             raise Exception('Unable to download WormBase data: status code %s'
                             % res.status_code)
 
         gzip_bytes = BytesIO(res.content)
-        with gzip.open(gzip_bytes, 'rt') as gz_file:  # Open the .gz file in text mode
-            # Locate the header line (last line starting with '#')
-            # with open(file_path, 'r') as file:
-            #     lines = file.readlines()
-            #
-            # header_line = None
+        with gzip.open(gzip_bytes, 'rt') as gz_file:
+            # Locate the header line (last line that starts with '#')
             header_index = None
             for i, line in enumerate(gz_file):
                 if line.startswith('#') and not line.strip().startswith('######'):
-                    # header_line = line.strip('#').strip()
                     header_index = i
 
-            # if header_index is None:
-            #     raise Exception('Header not found in the file.')
+            if header_index is None:
+                raise Exception('Header not found in the file.')
 
-            # Reset the file pointer to the beginning after locating the header
             gzip_bytes.seek(0)
-            gz_file = gzip.open(gzip_bytes, 'rt')  # Reinitialize gz_file
+            gz_file = gzip.open(gzip_bytes, 'rt')
 
-            # Skip rows until the specified header_index
-            for _ in range(header_index + 1):  # Skip all rows up to and including the header
+            # Skip all rows up to and including the header
+            for _ in range(header_index + 1):
                 next(gz_file)
 
-            # csv_reader = csv.reader(gz_file, delimiter='\t')  # Read TSV content
-            csv_reader = list(csv.reader(gz_file, delimiter='\t'))  # Read TSV content
-            return csv_reader  # Return csv.reader for iteration
+            csv_reader = list(csv.reader(gz_file, delimiter='\t'))  # Create list of rows
+            return csv_reader
 
-    def _read_wormbase_csv(self, file_path):
+    def _read_wormbase_data(self):
         """Return a csv.reader for a TSV file.
-
-            Parameters
-            ----------
-            file_path : str
-                Path to TSV file that is to be read.
 
             Returns
             -------
-            csv_reader : csv.reader
-                CSV reader for iteration.
+            csv_reader : list
+                An iterable list of rows in the file (header has already
+                been skipped).
             """
+
+        file_path = self.wormbase_file
+
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
         try:
-            # Locate the header line (last line starting with '#')
+            # Locate the header line (last line that starts with '#')
             with open(file_path, 'r') as file:
                 header_index = None
                 for i, line in enumerate(file):
                     if line.startswith('#') and not line.strip().startswith('######'):
-                        # header_line = line.strip('#').strip()
                         header_index = i
 
-                # if header_index is None:
-                #     raise Exception('Header not found in the file.')
+                if header_index is None:
+                    raise Exception('Header not found in the file.')
 
-                # Reset the file pointer to the beginning after locating the header
+                # Skip all rows up to and including the header
                 file.seek(0)
-
-                # Skip rows until the specified header_index
-                for _ in range(header_index + 1):  # Skip all rows up to and including the header
+                for _ in range(header_index + 1):
                     next(file)
 
-                # csv_reader = csv.reader(file, delimiter='\t')  # Read TSV content
-                csv_reader = list(csv.reader(file, delimiter='\t'))  # Read TSV content
-                return csv_reader  # Return csv.reader for iteration
+                csv_reader = list(csv.reader(file, delimiter='\t'))  # Create list of row
+                return csv_reader
 
         except Exception as e:
             raise Exception(f"Error occurred while reading WormBase CSV: {e}")
+
