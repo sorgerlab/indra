@@ -1,19 +1,11 @@
 from unittest import TestCase
-import sys
 import os
+from indra.sources.wormbase.processor import WormBaseProcessor, wormbase_file_url
 
-# Get path to wormbase module
-script_dir = os.path.dirname(os.path.abspath(__file__))  # Current script directory
-project_root = os.path.dirname(script_dir)  # Navigate one level up (indra)
-path_to_sources = os.path.join(project_root, 'sources')
-sys.path.append(path_to_sources)
-
-from wormbase.processor import WormBaseProcessor, wormbase_file_url
+this_dir = os.path.dirname(__file__)
+test_file = os.path.join(this_dir, 'wormbase_tests_data/INTERACTION-GEN_WB_test.tsv')
 
 class TestWormBaseProcessor(TestCase):
-    def setUp(self):
-        self.test_file_path = os.path.join(project_root, "tests/wormbase_tests_data/INTERACTION-GEN_WB_test.tsv")
-
     def test_download_wormbase_data(self):
         """Test the `_download_wormbase_data` function with the actual
         WormBase URL."""
@@ -58,10 +50,8 @@ class TestWormBaseProcessor(TestCase):
         """
         print("\nStarting test for _read_wormbase_data...")
 
-        # test_file_path = os.path.join(path_to_wb_test_data_dir, "INTERACTION-GEN_WB_test.tsv")
-
         try:
-            rows = WormBaseProcessor(wormbase_file=self.test_file_path)._read_wormbase_data()
+            rows = WormBaseProcessor(wormbase_file=test_file)._read_wormbase_data()
 
             # Assert there are rows (basic validation)
             print(f"Number of rows found in the test file: {len(rows)}")
@@ -94,7 +84,7 @@ class TestWormBaseProcessor(TestCase):
               "(WormBaseProcessor.__init__)...")
 
         try:
-            processor = WormBaseProcessor(wormbase_file=self.test_file_path)
+            processor = WormBaseProcessor(wormbase_file=test_file)
             rows = processor._read_wormbase_data()
 
             sample = rows[0]
@@ -107,6 +97,9 @@ class TestWormBaseProcessor(TestCase):
             db_id_info_agent_a = processor._id_conversion(sample[0])
             worm_base_id_agent_a = db_id_info_agent_a.get("wormbase")
             entrez_id_agent_a = db_id_info_agent_a.get("entrez gene/locuslink")
+
+            # Ground agent
+            # agent_a = processor._make_agent(name_agent_a, worm_base_id_agent_a, entrez_id_agent_a)
 
             # Assertions for value validation
             self.assertIsInstance(name_info_agent_a, dict)
@@ -127,6 +120,9 @@ class TestWormBaseProcessor(TestCase):
             # Entrez ID is None in the first row of the test data
             self.assertIsNone(entrez_id_agent_a)
             print(f"entrez_id_agent_a: {entrez_id_agent_a}")
+
+            # self.assertIsInstance(agent_a, dict)
+            # print(f"agent_a: {agent_a}")
 
             print("\nTest passed: Agent extraction successful.")
 
