@@ -1,5 +1,5 @@
 ## TO-DO:
-## – modify the _make_agent function to handle wormbase data
+## – modify the _make_agent function so that standardized
 
 import re
 import csv
@@ -11,8 +11,7 @@ from io import BytesIO, StringIO
 # from zipfile import ZipFile
 import gzip
 from collections import namedtuple
-from indra.statements import Agent
-# from indra.statements import Agent, Complex, Evidence
+from indra.statements import Agent, Evidence, Activation, Association, Inhibition
 from indra.ontology.standardize import standardize_name_db_refs
 
 # comment
@@ -109,47 +108,74 @@ class WormBaseProcessor(object):
             wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')
             entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
 
+            # Ground agents
+            agent_a = self._make_agent(name_agent_a, wormbase_id_agent_a, entrez_id_agent_a)
+            agent_b = self._make_agent(name_agent_b, wormbase_id_agent_b, entrez_id_agent_b)
+
+            # Skip any agents with neither HGNC grounding or string name
+            if agent_a is None or agent_b is None:
+                continue
+            # Get evidence
+            pmid = self._id_conversion(wb_row.publication_identifiers).get('pubmed')
+            doi = self._id_conversion(wb_row.publication_identifiers).get('doi')
+            text_refs = {}
+            if pmid:
+                text_refs['PMID'] = pmid
+            elif doi:
+                text_refs['DOI'] = doi
+
+            source_id = self._id_conversion(wb_row.interaction_identifiers).get('wormbase')
+            interaction_annotations = self._id_conversion(wb_row.interaction_annotations).get('wormbase')
+            ev = Evidence(source_api='wormbase',
+                          source_id=source_id,
+                          pmid=text_refs.get('PMID'),
+                          text_refs=text_refs,
+                          # annotations=interaction_annotations
+                          annotations=dict(wb_row._asdict())
+                          )
+            # Make statement
+            interaction_type = self._interaction_type_conversion(wb_row.interaction_types).get('psi-mi')
+            if 'enhancement' in interaction_type:
+                s = Activation([agent_a, agent_b], evidence=ev)
+            elif 'suppression' in interaction_type:
+                s = Inhibition([agent_a, agent_b], evidence=ev)
+            else:
+                s = Association([agent_a, agent_b], evidence=ev)
+            self.statements.append(s)
+
+    def _make_agent(self, symbol, wormbase_id, entrez_id):
+        """Make an Agent object, appropriately grounded.
+
+        Parameters
+        ----------
+        symbol : str
+            A plain text symbol, or None if not listed.
+        wormbase_id : str
+            WormBase identifier
+        entrez_id : str
+            Entrez id number
+
+        Returns
+        -------
+        agent : indra.statements.Agent
+            A grounded agent object.
+        """
+        db_refs = {}
+        name = symbol
+        if wormbase_id:
+            db_refs['WB'] = wormbase_id
+        if entrez_id:
+            db_refs['EGID'] = entrez_id
+        standard_name, db_refs = standardize_name_db_refs(db_refs)
+        if standard_name:
+            name = standard_name
         #
-        #     # Ground agents
-        #     agent_a = self._make_agent(wb_row.symbol_a, wb_row.entrez_a,
-        #                                wb_row.swissprot_a, wb_row.trembl_a)
-        #     agent_b = self._make_agent(wb_row.symbol_b, wb_row.entrez_b,
-        #                                wb_row.swissprot_b, wb_row.trembl_b)
+        # At the time of writing this, the name was never None but
+        # just in case
+        if name is None:
+            return None
 
-    # def _make_agent(self, symbol, wormbase_id, entrez_id):
-    #     """Make an Agent object, appropriately grounded.
-    #
-    #     Parameters
-    #     ----------
-    #     symbol : str
-    #         A plain text symbol, or None if not listed.
-    #     wormbase_id : str
-    #         WormBase identifier
-    #     entrez_id : str
-    #         Entrez id number
-    #
-    #     Returns
-    #     -------
-    #     agent : indra.statements.Agent
-    #         A grounded agent object.
-    #     """
-    #     db_refs = {}
-    #     name = symbol
-    #     if wormbase_id:
-    #         db_refs['WB'] = wormbase_id
-    #     if entrez_id:
-    #         db_refs['EGID'] = entrez_id
-    #     standard_name, db_refs = standardize_name_db_refs(db_refs)
-    #     if standard_name:
-    #         name = standard_name
-    #
-    #     # At the time of writing this, the name was never None but
-    #     # just in case
-    #     if name is None:
-    #         return None
-    #
-    #     return Agent(name, db_refs=db_refs)
-
+        return Agent(name, db_refs=db_refs)
 
     def _alias_conversion(self, raw_value: str):
         """Return dictionary with keys corresponding to name types and values
@@ -186,15 +212,16 @@ class WormBaseProcessor(object):
 
     def _id_conversion(self, raw_value: str):
         """Decompose the string value in columns 'ID(s) interactor A', 'ID(s) interactor B',
-        or 'Publication ID(s)' and return dictionary with keys corresponding to database/source names and values
-        to identifiers.
+        'Publication ID(s)', or 'Interaction identifier(s)' and return dictionary with keys
+        corresponding to database/source names and values to identifiers.
 
-        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272', 'pubmed:36969515'.
+        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272',
+        'pubmed:36969515', 'wormbase:WBInteraction000000001'.
 
         Parameters
         ----------
         raw_value : str
-            The raw value in 'ID(s) interactor A' or 'ID(s) interactor B'
+            The raw value in whichever ID column is being converted.
 
         Returns
         -------
@@ -203,7 +230,6 @@ class WormBaseProcessor(object):
             'ID(s) interactor _' in C. elegans interaction data are 'wormbase' and 'entrez gene/locuslink'.
             Unique keys for 'Publication ID(s)' in C. elegans interaction data are 'pubmed'.
         """
-        # import re
         if not raw_value:
             return {}
         id_info = {}
@@ -213,6 +239,36 @@ class WormBaseProcessor(object):
                 val = sub.split(':')[1]
                 id_info[key] = val
         return id_info
+
+    def _interaction_type_conversion(self, raw_value: str):
+        """Decompose the string value in columns 'Interaction type(s)' and return dictionary with keys
+        corresponding to database/source names and values to identifiers.
+
+        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272',
+        'pubmed:36969515', 'wormbase:WBInteraction000000001'.
+
+        Parameters
+        ----------
+        raw_value : str
+            The raw value in whichever ID column is being converted.
+
+        Returns
+        -------
+        source_id_info : dict
+            Dictionary with database/source names as keys and identifiers as values. Unique keys for
+            'ID(s) interactor _' in C. elegans interaction data are 'wormbase' and 'entrez gene/locuslink'.
+            Unique keys for 'Publication ID(s)' in C. elegans interaction data are 'pubmed'.
+        """
+        import re
+        if not raw_value:
+            return {}
+        type_info = {}
+        for sub in raw_value.split('|'):
+            if all(char in sub for char in (':', '(', ')')):
+                key = sub.split(':')[0]
+                val = re.search(r'\((.*)\)', sub).group(1)  # Extract text inside outermost parentheses
+                type_info[key] = val
+        return type_info
 
     @staticmethod
     def _download_wormbase_data(url):
