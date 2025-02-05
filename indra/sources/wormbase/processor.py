@@ -1,5 +1,3 @@
-## TO-DO:
-## – modify the _make_agent function so that standardized
 
 import re
 import csv
@@ -7,17 +5,15 @@ import os
 import tqdm
 import logging
 import requests
-from io import BytesIO, StringIO
-# from zipfile import ZipFile
+from io import BytesIO
 import gzip
 from collections import namedtuple
-from indra.statements import Agent, Evidence, Activation, Association, Inhibition
+from indra.statements import Agent, Evidence, Activation, Association, Inhibition, Phosphorylation, Demethylation, \
+    Methylation
 from indra.ontology.standardize import standardize_name_db_refs
 
-# comment
 
 logger = logging.getLogger(__name__)
-
 
 wormbase_file_url = ('https://fms.alliancegenome.org/download/'
                      'INTERACTION-GEN_WB.tsv.gz')
@@ -50,6 +46,19 @@ columns = ['ids_interactor_a', 'ids_interactor_b',
 
 _WormBaseRow = namedtuple('WormBaseRow', columns)
 
+"""Misc. info for WormBase interaction data (genetic and molecular):
+
+    Unique source databases: 
+    ['wormbase' 'biogrid' 'MINT' 'IntAct' 'UniProt' 'DIP']
+    
+    Unique agent ID types: 
+    ['wormbase' 'entrez gene/locuslink' 'uniprotkb' 'intact'] 
+    
+    Unique interaction ID types: 
+    ['wormbase' 'biogrid' 'intact' 'mint' 'imex' 'dip' 'wwpdb' 'emdb']
+
+"""
+
 class WormBaseProcessor(object):
     """Extracts INDRA statements from WormBase interaction data.
 
@@ -59,17 +68,11 @@ class WormBaseProcessor(object):
             The file containing the WormBase data in .tsv format. If not provided,
             the WormBase data is downloaded from the WormBase website (technically
             alliancegenome.org).
-        physical_only : boolean
-            If True, only physical interactions are included (e.g., genetic
-            interactions are excluded). If False, all interactions are included).
 
         Attributes
         ----------
         statements : list[indra.statements.Statements]
             Extracted INDRA statements.
-        physical_only : boolean
-            Indicates whether only physical interactions were included during
-            statement processing.
         """
 
     def __init__(self, wormbase_file=None):
@@ -95,42 +98,75 @@ class WormBaseProcessor(object):
 
             # Get names of agents using wb_row.aliases_interactor_a and aliases_interactor_b
             name_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a)
-            name_agent_a = name_info_agent_a.get('public_name')
-            name_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b)
-            name_agent_b = name_info_agent_b.get('public_name')
+            if name_info_agent_a.get('public_name'):
+                name_agent_a = name_info_agent_a.get('public_name')
+            elif name_info_agent_a.get('gene name'):
+                name_agent_a = name_info_agent_a.get('gene name')
+            else:
+                # name_type_a = next(iter(name_info_agent_a))
+                # name_agent_a = name_info_agent_a.get(name_type_a)
+                name_agent_a = list(name_info_agent_a.values())[0]
 
-            # Get db_refs using the wormbase ID and entrez ID in wb_row.ids_interactor_a
-            # and wb_row.ids_interactor_b
+            name_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b)
+            if name_info_agent_b.get('public_name'):
+                name_agent_b = name_info_agent_b.get('public_name')
+            elif name_info_agent_b.get('gene name'):
+                name_agent_b = name_info_agent_b.get('gene name')
+            else:
+                # name_type_b = next(iter(name_info_agent_b))
+                # name_agent_b = name_info_agent_b.get(name_type_b)
+                name_agent_b = list(name_info_agent_b.values())[0]
+
+            # Get db_refs using wb_row.ids_interactor_(a/b)
             db_id_info_agent_a = self._id_conversion(wb_row.ids_interactor_a)
             wormbase_id_agent_a = db_id_info_agent_a.get('wormbase')
             entrez_id_agent_a = db_id_info_agent_a.get('entrez gene/locuslink')
+            up_id_agent_a = db_id_info_agent_a.get('uniprotkb')
+            intact_id_agent_a = db_id_info_agent_a.get('intact')
+
             db_id_info_agent_b = self._id_conversion(wb_row.ids_interactor_b)
             wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')
             entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
+            up_id_agent_b = db_id_info_agent_b.get('uniprotkb')
+            intact_id_agent_b = db_id_info_agent_b.get('intact')
 
             # Ground agents
-            agent_a = self._make_agent(name_agent_a, wormbase_id_agent_a, entrez_id_agent_a)
-            agent_b = self._make_agent(name_agent_b, wormbase_id_agent_b, entrez_id_agent_b)
+            agent_a = self._make_agent(name_agent_a, wormbase_id_agent_a,
+                                       entrez_id_agent_a, up_id_agent_a, intact_id_agent_a)
+            agent_b = self._make_agent(name_agent_b, wormbase_id_agent_b,
+                                       entrez_id_agent_b, up_id_agent_b, intact_id_agent_b)
 
-            # Skip any agents with neither HGNC grounding or string name
+            # Skip any agents with no grounding
             if agent_a is None or agent_b is None:
                 continue
+
             # Get evidence
             pmid = self._id_conversion(wb_row.publication_identifiers).get('pubmed')
             doi = self._id_conversion(wb_row.publication_identifiers).get('doi')
+            mint = self._id_conversion(wb_row.publication_identifiers).get('mint')
+            imex = self._id_conversion(wb_row.publication_identifiers).get('imex')
             text_refs = {}
             if pmid:
                 text_refs['PMID'] = pmid
-            elif doi:
+            if doi:
                 text_refs['DOI'] = doi
+            if mint:
+                text_refs['MINT'] = mint
+            if imex:
+                text_refs['IMEX'] = imex
 
-            source_id = self._id_conversion(wb_row.interaction_identifiers).get('wormbase')
-            interaction_annotations = self._id_conversion(wb_row.interaction_annotations).get('wormbase')
-            ev = Evidence(source_api='wormbase',
+            if isinstance(self._id_conversion(wb_row.interaction_identifiers),
+                          dict) and 'wormbase' in self._id_conversion(
+                wb_row.interaction_identifiers):
+                source = 'wormbase'
+            else:
+                source = list(self._id_conversion(wb_row.interaction_identifiers).keys())[0]
+
+            source_id = self._id_conversion(wb_row.interaction_identifiers).get(source)
+            ev = Evidence(source_api=source,
                           source_id=source_id,
                           pmid=text_refs.get('PMID'),
                           text_refs=text_refs,
-                          # annotations=interaction_annotations
                           annotations=dict(wb_row._asdict())
                           )
             # Make statement
@@ -139,11 +175,17 @@ class WormBaseProcessor(object):
                 s = Activation([agent_a, agent_b], evidence=ev)
             elif 'suppression' in interaction_type:
                 s = Inhibition([agent_a, agent_b], evidence=ev)
+            elif 'phosphorylation reaction' in interaction_type:
+                s = Phosphorylation([agent_a, agent_b], evidence=ev)
+            elif 'demethylation reaction' in interaction_type:
+                s = Demethylation([agent_a, agent_b], evidence=ev)
+            elif 'methylation reaction' in interaction_type:
+                s = Methylation([agent_a, agent_b], evidence=ev)
             else:
                 s = Association([agent_a, agent_b], evidence=ev)
             self.statements.append(s)
 
-    def _make_agent(self, symbol, wormbase_id, entrez_id):
+    def _make_agent(self, symbol, wormbase_id, entrez_id, up_id, intact_id):
         """Make an Agent object, appropriately grounded.
 
         Parameters
@@ -153,7 +195,11 @@ class WormBaseProcessor(object):
         wormbase_id : str
             WormBase identifier
         entrez_id : str
-            Entrez id number
+            Entrez identifier
+        up_id : str
+            UniProt identifier
+        intact_id : str
+            IntAct identifier
 
         Returns
         -------
@@ -166,10 +212,14 @@ class WormBaseProcessor(object):
             db_refs['WB'] = wormbase_id
         if entrez_id:
             db_refs['EGID'] = entrez_id
+        if up_id:
+            db_refs['UP'] = up_id
+        # if intact_id:
+        #     db_refs['INTACT'] = intact_id
         standard_name, db_refs = standardize_name_db_refs(db_refs)
         if standard_name:
             name = standard_name
-        #
+
         # At the time of writing this, the name was never None but
         # just in case
         if name is None:
@@ -208,7 +258,6 @@ class WormBaseProcessor(object):
                     val = sub.split(':')[1].split('(')[0]
                     name_info[key] = val
         return name_info
-
 
     def _id_conversion(self, raw_value: str):
         """Decompose the string value in columns 'ID(s) interactor A', 'ID(s) interactor B',
