@@ -15,10 +15,12 @@ from indra.ontology.standardize import standardize_name_db_refs
 
 logger = logging.getLogger(__name__)
 
-wormbase_file_url = ('https://fms.alliancegenome.org/download/'
-                     'INTERACTION-GEN_WB.tsv.gz')
+wormbase_mol_file_url = ('https://fms.alliancegenome.org/download/'
+                     'INTERACTION-MOL_WB.tsv.gz') # Url for all C. elegans molecular interactions data file
+wormbase_gen_file_url = ('https://fms.alliancegenome.org/download/'
+                     'INTERACTION-GEN_WB.tsv.gz') # Url for all C. elegans genetic interactions data file
 
-# The explanation for each column of the tsv file is here:
+# An explanation for each column of the interaction files are here:
 # https://github.com/HUPO-PSI/miTab/blob/master/PSI-MITAB27Format.md
 columns = ['ids_interactor_a', 'ids_interactor_b',
            'alt_ids_interactor_a', 'alt_ids_interactor_b',
@@ -64,10 +66,14 @@ class WormBaseProcessor(object):
 
         Parameters
         ----------
-        wormbase_file : str
-            The file containing the WormBase data in .tsv format. If not provided,
-            the WormBase data is downloaded from the WormBase website (technically
-            alliancegenome.org).
+        wormbase_gen_file : str
+            The file from WormBase containing all genetic interactions in
+            C. elegans. If not provided, the WormBase data is downloaded
+            from the WormBase website (technically alliancegenome.org).
+        wormbase_mol_file : str
+            The file from WormBase containing all molecular interactions in
+            C. elegans. If not provided, the WormBase data is downloaded
+            from the WormBase website (technically alliancegenome.org).
 
         Attributes
         ----------
@@ -75,115 +81,276 @@ class WormBaseProcessor(object):
             Extracted INDRA statements.
         """
 
-    def __init__(self, wormbase_file=None):
+    def __init__(self, wormbase_gen_file=None, wormbase_mol_file=None):
         self.statements = []
-        self.wormbase_file = wormbase_file
+        self.wormbase_gen_file = wormbase_gen_file
+        self.wormbase_mol_file = wormbase_mol_file
 
-        # If a path to the file is included, process it, skipping the header
-        if self.wormbase_file:
-            rows = self._read_wormbase_data()
+        # If a path to the genetic interactions file is included, process it.
+        if self.wormbase_gen_file:
+            rows_gen = self._read_wormbase_data(self.wormbase_gen_file)
         # If no file is provided, download from web
         else:
-            logger.info('No data file specified, downloading from WormBase '
-                        'at %s' % wormbase_file_url)
-            rows = self._download_wormbase_data(wormbase_file_url)
+            logger.info('No genetic interactions file specified, downloading from WormBase '
+                        'at %s' % wormbase_gen_file_url)
+            rows_gen = self._download_wormbase_data(wormbase_gen_file_url)
+
+        # If a path to the molecular interactions file is included, process it.
+        if self.wormbase_mol_file:
+            rows_mol = self._read_wormbase_data(self.wormbase_mol_file)
+        # If no file is provided, download from web
+        else:
+            logger.info('No molecular interactions file specified, downloading from WormBase '
+                        'at %s' % wormbase_mol_file_url)
+            rows_mol = self._download_wormbase_data(wormbase_mol_file_url)
+
+        rows = rows_gen + rows_mol
 
         # Process the rows into Statements
-        for row in tqdm.tqdm(rows, desc='Processing WormBase rows'):
-            # There are some extra columns that we don't need to take and
-            # thereby save space in annotations
-            filt_row = [None if item == '-' else item
-                        for item in row][:len(columns)]
-            wb_row = _WormBaseRow(*filt_row)
+        for idx, row in enumerate(tqdm.tqdm(rows, desc='Processing WormBase rows')):
+            try:
+                # There are some extra columns that we don't need to take and
+                # thereby save space in annotations
+                filt_row = [None if item == '-' else item
+                            for item in row][:len(columns)]
+                wb_row = _WormBaseRow(*filt_row)
 
-            # Get names of agents using wb_row.aliases_interactor_a and aliases_interactor_b
-            name_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a)
-            if name_info_agent_a.get('public_name'):
-                name_agent_a = name_info_agent_a.get('public_name')
-            elif name_info_agent_a.get('gene name'):
-                name_agent_a = name_info_agent_a.get('gene name')
-            else:
-                # name_type_a = next(iter(name_info_agent_a))
-                # name_agent_a = name_info_agent_a.get(name_type_a)
-                name_agent_a = list(name_info_agent_a.values())[0]
+                # Get the name of agent A using wb_row.aliases_interactor_a and wb_row.alt_ids_interactor_a
+                name_agent_a = None
+                alias_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a) or {}
+                alt_ids_agent_a = self._id_conversion(wb_row.alt_ids_interactor_a) or {}
+                if not alias_info_agent_a: # If agent alias is empty, look for a valid name in alternate IDs
+                    if not alt_ids_agent_a:
+                        logger.warning(f"Agent alias and alternate ID dicts for interactor A are empty: {wb_row}")
+                    else: # If the alternate ids dict is not empty, look for names in the order below, with 'entrez
+                        # gene/locuslink' and lowercase preferred.
+                        all_lowercase_names = []
+                        all_uppercase_names = []
+                        for key in ['entrez gene/locuslink', 'uniprot/swiss-prot', 'biogrid']:
+                            if alt_ids_agent_a.get(key):
+                                lowercase_names = [s for s in (alt_ids_agent_a.get(key) or []) if s.islower()]
+                                uppercase_names = [s for s in (alt_ids_agent_a.get(key) or []) if not s.islower()]
+                                if lowercase_names:
+                                    all_lowercase_names.extend(lowercase_names)
+                                if uppercase_names:
+                                    all_uppercase_names.extend(uppercase_names)
+                        if all_lowercase_names:
+                            name_agent_a = all_lowercase_names[0]
+                        elif all_uppercase_names:
+                            name_agent_a = all_uppercase_names[0]
+                        else:
+                            # If no names were found above, maker the name whatever first value is in the alias dict
+                            name_agent_a = next(iter(alt_ids_agent_a.values()), [None])[0]
+                            logger.warning(f"No valid lowercase or uppercase name found for interactor A. Using "
+                                           f"fallback: {name_agent_a} ... ... {wb_row}")
+                else: # If the alias dict is not empty, look for names in the order below, with 'public_name' and
+                    # lowercase preferred.
+                    all_lowercase_names = []
+                    all_uppercase_names = []
+                    for key in ['public_name', 'gene name', 'display_short', 'gene name synonym']:
+                        if alias_info_agent_a.get(key):
+                            lowercase_names = [s for s in (alias_info_agent_a.get(key) or []) if s.islower()]
+                            uppercase_names = [s for s in (alias_info_agent_a.get(key) or []) if not s.islower()]
+                            if lowercase_names:
+                                all_lowercase_names.extend(lowercase_names)
+                            if uppercase_names:
+                                all_uppercase_names.extend(uppercase_names)
+                    if all_lowercase_names:
+                        name_agent_a = all_lowercase_names[0]
+                    elif all_uppercase_names:
+                        name_agent_a = all_uppercase_names[0]
+                    else:
+                        # If no names were found above, maker the name whatever first value is in the alias dict
+                        name_agent_a = next(iter(alias_info_agent_a.values()), [None])[0]
+                        logger.warning(f"No valid lowercase or uppercase name found for interactor A. Using "
+                                       f"fallback: {name_agent_a} ... ... {wb_row}")
 
-            name_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b)
-            if name_info_agent_b.get('public_name'):
-                name_agent_b = name_info_agent_b.get('public_name')
-            elif name_info_agent_b.get('gene name'):
-                name_agent_b = name_info_agent_b.get('gene name')
-            else:
-                # name_type_b = next(iter(name_info_agent_b))
-                # name_agent_b = name_info_agent_b.get(name_type_b)
-                name_agent_b = list(name_info_agent_b.values())[0]
+                # Get the name of agent B using wb_row.aliases_interactor_b and wb_row.alt_ids_interactor_b
+                name_agent_b = None
+                alias_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b) or {}
+                alt_ids_agent_b = self._id_conversion(wb_row.alt_ids_interactor_b) or {}
+                if not alias_info_agent_b:  # If agent alias is empty, look for a valid name in alternate IDs
+                    if not alt_ids_agent_b:
+                        logger.warning(
+                            f"Agent alias and alternate ID dicts for interactor B are empty: {wb_row}")
+                    else:  # If the alternate ids dict is not empty, look for names in the order below, with 'entrez
+                        # gene/locuslink' and lowercase preferred.
+                        all_lowercase_names = []
+                        all_uppercase_names = []
+                        for key in ['entrez gene/locuslink', 'uniprot/swiss-prot', 'biogrid']:
+                            if alt_ids_agent_b.get(key):
+                                lowercase_names = [s for s in (alt_ids_agent_b.get(key) or []) if s.islower()]
+                                uppercase_names = [s for s in (alt_ids_agent_b.get(key) or []) if
+                                                   not s.islower()]
+                                if lowercase_names:
+                                    all_lowercase_names.extend(lowercase_names)
+                                if uppercase_names:
+                                    all_uppercase_names.extend(uppercase_names)
+                        if all_lowercase_names:
+                            name_agent_b = all_lowercase_names[0]
+                        elif all_uppercase_names:
+                            name_agent_b = all_uppercase_names[0]
+                        else:
+                            # If no names were found above, maker the name whatever first value is in the alias dict
+                            name_agent_b = next(iter(alt_ids_agent_b.values()), [None])[0]
+                            logger.warning(
+                                f"No valid lowercase or uppercase name found for interactor B. Using "
+                                f"fallback: {name_agent_b} ... ... {wb_row}")
+                else:  # If the alias dict is not empty, look for names in the order below, with 'public_name' and
+                    # lowercase preferred.
+                    all_lowercase_names = []
+                    all_uppercase_names = []
+                    for key in ['public_name', 'gene name', 'display_short', 'gene name synonym']:
+                        if alias_info_agent_b.get(key):
+                            lowercase_names = [s for s in (alias_info_agent_b.get(key) or []) if s.islower()]
+                            uppercase_names = [s for s in (alias_info_agent_b.get(key) or []) if
+                                               not s.islower()]
+                            if lowercase_names:
+                                all_lowercase_names.extend(lowercase_names)
+                            if uppercase_names:
+                                all_uppercase_names.extend(uppercase_names)
+                    if all_lowercase_names:
+                        name_agent_b = all_lowercase_names[0]
+                    elif all_uppercase_names:
+                        name_agent_b = all_uppercase_names[0]
+                    else:
+                        # If no names were found above, maker the name whatever first value is in the alias dict
+                        name_agent_b = next(iter(alias_info_agent_b.values()), [None])[0]
+                        logger.warning(f"No valid lowercase or uppercase name found for interactor B. Using "
+                                       f"fallback: {name_agent_b} ... ... {wb_row}")
 
-            # Get db_refs using wb_row.ids_interactor_(a/b)
-            db_id_info_agent_a = self._id_conversion(wb_row.ids_interactor_a)
-            wormbase_id_agent_a = db_id_info_agent_a.get('wormbase')
-            entrez_id_agent_a = db_id_info_agent_a.get('entrez gene/locuslink')
-            up_id_agent_a = db_id_info_agent_a.get('uniprotkb')
-            intact_id_agent_a = db_id_info_agent_a.get('intact')
 
-            db_id_info_agent_b = self._id_conversion(wb_row.ids_interactor_b)
-            wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')
-            entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')
-            up_id_agent_b = db_id_info_agent_b.get('uniprotkb')
-            intact_id_agent_b = db_id_info_agent_b.get('intact')
+                # Get db_refs using wb_row.ids_interactor_(a/b)
+                wormbase_id_agent_a = None
+                entrez_id_agent_a = None
+                up_id_agent_a = None
+                intact_id_agent_a = None
+                db_id_info_agent_a = self._id_conversion(wb_row.ids_interactor_a) or {}
+                alt_db_id_info_agent_a = self._id_conversion(wb_row.alt_ids_interactor_a) or {}
+                if not db_id_info_agent_a:
+                    logger.warning(f"No db_refs found for interactor A: {wb_row}")
+                else:
+                    if db_id_info_agent_a.get('wormbase'):
+                        wormbase_id_agent_a = db_id_info_agent_a.get('wormbase')[0]
+                    # Some WB ids are stored as an alternate id under 'ensemblgenomes'
+                    elif alt_db_id_info_agent_a.get('ensemblgenomes') and 'WBGene' in \
+                        alt_db_id_info_agent_a.get('ensemblgenomes'):
+                            wormbase_id_agent_a = alt_db_id_info_agent_a.get('ensemblgenomes')[0]
+                    if db_id_info_agent_a.get('entrez gene/locuslink'):
+                        entrez_id_agent_a = db_id_info_agent_a.get('entrez gene/locuslink')[0]
+                    if db_id_info_agent_a.get('uniprotkb'):
+                        up_id_agent_a = db_id_info_agent_a.get('uniprotkb')[0]
+                    if db_id_info_agent_a.get('intact'):
+                        intact_id_agent_a = db_id_info_agent_a.get('intact')[0]
 
-            # Ground agents
-            agent_a = self._make_agent(name_agent_a, wormbase_id_agent_a,
-                                       entrez_id_agent_a, up_id_agent_a, intact_id_agent_a)
-            agent_b = self._make_agent(name_agent_b, wormbase_id_agent_b,
-                                       entrez_id_agent_b, up_id_agent_b, intact_id_agent_b)
+                wormbase_id_agent_b = None
+                entrez_id_agent_b = None
+                up_id_agent_b = None
+                intact_id_agent_b = None
+                db_id_info_agent_b = self._id_conversion(wb_row.ids_interactor_b) or {}
+                alt_db_id_info_agent_b = self._id_conversion(wb_row.alt_ids_interactor_b) or {}
+                if not db_id_info_agent_b:
+                    logger.warning(f"No db_refs found for interactor B: {wb_row}")
+                else:
+                    if db_id_info_agent_b.get('wormbase'):
+                        wormbase_id_agent_b = db_id_info_agent_b.get('wormbase')[0]
+                    # Some WB ids are stored as an alternate id under 'ensemblgenomes'
+                    elif alt_db_id_info_agent_b.get('ensemblgenomes') and 'WBGene' in \
+                         alt_db_id_info_agent_b.get('ensemblgenomes'):
+                        wormbase_id_agent_b = alt_db_id_info_agent_b.get('ensemblgenomes')[0]
+                    if db_id_info_agent_b.get('entrez gene/locuslink'):
+                        entrez_id_agent_b = db_id_info_agent_b.get('entrez gene/locuslink')[0]
+                    if db_id_info_agent_b.get('uniprotkb'):
+                        up_id_agent_b = db_id_info_agent_b.get('uniprotkb')[0]
+                    if db_id_info_agent_b.get('intact'):
+                        intact_id_agent_b = db_id_info_agent_b.get('intact')[0]
 
-            # Skip any agents with no grounding
-            if agent_a is None or agent_b is None:
-                continue
+                # Ground agents
+                agent_a = self._make_agent(name_agent_a, wormbase_id_agent_a,
+                                           entrez_id_agent_a, up_id_agent_a, intact_id_agent_a) or {}
+                agent_b = self._make_agent(name_agent_b, wormbase_id_agent_b,
+                                           entrez_id_agent_b, up_id_agent_b, intact_id_agent_b) or {}
 
-            # Get evidence
-            pmid = self._id_conversion(wb_row.publication_identifiers).get('pubmed')
-            doi = self._id_conversion(wb_row.publication_identifiers).get('doi')
-            mint = self._id_conversion(wb_row.publication_identifiers).get('mint')
-            imex = self._id_conversion(wb_row.publication_identifiers).get('imex')
-            text_refs = {}
-            if pmid:
-                text_refs['PMID'] = pmid
-            if doi:
-                text_refs['DOI'] = doi
-            if mint:
-                text_refs['MINT'] = mint
-            if imex:
-                text_refs['IMEX'] = imex
+                # Skip any agents with no grounding
+                if agent_a is None or agent_b is None:
+                    continue
 
-            if isinstance(self._id_conversion(wb_row.interaction_identifiers),
-                          dict) and 'wormbase' in self._id_conversion(
-                wb_row.interaction_identifiers):
-                source = 'wormbase'
-            else:
-                source = list(self._id_conversion(wb_row.interaction_identifiers).keys())[0]
+                # Get evidence
+                pmid = None
+                mint = None
+                imex = None
+                doi = None
+                pub_id_info = self._id_conversion(wb_row.publication_identifiers) or {}
+                if not pub_id_info:
+                    logger.warning(f"No publication info found: {wb_row}")
+                else:
+                    if pub_id_info.get('pubmed'):
+                        pmid = pub_id_info.get('pubmed')[0]
+                    if pub_id_info.get('mint'):
+                        mint = pub_id_info.get('mint')[0]
+                    if pub_id_info.get('imex'):
+                        imex = pub_id_info.get('imex')[0]
+                    if pub_id_info.get('doi'):
+                        doi = pub_id_info.get('doi')[0]
 
-            source_id = self._id_conversion(wb_row.interaction_identifiers).get(source)
-            ev = Evidence(source_api=source,
-                          source_id=source_id,
-                          pmid=text_refs.get('PMID'),
-                          text_refs=text_refs,
-                          annotations=dict(wb_row._asdict())
-                          )
-            # Make statement
-            interaction_type = self._interaction_type_conversion(wb_row.interaction_types).get('psi-mi')
-            if 'enhancement' in interaction_type:
-                s = Activation([agent_a, agent_b], evidence=ev)
-            elif 'suppression' in interaction_type:
-                s = Inhibition([agent_a, agent_b], evidence=ev)
-            elif 'phosphorylation reaction' in interaction_type:
-                s = Phosphorylation([agent_a, agent_b], evidence=ev)
-            elif 'demethylation reaction' in interaction_type:
-                s = Demethylation([agent_a, agent_b], evidence=ev)
-            elif 'methylation reaction' in interaction_type:
-                s = Methylation([agent_a, agent_b], evidence=ev)
-            else:
-                s = Association([agent_a, agent_b], evidence=ev)
-            self.statements.append(s)
+                text_refs = {}
+                if pmid:
+                    text_refs['PMID'] = pmid
+                if doi:
+                    text_refs['DOI'] = doi
+                if mint:
+                    text_refs['MINT'] = mint
+                if imex:
+                    text_refs['IMEX'] = imex
+
+                source = None
+                int_id_info = self._id_conversion(wb_row.interaction_identifiers) or {}
+                if not int_id_info:
+                    logger.warning(f"No interaction ID found: {wb_row}")
+                else:
+                    if 'wormbase' in int_id_info:
+                        source = 'wormbase'
+                    else:
+                        key = next(iter(int_id_info), None)
+                        source = (int_id_info.get(key) or [None])[0]
+
+                source_id = (int_id_info.get(source) or [None])[0]
+                ev = Evidence(source_api=source,
+                              source_id=source_id,
+                              pmid=text_refs.get('PMID'),
+                              text_refs=text_refs,
+                              annotations=dict(wb_row._asdict())
+                              )
+                # Make statement
+                interaction_type = None
+                int_type_info = self._interaction_type_conversion(wb_row.interaction_types) or {}
+                if not int_type_info:
+                    logger.warning(f"No interaction type found: {wb_row}")
+                else:
+                    if int_type_info.get('psi-mi'):
+                        interaction_type = int_type_info.get('psi-mi')[0]
+                    else:
+                        key = next(iter(int_type_info), None)
+                        interaction_type = (int_type_info.get(key) or [None])[0]
+
+                    if 'enhancement' in interaction_type:
+                        s = Activation(agent_a, agent_b, evidence=ev)
+                    elif 'suppression' in interaction_type:
+                        s = Inhibition(agent_a, agent_b, evidence=ev)
+                    elif 'phosphorylation reaction' in interaction_type:
+                        s = Phosphorylation(agent_a, agent_b, evidence=ev)
+                    elif 'demethylation reaction' in interaction_type:
+                        s = Demethylation(agent_a, agent_b, evidence=ev)
+                    elif 'methylation reaction' in interaction_type:
+                        s = Methylation(agent_a, agent_b, evidence=ev)
+                    else:
+                        s = Association([agent_a, agent_b], evidence=ev)
+
+                    self.statements.append(s)
+
+            except Exception as e:
+                logger.error(f"Error occurred at row {idx} for the {interaction_type} between agents {agent_a} and "
+                             f"{agent_b}: {e}")
 
     def _make_agent(self, symbol, wormbase_id, entrez_id, up_id, intact_id):
         """Make an Agent object, appropriately grounded.
@@ -229,8 +396,8 @@ class WormBaseProcessor(object):
 
     def _alias_conversion(self, raw_value: str):
         """Return dictionary with keys corresponding to name types and values
-        to agent names (or aliases) by decomposing the string value in Alias(es) interact A
-        or Alias(es) interactor B.
+        to agent names by decomposing the string value in one of 'Alias(es) interactor A' or
+        'Alias(es) interactor B'.
 
         Example string value: 'wormbase:dpy-21(public_name)|wormbase:Y59A8B.1(sequence_name)'
 
@@ -249,20 +416,27 @@ class WormBaseProcessor(object):
         # import re
         if not raw_value:
             return {}
+
+        # Remove the strings "public name" and all double quotes (only a few special cases in the data have this)
+        cleaned_value = raw_value.replace('"public name: ', '').replace('"', '')
         name_info = {}
-        for sub in raw_value.split('|'): # 'Alias(es) interactor _' can contain multiple aliases separated by "|".
+        for sub in cleaned_value.split('|'): # 'Alias(es) interactor _' can contain multiple aliases separated by "|".
             if ':' in sub and '(' in sub:
                 match = re.search(r'\(([^)]+)\)', sub)  # Extract text inside parentheses
                 if match:
                     key = match.group(1)
                     val = sub.split(':')[1].split('(')[0]
-                    name_info[key] = val
+                    if key not in name_info:
+                        name_info[key] = [val]
+                    else:
+                        name_info[key].append(val)
         return name_info
 
     def _id_conversion(self, raw_value: str):
         """Decompose the string value in columns 'ID(s) interactor A', 'ID(s) interactor B',
-        'Publication ID(s)', or 'Interaction identifier(s)' and return dictionary with keys
-        corresponding to database/source names and values to identifiers.
+        'Alt. ID(s) interactor A', 'Alt. ID(s) interactor B', 'Publication ID(s)', or
+        'Interaction identifier(s)' and return dictionary with keys corresponding to
+        database/source names and values to identifiers.
 
         Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272',
         'pubmed:36969515', 'wormbase:WBInteraction000000001'.
@@ -286,7 +460,10 @@ class WormBaseProcessor(object):
             if ':' in sub:
                 key = sub.split(':')[0]
                 val = sub.split(':')[1]
-                id_info[key] = val
+            if key not in id_info:
+                id_info[key] = [val]
+            else:
+                id_info[key].append(val)
         return id_info
 
     def _interaction_type_conversion(self, raw_value: str):
@@ -316,7 +493,10 @@ class WormBaseProcessor(object):
             if all(char in sub for char in (':', '(', ')')):
                 key = sub.split(':')[0]
                 val = re.search(r'\((.*)\)', sub).group(1)  # Extract text inside outermost parentheses
-                type_info[key] = val
+                if key not in type_info:
+                    type_info[key] = [val]
+                else:
+                    type_info[key].append(val)
         return type_info
 
     @staticmethod
@@ -360,7 +540,7 @@ class WormBaseProcessor(object):
             csv_reader = list(csv.reader(gz_file, delimiter='\t'))  # Create list of rows
             return csv_reader
 
-    def _read_wormbase_data(self):
+    def _read_wormbase_data(self, wormbase_file=None):
         """Return a csv.reader for a TSV file.
 
             Returns
@@ -370,7 +550,7 @@ class WormBaseProcessor(object):
                 been skipped).
             """
 
-        file_path = self.wormbase_file
+        file_path = wormbase_file
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
