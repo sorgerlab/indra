@@ -16,6 +16,7 @@ Reading Systems
    sparser/index
    medscan/index
    tees/index
+   evex
    isi/index
    geneways/index
    rlimsp/index

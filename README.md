@@ -57,6 +57,7 @@ Reading systems:
 | Sparser    | [`indra.sources.sparser`](https://indra.readthedocs.io/en/latest/modules/sources/sparser/index.html#)  | https://github.com/ddmcdonald/sparser           |
 | Eidos      | [`indra.sources.eidos`](https://indra.readthedocs.io/en/latest/modules/sources/eidos/index.html#)      | https://github.com/clulab/eidos                 |
 | TEES       | [`indra.sources.tees`](https://indra.readthedocs.io/en/latest/modules/sources/tees/index.html)         | https://github.com/jbjorne/TEES                 |
+| EVEX       | [`indra.sources.evex`](https://indra.readthedocs.io/en/latest/modules/sources/evex/index.html)         | http://evexdb.org/                              |
 | MedScan    | [`indra.sources.medscan`](https://indra.readthedocs.io/en/latest/modules/sources/medscan/index.html)   | https://doi.org/10.1093/bioinformatics/btg207   |
 | RLIMS-P    | [`indra.sources.rlimsp`](https://indra.readthedocs.io/en/latest/modules/sources/rlimsp/index.html)     | https://research.bioinformatics.udel.edu/rlimsp |
 | ISI/AMR    | [`indra.sources.isi`](https://indra.readthedocs.io/en/latest/modules/sources/isi/index.html)           | https://github.com/sgarg87/big_mech_isi_gg      |
