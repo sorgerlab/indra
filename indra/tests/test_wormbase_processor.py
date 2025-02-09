@@ -1,3 +1,4 @@
+from collections import Counter
 from unittest import TestCase
 import os
 import tqdm
@@ -17,9 +18,14 @@ class TestWormBaseProcessor(TestCase):
         try:
             # Create a WormBaseProcessor instance with test files
             processor = WormBaseProcessor(test_file_gen, test_file_mol)
+            # processor = WormBaseProcessor()
 
             # Ensure `statements` has been populated
             self.assertGreater(len(processor.statements), 0, "The statements list should not be empty.")
+
+            # print(len(processor.statements))
+            # interaction_type_counts = Counter(type(statement).__name__ for statement in processor.statements)
+            # print(interaction_type_counts)
 
         except Exception as e:
             self.fail(f"Test failed due to an exception: {e}")
