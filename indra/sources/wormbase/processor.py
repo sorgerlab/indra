@@ -1,15 +1,9 @@
+__all__ = ['WormBaseProcessor']
 
 import re
-import csv
-import os
 import tqdm
 import logging
-import requests
-import pandas as pd
-from io import BytesIO
-import gzip
-from indra.statements import Agent, Evidence, Activation, Association, Inhibition, Phosphorylation, Demethylation, \
-    Methylation
+from indra.statements import *
 from indra.ontology.standardize import standardize_name_db_refs
 
 
@@ -28,19 +22,14 @@ logger = logging.getLogger(__name__)
 
 """
 
+
 class WormBaseProcessor(object):
     """Extracts INDRA statements from WormBase interaction data.
 
         Parameters
         ----------
-        wormbase_gen_file : str
-            The file from WormBase containing all genetic interactions in
-            C. elegans. If not provided, the WormBase data is downloaded
-            from the WormBase website (technically alliancegenome.org).
-        wormbase_mol_file : str
-            The file from WormBase containing all molecular interactions in
-            C. elegans. If not provided, the WormBase data is downloaded
-            from the WormBase website (technically alliancegenome.org).
+        data :
+            Raw data from WormBase to be processed.
 
         Attributes
         ----------

@@ -1,18 +1,20 @@
+__all__ = ['process_from_files', 'process_from_web']
+
+
 from .processor import WormBaseProcessor
-import requests
-import gzip
-from io import BytesIO
 from collections import namedtuple
 import pandas as pd
 
-
+# Url for all C. elegans molecular interactions data file
 wormbase_mol_file_url = ('https://fms.alliancegenome.org/download/'
-                     'INTERACTION-MOL_WB.tsv.gz') # Url for all C. elegans molecular interactions data file
+                         'INTERACTION-MOL_WB.tsv.gz')
+# Url for all C. elegans genetic interactions data file
 wormbase_gen_file_url = ('https://fms.alliancegenome.org/download/'
-                     'INTERACTION-GEN_WB.tsv.gz') # Url for all C. elegans genetic interactions data file
+                         'INTERACTION-GEN_WB.tsv.gz')
+# Url for wormbase-to-entrez ID mapping
 wormbase_entrez_mappings_file_url = ('https://ftp.ncbi.nih.gov/gene/'
                                      'DATA/GENE_INFO/Invertebrates/'
-                                     'Caenorhabditis_elegans.gene_info.gz') # Url for wormbase-to-entrez ID mapping
+                                     'Caenorhabditis_elegans.gene_info.gz')
 
 # An explanation for each column of the interaction files are here:
 # https://github.com/HUPO-PSI/miTab/blob/master/PSI-MITAB27Format.md
@@ -42,14 +44,17 @@ columns = ['ids_interactor_a', 'ids_interactor_b',
 
 mapping_columns = ['tax_id', 'GeneID', 'Symbol',
                    'LocusTag', 'Synonyms', 'dbXrefs', 'chromosome',
-                   'map_location', 'description', 'type_of_gene', 'Symbol_from_nomenclature_authority',
-                   'Full_name_from_nomenclature_authority',	'Nomenclature_status', 'Other_designations',
+                   'map_location', 'description', 'type_of_gene',
+                   'Symbol_from_nomenclature_authority',
+                   'Full_name_from_nomenclature_authority',
+                   'Nomenclature_status', 'Other_designations',
                    'Modification_date', 'Feature_type']
 
 _WormBaseRow = namedtuple('WormBaseRow', columns)
 
-def process_from_file(wormbase_gen_data_file, wormbase_mol_data_file,
-                      wb_to_entrez_mappings_file):
+
+def process_from_files(wormbase_gen_data_file, wormbase_mol_data_file,
+                       wb_to_entrez_mappings_file):
     """Process WormBase interaction data from TSV files.
 
     Parameters
@@ -64,59 +69,33 @@ def process_from_file(wormbase_gen_data_file, wormbase_mol_data_file,
     Returns
     -------
     indra.sources.wormbase.WormBaseProcessor
-        WormBaseProcessor containing Statements extracted from the interactions data.
+        WormBaseProcessor containing Statements extracted from the
+        interactions data.
     """
-    gen_iter = pd.read_csv(wormbase_gen_data_file, sep='\t', comment='#', na_values="-", dtype=str).values.tolist()
-    mol_iter = pd.read_csv(wormbase_mol_data_file, sep='\t', comment='#', na_values="-", dtype=str).values.tolist()
-    mappings_df = pd.read_csv(wb_to_entrez_mappings_file, sep='\t', comment='#', dtype=str, names=mapping_columns)
+    gen_iter = pd.read_csv(wormbase_gen_data_file, sep='\t', comment='#',
+                           na_values="-", dtype=str).values.tolist()
+    mol_iter = pd.read_csv(wormbase_mol_data_file, sep='\t', comment='#',
+                           na_values="-", dtype=str).values.tolist()
+    mappings_df = pd.read_csv(wb_to_entrez_mappings_file, sep='\t',
+                              comment='#', dtype=str, names=mapping_columns)
     return _processor_from_data(gen_iter, mol_iter, mappings_df)
 
 
-def process_from_web(wormbase_gen_data_file=None, wormbase_mol_data_file=None,
-                     wb_to_entrez_mappings_file=None):
+def process_from_web():
     """Process WormBase interaction data from the web.
-
-    Parameters
-    ----------
-    wormbase_gen_data_file : Optional[str]
-        If specified, the genetic interactions data will be written to this file.
-    wormbase_mol_data_file : Optional[str]
-        If specified, the molecular interactions data will be written to this file.
-    wb_to_entrez_mappings_file : Optional[str]
-        If specified, the WormBase-to-Entrez ID mapping file will be written to this file.
 
     Returns
     -------
     indra.sources.wormbase.WormBaseProcessor
         WormBaseProcessor containing Statements extracted from the interactions data.
     """
-
-    res_gen = requests.get(wormbase_gen_file_url)
-    if res_gen.status_code == 200:
-        gzip_bytes_gen = BytesIO(res_gen.content)
-        with gzip.open(gzip_bytes_gen, 'rt') as file:
-            gen_iter = pd.read_csv(file, sep='\t', comment='#', na_values="-", dtype=str).values.tolist()
-    else:
-        raise Exception('Unable to download WormBase genetic interactions data: status code %s'
-                        % res_gen.status_code)
-
-    res_mol = requests.get(wormbase_mol_file_url)
-    if res_mol.status_code == 200:
-        gzip_bytes_mol = BytesIO(res_mol.content)
-        with gzip.open(gzip_bytes_mol, 'rt') as file:
-            mol_iter = pd.read_csv(file, sep='\t', comment='#', na_values="-", dtype=str).values.tolist()
-    else:
-        raise Exception('Unable to download WormBase molecular interactions data: status code %s'
-                        % res_mol.status_code)
-
-    res_map = requests.get(wormbase_entrez_mappings_file_url)
-    if res_map.status_code == 200:
-        gzip_bytes_map = BytesIO(res_map.content)
-        with gzip.open(gzip_bytes_map, 'rt') as file:
-            mappings_df = pd.read_csv(file, sep='\t', comment='#', na_values="-", dtype=str, names=mapping_columns)
-    else:
-        raise Exception('Unable to download WormBase-to-Entrez ID mapping data: status code %s'
-                        % res_mol.status_code)
+    gen_iter = pd.read_csv(wormbase_gen_file_url, sep='\t', comment='#',
+                           na_values="-", dtype=str).values.tolist()
+    mol_iter = pd.read_csv(wormbase_mol_file_url, sep='\t', comment='#',
+                           na_values="-", dtype=str).values.tolist()
+    mappings_df = pd.read_csv(wormbase_entrez_mappings_file_url, sep='\t',
+                              comment='#', na_values="-", dtype=str,
+                              names=mapping_columns)
 
     return _processor_from_data(gen_iter, mol_iter, mappings_df)
 
@@ -141,5 +120,6 @@ def _processor_from_data(gen_iter, mol_iter, mappings_df):
     # Process into a list of WormBaseRow namedtuples
     all_rows = gen_iter + mol_iter
     data = [_WormBaseRow(*[None if item == '-' else item
-                            for item in row][:len(columns)]) for row in all_rows]
+                           for item in row][:len(columns)])
+            for row in all_rows]
     return WormBaseProcessor(data, mappings_df)
