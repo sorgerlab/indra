@@ -6,52 +6,14 @@ import tqdm
 import logging
 import requests
 import pandas as pd
-import numpy as np
 from io import BytesIO
 import gzip
-from collections import namedtuple
 from indra.statements import Agent, Evidence, Activation, Association, Inhibition, Phosphorylation, Demethylation, \
     Methylation
 from indra.ontology.standardize import standardize_name_db_refs
 
 
 logger = logging.getLogger(__name__)
-
-wormbase_mol_file_url = ('https://fms.alliancegenome.org/download/'
-                     'INTERACTION-MOL_WB.tsv.gz') # Url for all C. elegans molecular interactions data file
-wormbase_gen_file_url = ('https://fms.alliancegenome.org/download/'
-                     'INTERACTION-GEN_WB.tsv.gz') # Url for all C. elegans genetic interactions data file
-wormbase_entrez_mappings_file_url = ('https://ftp.ncbi.nih.gov/gene/'
-                                     'DATA/GENE_INFO/Invertebrates/'
-                                     'Caenorhabditis_elegans.gene_info.gz') # Url for wormbase-to-entrez ID mapping
-
-# An explanation for each column of the interaction files are here:
-# https://github.com/HUPO-PSI/miTab/blob/master/PSI-MITAB27Format.md
-columns = ['ids_interactor_a', 'ids_interactor_b',
-           'alt_ids_interactor_a', 'alt_ids_interactor_b',
-           'aliases_interactor_a', 'aliases_interactor_b',
-           'interaction_detection_methods', 'publication_first_authors',
-           'publication_identifiers', 'taxid_interactor_a',
-           'taxid_interactor_b', 'interaction_types',
-           'source_databases', 'interaction_identifiers',
-           'confidence_values', 'expansion_methods',
-           'biological_roles_interactor_a',
-           'biological_roles_interactor_b',
-           'experimental_roles_interactor_a',
-           'experimental_roles_interactor_b',
-           'types_interactor_a', 'types_interactor_b',
-           'xrefs_interactor_a', 'xrefs_interactor_b',
-           'interaction_xrefs', 'annotations_interactor_a',
-           'annotations_interactor_b', 'interaction_annotations',
-           'host_organisms', 'interaction_parameters',
-           'creation_date', 'update_date', 'checksums_interactor_a',
-           'checksums_interactor_b', 'interaction_checksums',
-           'negative', 'features_interactor_a', 'features_interactor_b',
-           'stoichiometries_interactor_a', 'stoichiometries_interactor_b',
-           'identification_method_participant_a',
-           'identification_method_participant_b']
-
-_WormBaseRow = namedtuple('WormBaseRow', columns)
 
 """Miscellaneous info for WormBase interaction data (genetic and molecular):
 
@@ -86,64 +48,37 @@ class WormBaseProcessor(object):
             Extracted INDRA statements.
         """
 
-    def __init__(self, wormbase_gen_file=None, wormbase_mol_file=None):
+    def __init__(self, data, mappings_df):
         self.statements = []
-        self.wormbase_gen_file = wormbase_gen_file
-        self.wormbase_mol_file = wormbase_mol_file
+        self.rows = data
+        self.mappings_df = mappings_df
 
-        # Load the wormbase-to-entrez ID mapping file as a pd.DataFrame
-        wb_to_entrez_mappings = self._download_wormbase_data(wormbase_entrez_mappings_file_url,
-                                                             as_df=True)
-
-        # If a path to the genetic interactions file is provided, process it.
-        if self.wormbase_gen_file:
-            rows_gen = self._read_wormbase_data(self.wormbase_gen_file)
-        # If no file is provided, download from web
-        else:
-            logger.info('No genetic interactions file specified, downloading from WormBase '
-                        'at %s' % wormbase_gen_file_url)
-            rows_gen = self._download_wormbase_data(wormbase_gen_file_url, as_df=False)
-
-        # If a path to the molecular interactions file is provided, process it.
-        if self.wormbase_mol_file:
-            rows_mol = self._read_wormbase_data(self.wormbase_mol_file)
-        # If no file is provided, download from web
-        else:
-            logger.info('No molecular interactions file specified, downloading from WormBase '
-                        'at %s' % wormbase_mol_file_url)
-            rows_mol = self._download_wormbase_data(wormbase_mol_file_url, as_df=False)
-
-        rows = rows_gen + rows_mol
-
-        # Convert 'dbXrefs' column in wb_to_entrez_mappings to a dictionary of Source:ID pairs.
-        wb_to_entrez_mappings['dbXrefs'] = wb_to_entrez_mappings['dbXrefs'].apply(self._id_conversion)
+        # Transform 'dbXrefs' column in mappings_df
+        self.mappings_df['dbXrefs'] = self.mappings_df['dbXrefs'].apply(self._id_conversion)
 
         # Create new column 'wormbase_id' that holds each gene's WormBase identifier
-        wb_to_entrez_mappings['wormbase_id'] = wb_to_entrez_mappings['dbXrefs'].apply(
+        self.mappings_df['wormbase_id'] = self.mappings_df['dbXrefs'].apply(
             lambda x: x.get('WormBase')[0] if isinstance(x, dict) and 'WormBase' in x
             else x.get('WB')[0] if isinstance(x, dict) and 'WB' in x
             else None
         )
 
         # Convert mappings to dictionaries for quick lookups
-        wb_to_entrez_dict = wb_to_entrez_mappings.set_index('wormbase_id')['GeneID'].to_dict()
-        entrez_to_wb_dict = wb_to_entrez_mappings.set_index('GeneID')['wormbase_id'].to_dict()
-        entrez_to_symbol_dict = wb_to_entrez_mappings.set_index('GeneID')['Symbol'].to_dict()
-        symbol_to_annotation_dict = wb_to_entrez_mappings.set_index('GeneID').to_dict(orient='index')
+        wb_to_entrez_dict = self.mappings_df.set_index('wormbase_id')['GeneID'].to_dict()
+        entrez_to_wb_dict = self.mappings_df.set_index('GeneID')['wormbase_id'].to_dict()
+        entrez_to_symbol_dict = self.mappings_df.set_index('GeneID')['Symbol'].to_dict()
+        symbol_to_annotation_dict = self.mappings_df.set_index('GeneID').to_dict(orient='index')
 
         # Process the rows into Statements
-        for idx, row in enumerate(tqdm.tqdm(rows, desc='Processing WormBase rows')):
+        for idx, wb_row in enumerate(tqdm.tqdm(self.rows, desc='Processing WormBase rows')):
             try:
-                # There are some extra columns that we don't need to take and
-                # thereby save space in annotations
-                filt_row = [None if item == '-' else item
-                            for item in row][:len(columns)]
-                wb_row = _WormBaseRow(*filt_row)
 
                 # Get the name of agent A
                 name_agent_a = None
-                alias_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a) or {}
-                alt_ids_agent_a = self._id_conversion(wb_row.alt_ids_interactor_a) or {}
+                alias_info_agent_a = self._alias_conversion(wb_row.aliases_interactor_a) if \
+                    isinstance(wb_row.aliases_interactor_a, str) else {}
+                alt_ids_agent_a = self._id_conversion(wb_row.alt_ids_interactor_a) if \
+                    isinstance(wb_row.alt_ids_interactor_a, str) else {}
                 if not alias_info_agent_a: # If agent alias is empty, look for a valid name in alternate IDs
                     if not alt_ids_agent_a:
                         logger.warning(f"Agent alias and alternate ID dicts for interactor A are empty: {wb_row}")
@@ -167,8 +102,6 @@ class WormBaseProcessor(object):
                             # If no names were found above, use whatever first value is in the alt. ids dict
                             # as a fallback
                             name_agent_a = next(iter(alt_ids_agent_a.values()), [None])[0]
-                            # logger.warning(f"No valid lowercase or uppercase name found for interactor A. Using "
-                            #                f"fallback: {name_agent_a} ... ... {wb_row}")
                 else: # If the alias dict is not empty, look for names in the order below, with 'public_name' and
                     # lowercase preferred.
                     all_lowercase_names = []
@@ -189,13 +122,13 @@ class WormBaseProcessor(object):
                         # If no names were found above, use whatever first value is in the alias dict
                         # as a fallback
                         name_agent_a = next(iter(alias_info_agent_a.values()), [None])[0]
-                        # logger.warning(f"No valid lowercase or uppercase name found for interactor A. Using "
-                        #                f"fallback: {name_agent_a} ... ... {wb_row}")
 
                 # Get the name of agent B
                 name_agent_b = None
-                alias_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b) or {}
-                alt_ids_agent_b = self._id_conversion(wb_row.alt_ids_interactor_b) or {}
+                alias_info_agent_b = self._alias_conversion(wb_row.aliases_interactor_b) if \
+                    isinstance(wb_row.aliases_interactor_b, str) else {}
+                alt_ids_agent_b = self._id_conversion(wb_row.alt_ids_interactor_b) if \
+                    isinstance(wb_row.alt_ids_interactor_b, str) else {}
                 if not alias_info_agent_b:  # If agent alias is empty, look for a valid name in alternate IDs
                     if not alt_ids_agent_b:
                         logger.warning(
@@ -569,94 +502,4 @@ class WormBaseProcessor(object):
                     type_info[key].append(val)
         return type_info
 
-    @staticmethod
-    def _download_wormbase_data(url, as_df):
-        """Downloads gzipped, tab-separated WormBase data in .tab2 format.
-
-        Parameters
-        -----------
-        url : str
-            URL of the WormBase gzip file.
-        as_df : Boolean
-            If True, returns a Pandas DataFrame object. If False,
-            returns an iterable list of file rows. The WormBase-to-Entrez ID
-            mappings file is needed in pd.DataFrame format, while the interactions
-            data are needed in as an iterable list of file rows.
-
-        Returns
-        -------
-        csv_reader : list
-            An iterable list of rows in the file (header has already
-            been skipped).
-        """
-        res = requests.get(url)
-        if res.status_code != 200:
-            raise Exception('Unable to download WormBase data: status code %s'
-                            % res.status_code)
-
-        gzip_bytes = BytesIO(res.content)
-        with gzip.open(gzip_bytes, 'rt') as gz_file:
-            # Locate the header line (last line that starts with '#')
-            header_index = None
-            for i, line in enumerate(gz_file):
-                if line.startswith('#') and not line.strip().startswith('######'):
-                    header_line = line.strip('#').strip()
-                    header_index = i
-
-            if header_index is None:
-                raise Exception('Header not found in the file.')
-
-            gzip_bytes.seek(0)
-            gz_file = gzip.open(gzip_bytes, 'rt')
-
-            if as_df:
-                # Create a dataframe
-                columns = header_line.split('\t')
-                df = pd.read_csv(gz_file, sep='\t', skiprows=header_index + 1,
-                                        names=columns, na_values="-")
-                return df
-            else:
-                # Skip all rows up to and including the header
-                for _ in range(header_index + 1):
-                    next(gz_file)
-
-                csv_reader = list(csv.reader(gz_file, delimiter='\t'))  # Create list of rows
-                return csv_reader
-
-    def _read_wormbase_data(self, wormbase_file=None):
-        """Return a csv.reader for a TSV file.
-
-            Returns
-            -------
-            csv_reader : list
-                An iterable list of rows in the file (header has already
-                been skipped).
-            """
-
-        file_path = wormbase_file
-
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File not found: {file_path}")
-
-        try:
-            # Locate the header line (last line that starts with '#')
-            with open(file_path, 'r') as file:
-                header_index = None
-                for i, line in enumerate(file):
-                    if line.startswith('#') and not line.strip().startswith('######'):
-                        header_index = i
-
-                if header_index is None:
-                    raise Exception('Header not found in the file.')
-
-                # Skip all rows up to and including the header
-                file.seek(0)
-                for _ in range(header_index + 1):
-                    next(file)
-
-                csv_reader = list(csv.reader(file, delimiter='\t'))  # Create list of row
-                return csv_reader
-
-        except Exception as e:
-            raise Exception(f"Error occurred while reading WormBase CSV: {e}")
 
