@@ -225,12 +225,13 @@ class WormBaseProcessor(object):
         else:
             if pub_id_info.get('pubmed'):
                 pmid = pub_id_info.get('pubmed')[0]
-            if pub_id_info.get('mint'):
-                mint = pub_id_info.get('mint')[0]
-            if pub_id_info.get('imex'):
-                imex = pub_id_info.get('imex')[0]
             if pub_id_info.get('doi'):
                 doi = pub_id_info.get('doi')[0]
+            # TODO: mint and imex IDs are also available
+            #if pub_id_info.get('mint'):
+            #    mint = pub_id_info.get('mint')[0]
+            #if pub_id_info.get('imex'):
+            #    imex = pub_id_info.get('imex')[0]
 
         text_refs = {}
         if pmid:
@@ -238,18 +239,14 @@ class WormBaseProcessor(object):
         if doi:
             text_refs['DOI'] = doi
 
-        source = None
-        int_id_info = self._id_conversion(wb_row.interaction_identifiers) or {}
-        if not int_id_info:
-            logger.warning(f"No interaction ID found: {wb_row}")
-        else:
-            if 'wormbase' in int_id_info:
-                source = 'wormbase'
-            else:
-                key = next(iter(int_id_info), None)
-                source = (int_id_info.get(key) or [None])[0]
+        # Prefer wormbase to get source ID if possible, otherwise choose
+        # the first alternative
+        int_id_info = self._id_conversion(wb_row.interaction_identifiers)
+        source = 'wormbase' if 'wormbase' in int_id_info else \
+            sorted(int_id_info)[0]
 
-        source_id = (int_id_info.get(source) or [None])[0]
+        source_id = f'{source}:{int_id_info.get(source)[0]}' \
+            if source else None
 
         # Incorporate info from the wormbase-to-entrez ID mapping file
         # into Evidence as annotations
@@ -264,7 +261,7 @@ class WormBaseProcessor(object):
             full_annotations['entrez_info_agent_b'] = \
                 self.symbol_to_annotation_dict.get(entrez_id_agent_b) or {}
 
-        ev = Evidence(source_api=source,
+        ev = Evidence(source_api='wormbase',
                       source_id=source_id,
                       pmid=pmid,
                       text_refs=text_refs,
@@ -379,13 +376,15 @@ class WormBaseProcessor(object):
         return name_info
 
     def _id_conversion(self, raw_value: str):
-        """Decompose the string value in columns 'ID(s) interactor A', 'ID(s) interactor B',
-        'Alt. ID(s) interactor A', 'Alt. ID(s) interactor B', 'Publication ID(s)', or
-        'Interaction identifier(s)' and return dictionary with keys corresponding to
-        database/source names and values to identifiers.
+        """Decompose the string value in columns 'ID(s) interactor A',
+        'ID(s) interactor B', 'Alt. ID(s) interactor A',
+        'Alt. ID(s) interactor B', 'Publication ID(s)', or
+        'Interaction identifier(s)' and return dictionary with keys
+        corresponding to database/source names and values to identifiers.
 
-        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272',
-        'pubmed:36969515', 'wormbase:WBInteraction000000001'.
+        Example string values: 'wormbase:WBGene00006352',
+        'entrez gene/locuslink:178272', 'pubmed:36969515',
+        'wormbase:WBInteraction000000001'.
 
         Parameters
         ----------
@@ -395,9 +394,11 @@ class WormBaseProcessor(object):
         Returns
         -------
         source_id_info : dict
-            Dictionary with database/source names as keys and identifiers as values. Unique keys for
-            'ID(s) interactor _' in C. elegans interaction data are 'wormbase' and 'entrez gene/locuslink'.
-            Unique keys for 'Publication ID(s)' in C. elegans interaction data are 'pubmed'.
+            Dictionary with database/source names as keys and identifiers
+            as values. Unique keys for 'ID(s) interactor _' in C. elegans
+            interaction data are 'wormbase' and 'entrez gene/locuslink'.
+            Unique keys for 'Publication ID(s)' in C. elegans interaction
+            data are 'pubmed'.
         """
         if not raw_value or not isinstance(raw_value, str):
             return {}
