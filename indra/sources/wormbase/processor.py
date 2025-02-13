@@ -66,7 +66,7 @@ class WormBaseProcessor(object):
             try:
                 self.process_row(wb_row)
             except Exception as e:
-                logger.error(f"Error occurred at row {idx}")
+                logger.error(f"Error occurred at row {idx}: {e}")
 
     def get_agent_name(self, aliases, alt_ids):
         # Get the name of agent A
@@ -183,6 +183,31 @@ class WormBaseProcessor(object):
                 name = entrez_name
         return name
 
+    def get_agent_role_info(self, interactor_types, interactor_bio_types, interactor_exp_types):
+        interactor_type_info = \
+            self._type_role_conversion(interactor_types) if \
+                interactor_types else {}
+        interactor_bio_role_info = \
+            self._type_role_conversion(interactor_bio_types) if \
+                interactor_bio_types else {}
+        interactor_exp_role_info = \
+            self._type_role_conversion(interactor_exp_types) if \
+                interactor_exp_types else {}
+
+        interactor_type = None
+        biological_role = None
+        experimental_role = None
+
+        if interactor_type_info.get('psi-mi'):
+            interactor_type = interactor_type_info.get('psi-mi')[0]
+        if interactor_bio_role_info.get('psi-mi'):
+            biological_role = interactor_bio_role_info.get('psi-mi')[0]
+        if interactor_exp_role_info.get('psi-mi'):
+            experimental_role = interactor_exp_role_info.get('psi-mi')[0]
+
+        return interactor_type, biological_role, experimental_role
+
+
     def process_row(self, wb_row):
         name_agent_a = self.get_agent_name(wb_row.aliases_interactor_a,
                                            wb_row.alt_ids_interactor_a)
@@ -268,7 +293,7 @@ class WormBaseProcessor(object):
                       annotations=full_annotations)
         # Make statement
         int_type_info = \
-            self._interaction_type_conversion(wb_row.interaction_types) or {}
+            self._type_role_conversion(wb_row.interaction_types) or {}
         if not int_type_info:
             logger.warning(f"No interaction type found: {wb_row}")
         else:
@@ -278,18 +303,57 @@ class WormBaseProcessor(object):
                 key = next(iter(int_type_info), None)
                 interaction_type = (int_type_info.get(key) or [None])[0]
 
-            if 'enhancement' in interaction_type:
-                s = Activation(agent_a, agent_b, evidence=ev)
-            elif 'suppression' in interaction_type:
-                s = Inhibition(agent_a, agent_b, evidence=ev)
-            elif 'phosphorylation reaction' in interaction_type:
-                s = Phosphorylation(agent_a, agent_b, evidence=ev)
-            elif 'demethylation reaction' in interaction_type:
-                s = Demethylation(agent_a, agent_b, evidence=ev)
-            elif 'methylation reaction' in interaction_type:
-                s = Methylation(agent_a, agent_b, evidence=ev)
+            # Only necessary to get interactor type, biological role,
+            # and experimental role for one agent
+            agent_a_type, agent_a_bio_role, agent_a_exp_role = \
+                self.get_agent_role_info(wb_row.types_interactor_a,
+                                    wb_row.biological_roles_interactor_a,
+                                    wb_row.experimental_roles_interactor_a)
+            # TODO: Decide how/whether to use agent type (protein, gene, DNA,
+            #  or RNA) to determine role.
+            subj = None
+            obj = None
+            is_two_hybrid = False
+            if agent_a_bio_role in ['enzyme', 'inhibitor'] or \
+                    agent_a_exp_role in ['suppressor gene', 'enhancer gene',
+                                         'epistatic gene']:
+                subj = agent_a
+                obj = agent_b
+            elif agent_a_bio_role in ['enzyme target'] or \
+                agent_a_exp_role in ['suppressed gene', 'enhanced gene',
+                                     'hypostatic gene']:
+                subj = agent_b
+                obj = agent_a
+            elif agent_a_exp_role in ['bait', 'prey']:
+                is_two_hybrid = True
             else:
-                s = Association([agent_a, agent_b], evidence=ev)
+                return # Only continue to statement creation if subject and
+            # object are specified or interaction is found through a
+            # two-hybrid screen.
+
+            # TODO: Decide how/whether to use remaining interaction types
+            # Omit types 'mutual genetic enhancement' and 'mutual genetic
+            # enhancement (sensu unexpected)' for now and only use the
+            # 'genetic enhancement' type.
+            if 'genetic enhancement' in interaction_type and \
+                    'mutual' not in interaction_type:
+                s = IncreaseAmount(subj, obj, evidence=ev)
+            elif any(x in interaction_type for x in
+                     ['suppression', 'epistasis (sensu Bateson)']):
+                s = DecreaseAmount(subj, obj, evidence=ev)
+            elif 'phosphorylation reaction' in interaction_type:
+                s = Phosphorylation(subj, obj, evidence=ev)
+            elif 'demethylation reaction' in interaction_type:
+                s = Demethylation(subj, obj, evidence=ev)
+            elif 'methylation reaction' in interaction_type:
+                s = Methylation(subj, obj, evidence=ev)
+
+            # Special case where agents do not have a subject-object
+            # relationship
+            elif is_two_hybrid:
+                s = Complex([agent_a, agent_b], evidence=ev)
+            else:
+                return
 
             self.statements.append(s)
 
@@ -405,32 +469,36 @@ class WormBaseProcessor(object):
         id_info = {}
         for sub in raw_value.split('|'):
             if ':' in sub:
-                key = sub.split(':')[-2]
-                val = sub.split(':')[-1]
-            if key not in id_info:
-                id_info[key] = [val]
-            else:
-                id_info[key].append(val)
+                parts = sub.split(':')
+                if len(parts) >= 2:
+                    key = sub.split(':')[-2]
+                    val = sub.split(':')[-1]
+                    if key not in id_info:
+                        id_info[key] = [val]
+                    else:
+                        id_info[key].append(val)
         return id_info
 
-    def _interaction_type_conversion(self, raw_value: str):
-        """Decompose the string value in columns 'Interaction type(s)' and return dictionary with keys
-        corresponding to database/source names and values to identifiers.
+    def _type_role_conversion(self, raw_value: str):
+        """Decompose string value for columns 'Interaction type(s)',
+        'Interactor type(s) A/B', 'Biological role(s) interactor A/B',
+         or 'Experimental role(s) interactor A/B' and return dictionary with
+         keys corresponding to the 'psi-mi' tag and values to
+         types or roles, which reside within parentheses of the string.
 
-        Example string values: 'wormbase:WBGene00006352', 'entrez gene/locuslink:178272',
-        'pubmed:36969515', 'wormbase:WBInteraction000000001'.
+        Example string values: 'psi-mi:"MI:0326"(protein)',
+        'psi-mi:"MI:2402"(genetic interaction)', 'psi-mi:"MI:0586"(inhibitor)',
+        'psi-mi:"MI:0582"(suppressed gene)'.
 
         Parameters
         ----------
         raw_value : str
-            The raw value in whichever ID column is being converted.
+            The raw value in whichever column is being converted.
 
         Returns
         -------
-        source_id_info : dict
-            Dictionary with database/source names as keys and identifiers as values. Unique keys for
-            'ID(s) interactor _' in C. elegans interaction data are 'wormbase' and 'entrez gene/locuslink'.
-            Unique keys for 'Publication ID(s)' in C. elegans interaction data are 'pubmed'.
+        type_info : dict
+            Dictionary with 'psi-mi' as keys and types or roles as values.
         """
         import re
         if not raw_value:
