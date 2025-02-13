@@ -73,9 +73,9 @@ def process_from_files(wormbase_gen_data_file, wormbase_mol_data_file,
         interactions data.
     """
     gen_iter = pd.read_csv(wormbase_gen_data_file, sep='\t', comment='#',
-                           na_values="-", dtype=str).values.tolist()
+                           dtype=str).values.tolist()
     mol_iter = pd.read_csv(wormbase_mol_data_file, sep='\t', comment='#',
-                           na_values="-", dtype=str).values.tolist()
+                           dtype=str).values.tolist()
     mappings_df = pd.read_csv(wb_to_entrez_mappings_file, sep='\t',
                               comment='#', dtype=str, names=mapping_columns)
     return _processor_from_data(gen_iter, mol_iter, mappings_df)
@@ -90,11 +90,11 @@ def process_from_web():
         WormBaseProcessor containing Statements extracted from the interactions data.
     """
     gen_iter = pd.read_csv(wormbase_gen_file_url, sep='\t', comment='#',
-                           na_values="-", dtype=str).values.tolist()
+                           dtype=str).values.tolist()
     mol_iter = pd.read_csv(wormbase_mol_file_url, sep='\t', comment='#',
-                           na_values="-", dtype=str).values.tolist()
+                           dtype=str).values.tolist()
     mappings_df = pd.read_csv(wormbase_entrez_mappings_file_url, sep='\t',
-                              comment='#', na_values="-", dtype=str,
+                              comment='#', dtype=str,
                               names=mapping_columns)
 
     return _processor_from_data(gen_iter, mol_iter, mappings_df)
