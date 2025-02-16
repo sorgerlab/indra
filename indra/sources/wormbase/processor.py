@@ -183,7 +183,8 @@ class WormBaseProcessor(object):
                 name = entrez_name
         return name
 
-    def get_agent_role_info(self, interactor_types, interactor_bio_types, interactor_exp_types):
+    def get_agent_role_info(self, interactor_types, interactor_bio_types,
+                            interactor_exp_types):
         interactor_type_info = \
             self._type_role_conversion(interactor_types) if \
                 interactor_types else {}
@@ -206,7 +207,6 @@ class WormBaseProcessor(object):
             experimental_role = interactor_exp_role_info.get('psi-mi')[0]
 
         return interactor_type, biological_role, experimental_role
-
 
     def process_row(self, wb_row):
         name_agent_a = self.get_agent_name(wb_row.aliases_interactor_a,
@@ -357,7 +357,8 @@ class WormBaseProcessor(object):
 
             self.statements.append(s)
 
-    def _make_agent(self, symbol, wormbase_id, entrez_id, up_id, intact_id):
+    @staticmethod
+    def _make_agent(symbol, wormbase_id, entrez_id, up_id, intact_id):
         """Make an Agent object, appropriately grounded.
 
         Parameters
@@ -403,33 +404,39 @@ class WormBaseProcessor(object):
 
         return Agent(name, db_refs=db_refs)
 
-    def _alias_conversion(self, raw_value: str):
+    @staticmethod
+    def _alias_conversion(raw_value: str):
         """Return dictionary with keys corresponding to name types and values
-        to agent names by decomposing the string value in one of 'Alias(es) interactor A' or
-        'Alias(es) interactor B'.
+        to agent names by decomposing the string value in one of 'Alias(es)
+        interactor A' or 'Alias(es) interactor B'.
 
-        Example string value: 'wormbase:dpy-21(public_name)|wormbase:Y59A8B.1(sequence_name)'
+        Example string value:
+        'wormbase:dpy-21(public_name)|wormbase:Y59A8B.1(sequence_name)'
 
         Parameters
         ----------
         raw_value : str
-            The raw value in 'Alias(es) interactor A' or 'Alias(es) interactor B'
-            for a particular row.
+            The raw value in 'Alias(es) interactor A' or
+            'Alias(es) interactor B' for a particular row.
 
         Returns
         -------
         name_info : dict
-            Dictionary with name types as keys and agent names as values (for C. elegans interaction data, the
-            primary name and the one used corresponds with the key 'public_name').
+            Dictionary with name types as keys and agent names as values
+            (for C. elegans interaction data, the primary name and the
+            one used corresponds with the key 'public_name').
         """
         # import re
         if not raw_value:
             return {}
 
-        # Remove the strings "public name" and all double quotes (only a few special cases in the data have this)
-        cleaned_value = raw_value.replace('"public name: ', '').replace('"', '')
+        # Remove the strings "public name" and all double quotes (only a few
+        # special cases in the data have this)
+        cleaned_value = \
+            raw_value.replace('"public name: ', '').replace('"', '')
         name_info = {}
-        # 'Alias(es) interactor _' can contain multiple aliases separated by "|".
+        # 'Alias(es) interactor _' can contain multiple aliases
+        # separated by "|".
         for sub in cleaned_value.split('|'):
             if ':' in sub and '(' in sub:
                 # Extract text inside parentheses
@@ -443,7 +450,8 @@ class WormBaseProcessor(object):
                         name_info[key].append(val)
         return name_info
 
-    def _id_conversion(self, raw_value: str):
+    @staticmethod
+    def _id_conversion(raw_value: str):
         """Decompose the string value in columns 'ID(s) interactor A',
         'ID(s) interactor B', 'Alt. ID(s) interactor A',
         'Alt. ID(s) interactor B', 'Publication ID(s)', or
@@ -483,7 +491,8 @@ class WormBaseProcessor(object):
                         id_info[key].append(val)
         return id_info
 
-    def _type_role_conversion(self, raw_value: str):
+    @staticmethod
+    def _type_role_conversion(raw_value: str):
         """Decompose string value for columns 'Interaction type(s)',
         'Interactor type(s) A/B', 'Biological role(s) interactor A/B',
          or 'Experimental role(s) interactor A/B' and return dictionary with
@@ -518,5 +527,3 @@ class WormBaseProcessor(object):
                 else:
                     type_info[key].append(val)
         return type_info
-
-
