@@ -86,6 +86,7 @@ Biological pathway databases:
 | CREEDS                     | [`indra.sources.creeds`](https://indra.readthedocs.io/en/latest/modules/sources/creeds/index.html) | https://maayanlab.cloud/CREEDS/                                 |
 | UbiBrowser                 | [`indra.sources.ubibrowser`](https://indra.readthedocs.io/en/latest/modules/sources/ubibrowser.html) | http://ubibrowser.ncpsb.org.cn/                |
 | ACSN                       | [`indra.sources.acsn`](https://indra.readthedocs.io/en/latest/modules/sources/acsn.html) | https://acsn.curie.fr/ACSN2/ACSN2.html   |
+| WormBase                       | [`indra.sources.wormbase`](https://indra.readthedocs.io/en/latest/modules/sources/wormbase.html) | https://www.wormbase.org   |
 
 Custom knowledge bases:
 

@@ -101,6 +101,7 @@ def main():
                     'indra.sources.trips', 'indra.sources.trrust',
                     'indra.sources.ubibrowser',
                     'indra.sources.virhostnet',
+                    'indra.sources.wormbase',
                     'indra.resources', 'indra.statements',
                     'indra.tests', 'indra.tests.test_obo_clients',
                     'indra.tools',

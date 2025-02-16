@@ -328,5 +328,15 @@
             "color": "white",
             "background-color": "#bf98eb"
         }
+    },
+    "wormbase": {
+        "name": "WormBase",
+        "link": "http://wormbase.org/",
+        "type": "database",
+        "domain": "biology",
+        "default_style": {
+            "color": "white",
+            "background-color": "#a8d7ff"
+        }
     }
 }

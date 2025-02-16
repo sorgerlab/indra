@@ -385,7 +385,11 @@ class WormBaseProcessor(object):
         if entrez_id:
             db_refs['EGID'] = entrez_id
         if up_id:
-            db_refs['UP'] = up_id
+            if '-' in up_id:
+                db_refs['UP'] = up_id.split('-')[0]
+                db_refs['UPISO'] = up_id
+            else:
+                db_refs['UP'] = up_id
         # if intact_id:
         #     db_refs['INTACT'] = intact_id
         standard_name, db_refs = standardize_name_db_refs(db_refs)
