@@ -1,4 +1,3 @@
-from collections import Counter
 from unittest import TestCase
 import os
 from indra.sources.wormbase import *
@@ -18,14 +17,10 @@ class TestWormBaseProcessor(TestCase):
 
         try:
             # Create a WormBaseProcessor instance with test files
-            processor = process_from_files(test_file_gen, test_file_mol. test_file_map)
+            processor = process_from_files(test_file_gen, test_file_mol, test_file_map)
 
             # Ensure `statements` has been populated
             self.assertGreater(len(processor.statements), 0, "The statements list should not be empty.")
-
-            # print(len(processor.statements))
-            # interaction_type_counts = Counter(type(statement).__name__ for statement in processor.statements)
-            # print(interaction_type_counts)
 
         except Exception as e:
             self.fail(f"Test failed due to an exception: {e}")
