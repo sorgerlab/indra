@@ -39,6 +39,7 @@ Molecular Pathway Databases
    omnipath/index
    ubibrowser
    acsn
+   wormbase
 
 Chemical Information Databases
 ------------------------------

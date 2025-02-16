@@ -167,6 +167,9 @@ reference should be added to the README.md in the appropriate table in
 the Knowledge sources section.
 - A prior estimate of random and systematic belief scores for the new source
 should be added to the `indra/resources/default_belief_probs.json` file.
+- The source should be listed in `indra/util/statement_presentation.py`
+to determine the order in which it appears in HTML-assembled statements
+presentation.
 
 New non-python resource files
 -----------------------------
