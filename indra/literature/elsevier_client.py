@@ -52,24 +52,31 @@ def _ensure_api_keys(task_desc, failure_ret=None):
             global ELSEVIER_KEYS
             if ELSEVIER_KEYS is None:
                 ELSEVIER_KEYS = {}
-                # Try to read in Elsevier API keys. For each key, first check
-                # the environment variables, then check the INDRA config file.
-                if not has_config(INST_KEY_ENV_NAME):
+                # Read API keys from environment/config
+                inst_token = get_config(INST_KEY_ENV_NAME) if has_config(
+                    INST_KEY_ENV_NAME) else None
+                api_key = get_config(API_KEY_ENV_NAME) if has_config(
+                    API_KEY_ENV_NAME) else None
+
+                if inst_token:
+                    ELSEVIER_KEYS['X-ELS-Insttoken'] = inst_token
+                else:
                     logger.warning('Institution API key %s not found in config '
                                    'file or environment variable: this will '
                                    'limit access for %s'
                                    % (INST_KEY_ENV_NAME, task_desc))
-                ELSEVIER_KEYS['X-ELS-Insttoken'] = get_config(INST_KEY_ENV_NAME)
 
-                if not has_config(API_KEY_ENV_NAME):
+                if api_key:
+                    ELSEVIER_KEYS['X-ELS-APIKey'] = api_key
+                else:
                     logger.error('API key %s not found in configuration file '
                                  'or environment variable: cannot %s'
                                  % (API_KEY_ENV_NAME, task_desc))
                     return failure_ret
-                ELSEVIER_KEYS['X-ELS-APIKey'] = get_config(API_KEY_ENV_NAME)
-            elif 'X-ELS-APIKey' not in ELSEVIER_KEYS.keys():
-                logger.error('No Elsevier API key %s found: cannot %s'
-                             % (API_KEY_ENV_NAME, task_desc))
+
+            elif 'X-ELS-APIKey' not in ELSEVIER_KEYS:
+                logger.error('No Elsevier API key %s found: cannot %s',
+                             API_KEY_ENV_NAME, task_desc)
                 return failure_ret
             return func(*args, **kwargs)
         return check_api_keys
