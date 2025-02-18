@@ -33,7 +33,8 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'common': 'http://www.elsevier.com/xml/common/dtd',
                'atom': 'http://www.w3.org/2005/Atom',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/',
-               'book': 'http://www.elsevier.com/xml/bk/dtd'}
+               'book': 'http://www.elsevier.com/xml/bk/dtd',
+               "ce": "http://www.elsevier.com/xml/common/dtd",}
 ELSEVIER_KEYS = None
 API_KEY_ENV_NAME = 'ELSEVIER_API_KEY'
 INST_KEY_ENV_NAME = 'ELSEVIER_INST_KEY'
@@ -188,6 +189,14 @@ def download_article_from_ids(**id_dict):
         logger.error("Could not download article with any of the ids: %s."
                      % str(id_dict))
     return content
+
+
+def has_full_text(xml_content):
+    """Determines if the given Elsevier XML contains full text."""
+    root = ET.fromstring(xml_content)
+    if (root.findall(".//ce:sections", elsevier_ns) or
+            root.findall(".//body", elsevier_ns)):
+        return True
 
 
 def get_abstract(doi):
