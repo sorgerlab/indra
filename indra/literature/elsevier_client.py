@@ -106,7 +106,7 @@ def check_entitlement(doi):
 
 
 @_ensure_api_keys('download article')
-def download_article(id_val, id_type='doi', on_retry=False):
+def download_article(id_val, id_type='doi', max_retries=2, on_retry=False):
     """Low level function to get an XML article for a particular id.
 
     Parameters
@@ -115,6 +115,8 @@ def download_article(id_val, id_type='doi', on_retry=False):
         The value of the id.
     id_type : str
         The type of id, such as pmid (a.k.a. pubmed_id), doi, or eid.
+    max_retries : int
+        The maximum number of retries for connection errors.
     on_retry : bool
         This function has a recursive retry feature, and this is the only time
         this parameter should be used.
@@ -128,33 +130,46 @@ def download_article(id_val, id_type='doi', on_retry=False):
         id_type = 'pubmed_id'
     url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
     params = {'httpAccept': 'text/xml'}
-    res = requests.get(url, params, headers=ELSEVIER_KEYS)
-    if res.status_code == 404:
-        logger.info("Resource for %s not available on elsevier." % url)
-        return None
-    elif res.status_code == 429:
-        if not on_retry:
-            logger.warning("Broke the speed limit. Waiting half a second then "
-                           "trying again...")
-            sleep(0.5)
-            return download_article(id_val, id_type, True)
-        else:
-            logger.error("Still breaking speed limit after waiting.")
-            logger.error("Elsevier response: %s" % res.text)
-            return None
-    elif res.status_code != 200:
-        logger.error('Could not download article %s: status code %d' %
-                     (url, res.status_code))
-        logger.error('Elsevier response: %s' % res.text)
-        return None
-    else:
-        content_str = res.content.decode('utf-8')
-        if content_str.startswith('<service-error>'):
-            logger.error('Got a service error with 200 status: %s'
-                         % content_str)
-            return None
-    # Return the XML content as a unicode string, assuming UTF-8 encoding
-    return content_str
+
+
+    for attempt in range(max_retries):
+        try:
+            res = requests.get(url, params=params, headers=ELSEVIER_KEYS)
+            if res.status_code == 200:
+                content_str = res.content.decode('utf-8')
+                if content_str.startswith('<service-error>'):
+                    logger.error('Got a service error with 200 status: %s'
+                                 % content_str)
+                    return None
+                return content_str  # Successfully retrieved article
+
+            elif res.status_code == 404:
+                logger.info("Resource for %s not available on elsevier." % url)
+                return None
+
+            elif res.status_code == 429:
+                if not on_retry:
+                    logger.warning(
+                        "Broke the speed limit. Waiting half a second then "
+                        "trying again...")
+                    sleep(0.5)
+                    return download_article(id_val, id_type, on_retry=True)
+                else:
+                    logger.error("Still breaking speed limit after waiting.")
+                    logger.error('Elsevier response: %s' % res.text)
+                    return None
+
+            else:
+                logger.error(f"Elsevier API error {res.status_code}: {res.text}")
+                return None
+
+        except requests.exceptions.ConnectionError as e:
+            wait_time = 2 ** attempt
+            logger.warning(f"Connection error: {e}. Retrying in {wait_time} seconds...")
+            sleep(wait_time)
+
+    logger.error("Max retries exceeded. Could not fetch article.")
+    return None
 
 
 def download_article_from_ids(**id_dict):
