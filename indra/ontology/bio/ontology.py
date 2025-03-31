@@ -50,7 +50,8 @@ class BioOntology(IndraOntology):
                 logger.info('Caching INDRA bio ontology at %s' % CACHE_FILE)
                 with open(CACHE_FILE, 'wb') as fh:
                     pickle.dump(self, fh, pickle.HIGHEST_PROTOCOL)
-            except Exception:
+            except Exception as e:
+                logger.warning(e)
                 logger.warning('Failed to cache ontology at %s.' % CACHE_FILE)
         else:
             logger.info(
