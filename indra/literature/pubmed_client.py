@@ -839,7 +839,11 @@ def get_metadata_for_ids(pmid_list, get_issns_from_nlm=False,
 def get_metadata_for_all_ids(pmid_list, get_issns_from_nlm=False,
                              get_abstracts=False, prepend_title=False,
                              detailed_authors=False, references_included=None):
-    """Get article metadata for up to 200 PMIDs from the Pubmed database.
+    """Get article metadata for any number of PMIDs from the Pubmed database.
+
+    This differs from get_metadata_for_ids in that it can handle any number of
+    PMIDs, and implements batch iteration to avoid the 200 PMID limit of the
+    Pubmed API.
 
     Parameters
     ----------

@@ -86,6 +86,7 @@ Biological pathway databases:
 | CREEDS                     | [`indra.sources.creeds`](https://indra.readthedocs.io/en/latest/modules/sources/creeds/index.html) | https://maayanlab.cloud/CREEDS/                                 |
 | UbiBrowser                 | [`indra.sources.ubibrowser`](https://indra.readthedocs.io/en/latest/modules/sources/ubibrowser.html) | http://ubibrowser.ncpsb.org.cn/                |
 | ACSN                       | [`indra.sources.acsn`](https://indra.readthedocs.io/en/latest/modules/sources/acsn.html) | https://acsn.curie.fr/ACSN2/ACSN2.html   |
+| WormBase                       | [`indra.sources.wormbase`](https://indra.readthedocs.io/en/latest/modules/sources/wormbase.html) | https://www.wormbase.org   |
 
 Custom knowledge bases:
 
@@ -300,8 +301,8 @@ You can run the INDRA REST API using the container as
 docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
 ```
 
-The Dockerfile to build the image locally is available in a separate repository
-at https://github.com/indralab/indra_docker.
+The Dockerfile to build the image locally is available in the docker folder in this
+repository.
 
 ## Using INDRA
 
@@ -404,3 +405,4 @@ The development of INDRA has been funded from the following sources:
 | DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
 | DARPA Panacea                                    | HR00111920022        |
 | DARPA Young Faculty Award                        | W911NF-20-1-0255     |
+| DARPA ASKEM / ARPA-H BDF                         | HR00112220036        |

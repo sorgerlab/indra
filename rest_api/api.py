@@ -74,7 +74,7 @@ genes_model = api.model('Genes', {
     'genes': fields.List(fields.String, example=['BRAF', 'MAP2K1'])})
 
 # Store the arguments by type
-int_args = ['poolsize', 'size_cutoff']
+int_args = ['members_allowed', 'protocol', 'poolsize', 'size_cutoff']
 float_args = ['score_threshold', 'belief_cutoff']
 boolean_args = [
     'do_rename', 'use_adeft', 'do_methionine_offset', 'do_orthology_mapping',
@@ -88,6 +88,8 @@ list_args = [
     'correct_tags', 'ignores', 'deletions']
 dict_args = [
     'grounding_map', 'misgrounding_map', 'whitelist', 'mutations']
+
+str_args = {'stmt_type': "Modification", 'policy': 'all'}
 
 
 def _return_stmts(stmts):
@@ -225,6 +227,8 @@ def make_preassembly_model(func):
                         fields.String, example=default)
             elif arg in dict_args:
                 model_fields[arg] = fields.Nested(dict_model)
+            elif arg in str_args.keys():
+                model_fields[arg] = fields.String(example=str_args[arg])
             else:
                 model_fields[arg] = fields.String(example=default)
     new_model = api.inherit(
@@ -316,6 +320,7 @@ reach_pmc_model = api.model('ReachPMC', {
 @sources_ns.expect(reach_text_model)
 @sources_ns.route('/reach/process_text')
 class ReachProcessText(Resource):
+    # TODO: REACH web service is down. Need to use a local Reach
     @api.doc(False)
     def options(self):
         return {}
@@ -397,6 +402,7 @@ class ReachProcessJson(Resource):
 @sources_ns.expect(reach_pmc_model)
 @sources_ns.route('/reach/process_pmc')
 class ReachProcessPmc(Resource):
+    #TODO: REACH web service is down. Need to use a local Reach
     @api.doc(False)
     def options(self):
         return {}

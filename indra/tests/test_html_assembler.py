@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 from indra.assemblers.english import AgentWithCoordinates
 from indra.assemblers.html.assembler import HtmlAssembler, tag_text, loader, \
@@ -9,6 +10,8 @@ from indra.resources import load_resource_json
 from indra.statements import *
 from indra.util.statement_presentation import AveAggregator, StmtStat, \
     internal_source_mappings
+
+HERE = Path(__file__).parent
 
 
 def make_stmt():
@@ -92,12 +95,12 @@ def test_colors_in_html():
 
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_simple.html')
+    ha.save_model(HERE / 'temp_simple.html')
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_not_simple.html', simple=False)
-    with open('./temp_simple.html') as fh:
+    ha.save_model(HERE / 'temp_not_simple.html', simple=False)
+    with open(HERE / 'temp_simple.html') as fh:
         simple_html = fh.read()
-    with open('./temp_not_simple.html') as fh:
+    with open(HERE / 'temp_not_simple.html') as fh:
         not_simple_html = fh.read()
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
@@ -140,13 +143,13 @@ def test_custom_colors_in_html():
 
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt], custom_sources=custom_sources)
-    ha.save_model('./temp_custom_colors_simple.html')
-    with open('./temp_custom_colors_simple.html') as fh:
+    ha.save_model(HERE / 'temp_custom_colors_simple.html')
+    with open(HERE / 'temp_custom_colors_simple.html') as fh:
         simple_html = fh.read()
 
     ha = HtmlAssembler(statements=[stmt], custom_sources=custom_sources)
-    ha.save_model('./temp_not_simple.html', simple=False)
-    with open('./temp_custom_colors_simple.html') as fh:
+    ha.save_model(HERE / 'temp_not_simple.html', simple=False)
+    with open(HERE / 'temp_custom_colors_simple.html') as fh:
         not_simple_html = fh.read()
 
     # Check if style rule appears
@@ -175,19 +178,19 @@ def test_skip_sources_not_in_evidences():
                 not_in_html.append(source)
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_simple.html')
-    with open('./temp_simple.html') as fh:
+    ha.save_model(HERE / 'temp_simple.html')
+    with open(HERE / 'temp_simple.html') as fh:
         simple_html = fh.read()
 
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_not_simple.html', simple=False)
-    with open('./temp_not_simple.html') as fh:
+    ha.save_model(HERE / 'temp_not_simple.html', simple=False)
+    with open(HERE / 'temp_not_simple.html') as fh:
         not_simple_no_show_html = fh.read()
 
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_not_simple_no_show.html',
+    ha.save_model(HERE / 'temp_not_simple_no_show.html',
                   show_only_available=True)
-    with open('./temp_not_simple_no_show.html') as fh:
+    with open(HERE / 'temp_not_simple_no_show.html') as fh:
         not_simple_html = fh.read()
     assert all(color in simple_html for color in colors)
     assert all(color in not_simple_html for color in colors)
@@ -215,9 +218,9 @@ def test_readers_only():
                 not_in_html.append(source)
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_no_show_rd_only.html',
+    ha.save_model(HERE / 'temp_no_show_rd_only.html',
                   show_only_available=True)
-    with open('./temp_no_show_rd_only.html') as fh:
+    with open(HERE / 'temp_no_show_rd_only.html') as fh:
         no_show_html = fh.read()
     assert all(color in no_show_html for color in colors)
 
@@ -244,9 +247,9 @@ def test_databases_only():
                 not_in_html.append(source)
     stmt = Activation(ag_a, ag_b, evidence=evidences)
     ha = HtmlAssembler(statements=[stmt])
-    ha.save_model('./temp_no_show_db_only.html',
+    ha.save_model(HERE / 'temp_no_show_db_only.html',
                   show_only_available=True)
-    with open('./temp_no_show_db_only.html') as fh:
+    with open(HERE / 'temp_no_show_db_only.html') as fh:
         no_show_html = fh.read()
     assert all(color in no_show_html for color in colors)
 
@@ -336,8 +339,8 @@ def test_source_info_to_source_colors():
 def test_generate_source_css():
     source_info = source_json()
     src_col = _source_info_to_source_colors(source_info)
-    generate_source_css(fname='./temp.css', source_colors=src_col)
-    with open('./temp.css') as fh:
+    generate_source_css(fname=HERE / 'temp.css', source_colors=src_col)
+    with open(HERE / 'temp.css') as fh:
         css_str = fh.read()
 
     rule_string = '.source-{src} {{\n    background-color: {src_bg};\n    ' \
@@ -653,7 +656,7 @@ def test_sort_default():
 
     # Check to make sure the HTML assembler runs.
     model = ha.make_model()
-    with open('test_agent_pair.html', 'w') as f:
+    with open(HERE / 'test_agent_pair.html', 'w') as f:
         f.write(model)
 
 
@@ -668,7 +671,7 @@ def test_sort_group_by_relation():
 
     # Make sure the HTML assembles.
     model = ha.make_model(grouping_level='relation')
-    with open('test_relation.html', 'w') as f:
+    with open(HERE / 'test_relation.html', 'w') as f:
         f.write(model)
 
 

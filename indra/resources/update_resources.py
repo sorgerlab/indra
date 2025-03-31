@@ -635,6 +635,10 @@ def update_mesh_names():
                                    'NumberList/RelatedRegistryNumber')
         txids = [txid.text[4:] for txid in txid_tags
                  if txid.text.startswith('txid')]
+        if not txids:
+            txid_tags = record.findall('ConceptList/Concept/RegistryNumber')
+            txids += [txid.text[4:] for txid in txid_tags
+                      if txid.text.startswith('txid')]
         txids_str = '|'.join(txids)
         name = record.find('DescriptorName/String').text
         term_name_str = _get_term_name_str(record, name)
