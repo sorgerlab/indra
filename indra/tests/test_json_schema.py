@@ -61,7 +61,10 @@ def test_valid_modification():
                  'Myristoylation', 'Demyristoylation', 'Ribosylation',
                  'Deribosylation', 'Methylation', 'Demethylation',
                  'Activation', 'Inhibition', 'IncreaseAmount',
-                 'DecreaseAmount']
+                 'DecreaseAmount', 'Carboxylation', 'Decarboxylation',
+                 'Amidation', 'Deamidation', 'Sulfation', 'Desulfation',
+                 'Neddylation', 'Deneddylation', 'Alkylation',
+                 'Dealkylation', 'Prenylation', 'Deprenylation']
 
     for mod_type in mod_types:
         s = {'enz': valid_agent1, 'sub': valid_agent2,

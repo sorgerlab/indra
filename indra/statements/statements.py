@@ -52,6 +52,18 @@ modifications that further inherit from
 - :py:class:`Deribosylation`
 - :py:class:`Methylation`
 - :py:class:`Demethylation`
+- :py:class:`Carboxylation`
+- :py:class:`Decarboxylation`
+- :py:class:`Amidation`
+- :py:class:`Deamidation`
+- :py:class:`Sulfation`
+- :py:class:`Desulfation`
+- :py:class:`Neddylation`
+- :py:class:`Deneddylation`
+- :py:class:`Alkylation`
+- :py:class:`Dealkylation`
+- :py:class:`Prenylation`
+- :py:class:`Deprenylation`
 
 There are additional subtypes of :py:class:`SelfModification`:
 
@@ -208,6 +220,9 @@ __all__ = [
     'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
     'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
     'Association', 'Event', 'Migration',
+    'Carboxylation', 'Decarboxylation', 'Amidation', 'Deamidation', 'Sulfation',
+    'Desulfation', 'Neddylation', 'Deneddylation', 'Alkylation', 'Dealkylation',
+    'Prenylation', 'Deprenylation',
 
     # Error classes
     'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
@@ -1035,6 +1050,54 @@ class Methylation(AddModification):
 
 class Demethylation(RemoveModification):
     """Demethylation modification."""
+
+
+class Carboxylation(AddModification):
+    """Carboxylation modification."""
+
+
+class Decarboxylation(RemoveModification):
+    """Decarboxylation modification."""
+
+
+class Amidation(AddModification):
+    """Amidation modification."""
+
+
+class Deamidation(RemoveModification):
+    """Deamidation modification."""
+
+
+class Sulfation(AddModification):
+    """Sulfation modification."""
+
+
+class Desulfation(RemoveModification):
+    """Desulfation modification."""
+
+
+class Neddylation(AddModification):
+    """Neddylation modification."""
+
+
+class Deneddylation(RemoveModification):
+    """Deneddylation modification."""
+
+
+class Alkylation(AddModification):
+    """Alkylation modification."""
+
+
+class Dealkylation(RemoveModification):
+    """Dealkylation modification."""
+
+
+class Prenylation(AddModification):
+    """Prenylation modification."""
+
+
+class Deprenylation(RemoveModification):
+    """Deprenylation modification."""
 
 
 @python_2_unicode_compatible
