@@ -1,15 +1,18 @@
 import logging
 from xml.etree import ElementTree
-from indra.statements import *
-from indra.databases.identifiers import ensure_chebi_prefix, \
+
+from indra.databases.identifiers import ensure_chebi_prefix,\
     ensure_chembl_prefix
+from indra.ontology.standardize import get_standard_agent
+from indra.statements import Activation, Complex, DecreaseAmount, Evidence,\
+    IncreaseAmount, Inhibition
 from indra.statements.validate import assert_valid_db_refs
-from indra.ontology.standardize import standardize_name_db_refs, \
-    get_standard_agent
 
 logger = logging.getLogger(__name__)
 
 drugbank_ns = {'db': 'http://www.drugbank.ca'}
+
+_UNHANDLED = set()
 
 
 class DrugbankProcessor:
@@ -28,6 +31,7 @@ class DrugbankProcessor:
     statements : list of indra.statements.Statement
         A list of INDRA Statements that were extracted from DrugBank content.
     """
+
     def __init__(self, xml_tree: ElementTree.ElementTree):
         self.xml_tree = xml_tree
         self.statements = []
@@ -45,7 +49,14 @@ class DrugbankProcessor:
             actions = {a.text for a in db_findall(target_element,
                                                   'db:actions/db:action')}
             if not actions:
-                actions = {'N/A'}
+                # See https://dev.drugbank.com/guides/terms/pharmacological-action
+                pharm_action = db_find(target_element, 'db:known-action')
+                # Skip if it's not known that it's a direct interaction
+                if pharm_action.text in {'no', 'unknown'}:
+                    actions = set()
+                # Otherwise use the N/A action which ultimately maps to Complex
+                else:
+                    actions = {'N/A'}
             for action in actions:
                 stmt_type = DrugbankProcessor._get_statement_type(action)
                 if not stmt_type:
@@ -59,9 +70,7 @@ class DrugbankProcessor:
 
     @staticmethod
     def _get_statement_type(action):
-        if action in neutral_actions:
-            return None
-        elif action in activation_actions:
+        if action in activation_actions:
             return Activation
         elif action in inhibition_actions:
             return Inhibition
@@ -70,9 +79,14 @@ class DrugbankProcessor:
         elif action in increase_amount_actions:
             return IncreaseAmount
         elif action == 'N/A':
-            return Inhibition
-        else:
+            return _complex
+        elif action in neutral_actions:
+            return _complex
+        elif action in skip_actions:
             return None
+        elif action not in _UNHANDLED:
+            _UNHANDLED.add(action)
+            logger.warning('unhandled DrugBank action: %s', action)
 
     @staticmethod
     def _get_target_agent(target_element):
@@ -160,22 +174,97 @@ def db_findall(element, path):
     return element.findall(path, namespaces=drugbank_ns)
 
 
-activation_actions = {'substrate', 'agonist', 'inducer', 'potentiator',
-                      'stimulator', 'cofactor', 'activator', 'ligand',
-                      'chaperone', 'partial agonist', 'protector',
-                      'positive allosteric modulator', 'positive modulator'}
+def _complex(a, b, evidence):
+    return Complex([a, b], evidence=evidence)
 
-inhibition_actions = {'antagonist', 'inhibitor', 'binder', 'antibody',
-                      'inactivator', 'binding', 'blocker', 'negative modulator',
-                      'inverse agonist', 'neutralizer', 'weak inhibitor',
-                      'suppressor', 'disruptor',
-                      'inhibitory allosteric modulator'}
 
-decrease_amount_actions = {'downregulator', 'metabolizer', 'chelator',
-                           'degradation',
-                           'incorporation into and destabilization'}
+activation_actions = {
+    'inducer',
+    'potentiator',
+    'stimulator',
+    'cofactor',
+    'activator',
+    'protector',
+    'positive allosteric modulator',
+    'positive modulator',
+    # All agonists activate receptors, The only differences are potency,
+    # how efficiently they bind and how long they stay at the receptor site
+    'agonist',
+    'partial agonist',
+}
 
-increase_amount_actions = {'stabilization'}
+inhibition_actions = {
+    'inhibitor',
+    'antibody',
+    'inactivator',
+    'blocker',
+    'negative modulator',
+    'neutralizer',
+    'weak inhibitor',
+    'suppressor',
+    'disruptor',
+    'chelator',
+    'inhibitory allosteric modulator',
+    'translocation inhibitor',
+    'inhibits downstream inflammation cascades',
+    'nucleotide exchange blocker',
+    # Antagonists can either bind to the receptor and do nothing and prevent
+    # physiologic agonists to bind (which can be overcome with higher agonist
+    # dosage [except in the case of irreversible antagonism which obviously
+    # can't be competed with]) or can be a noncompetitive antagonist that will
+    # change the structure of the active site and prevent agonist binding.
+    'antagonist',
+    'partial antagonist',
+    # Inverse agonists act exactly the same as competitive antagonists
+    # unless there is a basal physiological agonism. In which case the
+    # inverse agonist will have more of an opposite effect than just a
+    # pure antagonist would have.
+    'inverse agonist',
+}
 
-neutral_actions = {'modulator', 'other/unknown', 'unknown', 'other',
-                   'regulator'}
+decrease_amount_actions = {
+    'downregulator',
+    'metabolizer',
+    'degradation',
+    'incorporation into and destabilization',
+    'cleavage',
+    'inhibition of synthesis',
+    'antisense oligonucleotide',
+}
+
+increase_amount_actions = {
+    'stabilization',
+    'chaperone',
+    'gene replacement',
+}
+
+neutral_actions = {
+    'binder',
+    'binding',
+    'modulator',
+    'regulator',
+    'substrate',
+    'ligand',
+    # e.g., Doxorubicin intercalates DNA to prevent transcription
+    'intercalation',
+    # e.g., inhibits process on a protein's aggregation (like APP or LRRK)
+    'aggregation inhibitor',
+    'adduct',
+    'component of',
+    'product of',
+    'reducer',
+    'oxidizer',
+    # map to Ac INDRA statement?, but I'm not convinced by the idea of
+    # splitting up actions
+    'acetylation',
+    'allosteric modulator',
+    'deoxidizer',
+    'cross-linking/alkylation',  # e.g. Busulfan (DB01008) alkalytes DNA
+    'multitarget',
+}
+
+skip_actions = {
+    'other/unknown',
+    'unknown',
+    'other',
+}
