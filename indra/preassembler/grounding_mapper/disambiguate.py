@@ -92,7 +92,7 @@ class DisambManager(object):
         else:
             annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
         grounding_text = self._get_text_for_grounding(stmt, agent_txt,
-                                                      use_pubmed=True)
+                                                      use_pubmed=False)
 
         def apply_grounding(agent, agent_txt, ns_and_id):
             db_ns, db_id = ns_and_id.split(':', maxsplit=1)
