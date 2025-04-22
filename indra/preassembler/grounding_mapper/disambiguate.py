@@ -282,7 +282,7 @@ class DisambManager(object):
                 logger.info('Could not get text for disambiguation from DB: %s'
                             % e)
         # If that doesn't work, we try PubMed next trying to fetch an abstract
-        if text is None and skip_pubmed:
+        if text is None and not skip_pubmed:
             from indra.literature import pubmed_client
             pmid = stmt.evidence[0].pmid
             if pmid:
