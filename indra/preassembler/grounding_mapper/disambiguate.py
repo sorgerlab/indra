@@ -1,4 +1,6 @@
 import logging
+import os
+
 from indra.config import get_config, has_config
 from indra.ontology.standardize \
     import standardize_agent_name
@@ -211,7 +213,7 @@ class DisambManager(object):
                 success = True
         return success
 
-    def _get_text_for_grounding(self, stmt, agent_text, use_pubmed=True):
+    def _get_text_for_grounding(self, stmt, agent_text):
         """Get text context for Adeft disambiguation
 
         If the INDRA database is available, attempts to get the fulltext from
@@ -225,18 +227,15 @@ class DisambManager(object):
         stmt : py:class:`indra.statements.Statement`
             Statement with agent we seek to disambiguate.
 
-        agent_text : str
-           Agent text that needs to be disambiguated
-
         use_pubmed : bool
         If False, skip using PubMed client
-
 
         Returns
         -------
         text : str
             Text for Adeft disambiguation
         """
+        skip_pubmed = os.getenv("MAPPING_SKIP_PUBMED") is not None
         text = None
         # First we will try to get content from a local text content DB if
         # available since this is the fastest option
@@ -283,7 +282,7 @@ class DisambManager(object):
                 logger.info('Could not get text for disambiguation from DB: %s'
                             % e)
         # If that doesn't work, we try PubMed next trying to fetch an abstract
-        if text is None and use_pubmed:
+        if text is None and skip_pubmed:
             from indra.literature import pubmed_client
             pmid = stmt.evidence[0].pmid
             if pmid:
