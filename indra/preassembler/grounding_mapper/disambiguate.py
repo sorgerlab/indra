@@ -93,8 +93,7 @@ class DisambManager(object):
                     {'adeft': [None for _ in stmt.agent_list()]}
         else:
             annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
-        grounding_text = self._get_text_for_grounding(stmt, agent_txt,
-                                                      use_pubmed=False)
+        grounding_text = self._get_text_for_grounding(stmt, agent_txt)
 
         def apply_grounding(agent, agent_txt, ns_and_id):
             db_ns, db_id = ns_and_id.split(':', maxsplit=1)
@@ -227,8 +226,8 @@ class DisambManager(object):
         stmt : py:class:`indra.statements.Statement`
             Statement with agent we seek to disambiguate.
 
-        use_pubmed : bool
-        If False, skip using PubMed client
+        agent_text : str
+            Agent text that needs to be disambiguated
 
         Returns
         -------
