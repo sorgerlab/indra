@@ -45,7 +45,7 @@ class DisambManager(object):
             logger.debug('Could not connect to the DB: %s' % e)
             self.__tc = None
 
-    def run_adeft_disambiguation(self, stmt, agent, idx, agent_txt):
+    def run_adeft_disambiguation(self, stmt, agent, idx, agent_txt, **kwargs):
         """Run Adeft disambiguation on an Agent in a given Statement.
 
         This function looks at the evidence of the given Statement and attempts
@@ -93,7 +93,7 @@ class DisambManager(object):
                     {'adeft': [None for _ in stmt.agent_list()]}
         else:
             annots['agents'] = {'adeft': [None for _ in stmt.agent_list()]}
-        grounding_text = self._get_text_for_grounding(stmt, agent_txt)
+        grounding_text = self._get_text_for_grounding(stmt, agent_txt, **kwargs)
 
         def apply_grounding(agent, agent_txt, ns_and_id):
             db_ns, db_id = ns_and_id.split(':', maxsplit=1)
@@ -212,7 +212,7 @@ class DisambManager(object):
                 success = True
         return success
 
-    def _get_text_for_grounding(self, stmt, agent_text):
+    def _get_text_for_grounding(self, stmt, agent_text, **kwargs):
         """Get text context for Adeft disambiguation
 
         If the INDRA database is available, attempts to get the fulltext from
@@ -234,7 +234,7 @@ class DisambManager(object):
         text : str
             Text for Adeft disambiguation
         """
-        skip_pubmed = os.getenv("MAPPING_SKIP_PUBMED") is not None
+        use_pubmed = kwargs.get('use_pubmed', True)
         text = None
         # First we will try to get content from a local text content DB if
         # available since this is the fastest option
@@ -281,7 +281,7 @@ class DisambManager(object):
                 logger.info('Could not get text for disambiguation from DB: %s'
                             % e)
         # If that doesn't work, we try PubMed next trying to fetch an abstract
-        if text is None and not skip_pubmed:
+        if text is None and use_pubmed:
             from indra.literature import pubmed_client
             pmid = stmt.evidence[0].pmid
             if pmid:

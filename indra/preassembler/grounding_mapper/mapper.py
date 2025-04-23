@@ -85,7 +85,7 @@ class GroundingMapper(object):
                 raise ValueError('HGNC:%s for key %s in the grounding map is '
                                  'not a valid ID' % (refs['HGNC'], key))
 
-    def map_stmts(self, stmts, do_rename=True):
+    def map_stmts(self, stmts, do_rename=True, **kwargs):
         """Return a new list of statements whose agents have been mapped
 
         Parameters
@@ -111,7 +111,7 @@ class GroundingMapper(object):
         import tqdm
         it = tqdm.tqdm(stmts) if len(stmts) > 1e5 else stmts
         for stmt in it:
-            mapped_stmt = self.map_agents_for_stmt(stmt, do_rename)
+            mapped_stmt = self.map_agents_for_stmt(stmt, do_rename, **kwargs)
             # Check if we should skip the statement
             if mapped_stmt is not None:
                 mapped_stmts.append(mapped_stmt)
@@ -120,7 +120,7 @@ class GroundingMapper(object):
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
-    def map_agents_for_stmt(self, stmt, do_rename=True):
+    def map_agents_for_stmt(self, stmt, do_rename=True, **kwargs):
         """Return a new Statement whose agents have been grounding mapped.
 
         Parameters
@@ -165,7 +165,7 @@ class GroundingMapper(object):
                                            key=lambda x: len(x))[-1]
                     adeft_success = self.disamb_manager.\
                         run_adeft_disambiguation(mapped_stmt, agent, idx,
-                                                 txt_for_adeft)
+                                                 txt_for_adeft, **kwargs)
                 except Exception as e:
                     logger.error('There was an error during Adeft'
                                  ' disambiguation of %s.' % str(agent_txts))

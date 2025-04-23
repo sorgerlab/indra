@@ -148,7 +148,7 @@ def map_grounding(stmts_in, do_rename=True, grounding_map=None,
     gm = GroundingMapper(gm, agent_map=agent_map,
                          misgrounding_map=misgm, ignores=ignores,
                          use_adeft=use_adeft, gilda_mode=gilda_mode)
-    stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename)
+    stmts_out = gm.map_stmts(stmts_in, do_rename=do_rename, **kwargs)
     # Patch wrong locations in Translocation statements
     for stmt in stmts_out:
         if isinstance(stmt, Translocation):
