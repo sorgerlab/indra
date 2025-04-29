@@ -287,10 +287,17 @@ def get_agent_from_entity_info(entity_info):
 
     # If we at this point only have an empty string for the name and for the
     # TEXT ref, return None
-    if name == '' and set(refs) == {'TEXT'} and refs['TEXT'] == "":
-        logger.info(
-            f"Empty name and TEXT ref for entity: {entity_info}, can't create Agent"
-        )
+    if name == '':
+        if set(refs) == {'TEXT'} and refs['TEXT'] == "":
+            logger.info(
+                f"Empty name and TEXT ref for entity: {entity_info}, can't "
+                f"create Agent"
+            )
+        elif set(refs) == {'TAX'}:
+            logger.info(
+                f"Emtpy name and only TAX ref for entity: {refs}, can't "
+                f"create Agent"
+            )
         return None, None
 
     raw_coords = (entity_info['charStart'], entity_info['charEnd'])
