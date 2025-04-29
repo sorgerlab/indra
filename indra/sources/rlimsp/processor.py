@@ -2,7 +2,7 @@ import logging
 import tqdm
 from collections import Counter
 from indra.statements.validate import assert_valid_statements
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, mesh_client
 from indra.statements import Agent, Phosphorylation, Autophosphorylation, \
     Evidence, BioContext, RefContext, get_valid_residue, \
     InvalidResidueError, MutCondition
@@ -255,6 +255,10 @@ def get_agent_from_entity_info(entity_info):
                 refs[id_dict['source']] = id_dict['idString'].split(';')[0]
             else:
                 refs[id_dict['source']] = id_dict['idString']
+            # Handle case where MESH ID is provided but the name is an empty string,
+            # so we can look it up
+            if refs.get('MESH') and not name:
+                name = mesh_client.mesh_id_to_name.get(refs['MESH'], name)
         # CTD is sometimes used for MESH chemical IDs but can also be just '-'
         elif id_dict['source'] == 'CTD':
             if id_dict['idString'] != '-':
