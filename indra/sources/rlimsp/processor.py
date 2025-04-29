@@ -281,6 +281,14 @@ def get_agent_from_entity_info(entity_info):
             logger.warning("Unhandled id type: {source}={idString}"
                            .format(**id_dict))
 
+    # If we at this point only have an empty string for the name and for the
+    # TEXT ref, return None
+    if name == '' and set(refs) == {'TEXT'} and refs['TEXT'] == "":
+        logger.info(
+            f"Empty name and TEXT ref for entity: {entity_info}, can't create Agent"
+        )
+        return None, None
+
     raw_coords = (entity_info['charStart'], entity_info['charEnd'])
     return Agent(name, db_refs=refs, mutations=muts), raw_coords
 
