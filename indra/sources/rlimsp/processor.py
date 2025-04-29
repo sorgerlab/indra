@@ -298,6 +298,10 @@ def get_agent_from_entity_info(entity_info):
                 f"Emtpy name and only TAX ref for entity: {refs}, can't "
                 f"create Agent"
             )
+        else:
+            raise ValueError(
+                f"Empty name for entity: {entity_info}, can't create Agent"
+            )
         return None, None
 
     raw_coords = (entity_info['charStart'], entity_info['charEnd'])
