@@ -58,12 +58,12 @@ class RlimspParagraph(object):
     def _get_agent(self, entity_id):
         """Convert the entity dictionary into an INDRA Agent."""
         if entity_id is None:
-            return None
+            return None, None
 
         entity_info = self._entity_dict.get(entity_id)
         if entity_info is None:
             logger.warning("Entity key did not resolve to entity.")
-            return None
+            return None, None
         return get_agent_from_entity_info(entity_info)
 
     def _get_site(self, site_id):
