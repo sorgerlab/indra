@@ -224,6 +224,9 @@ def get_agent_from_entity_info(entity_info):
                         logger.info(msg)
                 else:
                     refs['HGNC'] = hgnc_id
+                    # If we have no name, we can get it from the mapped HGNC ID
+                    if name == '':
+                        name = hgnc_client.get_hgnc_name(hgnc_id)
         elif id_dict['source'] == 'UniProt':
             refs['UP'] = id_dict['idString']
             hgnc_id = uniprot_client.get_hgnc_id(id_dict['idString'])
