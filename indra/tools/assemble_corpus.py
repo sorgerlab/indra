@@ -125,6 +125,11 @@ def map_grounding(stmts_in, do_rename=True, grounding_map=None,
     grounding_map_policy : Optional[str]
         If a grounding map is provided, use the policy to extend or replace
         a default grounding map. Default: 'replace'.
+    **kwargs :
+        Optional keyword arguments passed to `GroundingMapper.map_stmts()`.
+        - use_pubmed (bool): If False, Querying content used for agent grounding
+        using pubmed api will be skipped. If True, it will not get skipped.
+
 
     Returns
     -------

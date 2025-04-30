@@ -97,6 +97,10 @@ class GroundingMapper(object):
             If do_rename is True the priority for setting the name is
             FamPlex ID, HGNC symbol, then the gene name
             from Uniprot. Default: True
+        **kwargs :
+            Optional keyword arguments passed to `GroundingMapper.map_agents_for_stmt()`.
+            - use_pubmed (bool): If False, Querying content used for agent grounding
+            using pubmed api will be skipped. If True, it will not get skipped.
 
         Returns
         -------
@@ -132,6 +136,10 @@ class GroundingMapper(object):
             If do_rename is True the priority for setting the name is
             FamPlex ID, HGNC symbol, then the gene name
             from Uniprot. Default: True
+        **kwargs :
+            Optional keyword arguments passed to `disamb_manager.run_adeft_disambiguation()`.
+            - use_pubmed (bool): If False, Querying content used for agent grounding
+            using pubmed api will be skipped. If True, it will not get skipped.
 
         Returns
         -------

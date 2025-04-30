@@ -68,6 +68,10 @@ class DisambManager(object):
         idx : int
             The index of the new Agent's position in the Statement's agent list
             (needed to set annotations correctly).
+        **kwargs :
+            Optional keyword arguments passed to `disamb_manager._get_text_for_grounding()`.
+            - use_pubmed (bool): If False, Querying content used for agent grounding
+            using pubmed api will be skipped. If True, it will not get skipped.
 
         Returns
         -------
@@ -228,6 +232,10 @@ class DisambManager(object):
 
         agent_text : str
             Agent text that needs to be disambiguated
+
+        **kwargs :
+            - use_pubmed (bool): If False, Querying content used for agent grounding
+            using pubmed api will be skipped. If True, it will not get skipped.
 
         Returns
         -------
