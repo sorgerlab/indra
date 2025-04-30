@@ -288,23 +288,11 @@ def get_agent_from_entity_info(entity_info):
             logger.warning("Unhandled id type: {source}={idString}"
                            .format(**id_dict))
 
-    # If we at this point only have an empty string for the name and for the
-    # TEXT ref, return None
-    if name == '':
-        if set(refs) == {'TEXT'} and refs['TEXT'] == "":
-            logger.info(
-                f"Empty name and TEXT ref for entity: {entity_info}, can't "
-                f"create Agent"
-            )
-        elif set(refs) == {'TAX'}:
-            logger.info(
-                f"Emtpy name and only TAX ref for entity: {refs}, can't "
-                f"create Agent"
-            )
-        else:
-            raise ValueError(
-                f"Empty name for entity: {entity_info}, can't create Agent"
-            )
+    # If we at this point only have an empty string for the name and have no
+    # mappable references, we can't create an Agent. EGID is part of this
+    # because if a name is not set but EGID is set, that means the Entrez ID
+    # could not be mapped to an HGNC ID.
+    if name == '' and set(refs).issubset({"TEXT", "TAX", "EGID"}):
         return None, None
 
     raw_coords = (entity_info['charStart'], entity_info['charEnd'])
