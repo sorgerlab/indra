@@ -260,12 +260,14 @@ def get_agent_from_entity_info(entity_info):
                 refs[id_dict['source']] = id_dict['idString']
             # Handle case where MESH ID is provided but the name is an empty string,
             # so we can look it up
-            if refs.get('MESH') and not name:
+            if refs.get('MESH') and name == '':
                 name = mesh_client.mesh_id_to_name.get(refs['MESH'], name)
         # CTD is sometimes used for MESH chemical IDs but can also be just '-'
         elif id_dict['source'] == 'CTD':
             if id_dict['idString'] != '-':
                 refs['MESH'] = id_dict['idString']
+                if name == '':
+                    name = mesh_client.mesh_id_to_name.get(refs['MESH'], name)
         # Handle mutations
         elif id_dict['source'] == 'Unk' and \
                 id_dict['entityType'] == 'ProteinMutation':
