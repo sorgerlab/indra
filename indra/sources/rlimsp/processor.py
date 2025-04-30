@@ -294,7 +294,7 @@ def get_agent_from_entity_info(entity_info):
     # mappable references, we can't create an Agent. EGID is checked here
     # because if the name is not set but EGID is in refs, it means the Entrez ID
     # could not be mapped to an HGNC ID.
-    if name == '' and set(refs).issubset({"TEXT", "TAX", "EGID"}):
+    if name == '' and refs["TEXT"] == '' and set(refs).issubset({"TEXT", "TAX", "EGID"}):
         return None, None
 
     raw_coords = (entity_info['charStart'], entity_info['charEnd'])
