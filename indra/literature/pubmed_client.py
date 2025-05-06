@@ -15,7 +15,7 @@ import random
 import subprocess
 import requests
 from time import sleep
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
@@ -1168,25 +1168,29 @@ def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
     return True
 
 
-def get_pmid_pacakge_url_mapping() -> Dict[str, str]:
-    """Fetch the mapping from PMCID to their .tar.gz download URL."""
+def get_pmid_package_url_mapping() -> Dict[str, str]:
+    """Fetch the mapping from PMID to their .tar.gz download URL."""
+    logger.info("Generating the pmid to url mapping")
     res = requests.get("https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv")
     res.raise_for_status()
     reader = csv.DictReader(StringIO(res.text))
     mapping = {}
     for row in reader:
-        pmcid = row["Accession ID"]
+        pmid = row["Accession ID"]
         path = row["File"]
-        mapping[pmcid] = f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/{path}"
+        mapping[pmid] = f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/{path}"
     return mapping
 
 
-def download_package_for_pmid(pmid: str, out_dir: str, mapping: Dict[str, str]):
+def download_package_for_pmid(pmid: str, out_dir: str,
+                              mapping: Optional[Dict[str, str]] = None):
     """Download a pdf and image packages for a single PMID
     to the given output directory."""
+    if mapping is None:
+        mapping = get_pmid_package_url_mapping()
 
     if pmid not in mapping:
-        raise ValueError(f"PMCID {pmid} not found in the PMC OA mapping.")
+        raise ValueError(f"PMID {pmid} not found in the PMC OA mapping.")
 
     url = mapping[pmid]
     filename = os.path.basename(url)
@@ -1202,14 +1206,14 @@ def download_package_for_pmid(pmid: str, out_dir: str, mapping: Dict[str, str]):
             f.write(chunk)
 
 
-def download_package_for_pmids(pmcid_list: List[str], out_dir: str):
+def download_package_for_pmids(pmid_list: List[str], out_dir: str):
     """Download pdf and image packages for multiple PMIDs."""
-    mapping = get_pmid_pacakge_url_mapping()
-    for pmcid in pmcid_list:
+    mapping = get_pmid_package_url_mapping()
+    for pmid in pmid_list:
         try:
-            download_package_for_pmid(pmcid, out_dir, mapping)
+            download_package_for_pmid(pmid, out_dir, mapping)
         except Exception as e:
-            print(f"Error downloading {pmcid}: {e}")
+            print(f"Error downloading {pmid}: {e}")
 
 
 class Retractions:
