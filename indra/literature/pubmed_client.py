@@ -1168,7 +1168,7 @@ def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
     return True
 
 
-def get_pmid_package_url_mapping() -> Dict[str, str]:
+def get_pmid_to_package_url_mapping() -> Dict[str, str]:
     """Fetch the mapping from PMID to their .tar.gz download URL."""
     logger.info("Generating the pmid to url mapping")
     res = requests.get("https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv")
@@ -1187,7 +1187,7 @@ def download_package_for_pmid(pmid: str, out_dir: str,
     """Download a pdf and image packages for a single PMID
     to the given output directory."""
     if mapping is None:
-        mapping = get_pmid_package_url_mapping()
+        mapping = get_pmid_to_package_url_mapping()
 
     if pmid not in mapping:
         raise ValueError(f"PMID {pmid} not found in the PMC OA mapping.")
@@ -1208,7 +1208,7 @@ def download_package_for_pmid(pmid: str, out_dir: str,
 
 def download_package_for_pmids(pmid_list: List[str], out_dir: str):
     """Download pdf and image packages for multiple PMIDs."""
-    mapping = get_pmid_package_url_mapping()
+    mapping = get_pmid_to_package_url_mapping()
     for pmid in pmid_list:
         try:
             download_package_for_pmid(pmid, out_dir, mapping)
