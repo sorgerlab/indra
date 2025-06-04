@@ -657,8 +657,9 @@ class HybridScorer(BeliefScorer):
     ) -> None:
         """Check that sources in the set of statements are accounted for."""
         # Get all sources for the set of statements
-        sources = CountsScorer.get_all_sources(statements,
-                                               include_more_specific=True)
+        sources = set()
+        for stmt in statements:
+            sources |= set([ev.source_api for ev in stmt.evidence])
         non_cs_sources = set(sources).difference(
                                         set(self.counts_scorer.source_list))
         return self.simple_scorer._check_sources(non_cs_sources)
