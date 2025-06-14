@@ -273,6 +273,13 @@ def get_ids_for_mesh_terms(mesh_terms, major_topics=None, **kwargs):
     return ids
 
 
+def _get_article_from_full_xml(full_xml_tree):
+    if full_xml_tree is None:
+        return None
+    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    return article
+
+
 def get_article_xml(pubmed_id):
     """Get the Article subtree a single article from the Pubmed database.
 
@@ -288,9 +295,7 @@ def get_article_xml(pubmed_id):
         PubMed entry.
     """
     full_xml_tree = get_full_xml(pubmed_id)
-    if full_xml_tree is None:
-        return None
-    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    article = _get_article_from_full_xml(full_xml_tree)
     return article  # May be none
 
 
