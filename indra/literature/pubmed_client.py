@@ -920,6 +920,50 @@ def get_issns_for_journal(nlm_id):
     return issn_list
 
 
+def get_nct_ids_from_full_xml(tree):
+    """Get the NCT IDs for a given PubMed ID from the full XML.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    list of str
+        A list of NCT IDs associated with the given PubMed ID.
+    """
+    # Find all AccessionNumbers under ClinicalTrials.gov
+    accession_numbers = []
+    for article in tree.findall(".//PubmedArticle"):
+        for databank in article.findall(".//DataBank"):
+            name = databank.find("DataBankName")
+            if name is not None and name.text == "ClinicalTrials.gov":
+                accession_list = databank.find("AccessionNumberList")
+                if accession_list is not None:
+                    for acc in accession_list.findall("AccessionNumber"):
+                        accession_numbers.append(acc.text)
+
+    return accession_numbers
+
+
+def get_nct_ids_for_pmid(pmid):
+    """Get the NCT IDs for a given PubMed ID.
+
+    Parameters
+    ----------
+    pmid : str
+        A PubMed ID.
+
+    Returns
+    -------
+    list of str
+        A list of NCT IDs associated with the given PubMed ID.
+    """
+    full_xml_tree = get_full_xml(pmid)
+    if full_xml_tree is None:
+        return []
+    return get_nct_ids_from_full_xml(full_xml_tree)
+
+
 def expand_pagination(pages):
     """Convert a page number to long form, e.g., from 456-7 to 456-457."""
     # If there is no hyphen, it's a single page, and we're good to go
