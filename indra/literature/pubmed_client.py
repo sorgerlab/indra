@@ -647,8 +647,28 @@ def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
     # Get the page number entry
     page = _find_elem_text(article, 'Pagination/MedlinePgn')
 
-    return {'pmid': pmid, 'pii': pii, 'doi': doi, 'pmcid': pmcid,
-            'title': title, 'authors': author_names, 'page': page}
+    # Get publication types ('Clinical Trial', 'Review', etc.)
+    # They are under the PublicationTypeList element inside the Article
+    # Each PublicationType element has a mesh_id set a 'UI' attribute
+    # and a type set as the text of the element
+    pub_type_list = article.findall('PublicationTypeList/PublicationType')
+    pub_types = None if pub_type_list is None else \
+        [
+            # Get the mesh_id and type for each publication type
+            {'mesh_id': pt.attrib.get('UI', None), 'type': pt.text}
+            for pt in pub_type_list
+        ]
+
+    return {
+        'pmid': pmid,
+        'pii': pii,
+        'doi': doi,
+        'pmcid': pmcid,
+        'title': title,
+        'authors': author_names,
+        'page': page,
+        'publication_types': pub_types,
+    }
 
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
