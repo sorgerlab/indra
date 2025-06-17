@@ -712,7 +712,8 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         Dictionary indexed by PMID. Each value is a dict containing the
         following fields: 'doi', 'title', 'authors', 'journal_title',
         'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page',
-        'volume', 'issue', 'issue_pub_date'.
+        'volume', 'issue', 'issue_pub_date', 'mesh_annotations',
+        'publication_date', 'abstract', 'publication_types' and 'references'.
     """
     # Iterate over the articles and build the results dict
     results = {}
