@@ -3,7 +3,7 @@ import pandas as pd
 import networkx as nx
 from indra.statements import *
 from indra.assemblers.indranet.net import default_sign_dict
-from indra.assemblers.indranet import IndraNetAssembler, IndraNet
+from indra.assemblers.indranet import IndraNetAssembler, IndraNet, statement_to_rows
 
 
 ev1 = Evidence(pmid='1')
@@ -328,3 +328,12 @@ def test_self_loops():
     assert ('a', 'a') not in ug4.edges
     assert ('c', 'c') not in ug4.edges
     assert ('b', 'b') not in ug4.edges
+
+
+def test_stmt_to_rows():
+    ia = IndraNetAssembler([st1, st2, st3, st4, st5, st6, st9])
+
+    rows = statement_to_rows(st1)
+    assert len(rows) == 1
+    assert rows[0] == ['a', 'b', 'HGNC', '1', 'TEXT', 'b', None, None,
+                       'Activation', 1, 8197018847132618, 1, {None: 1}, None]
