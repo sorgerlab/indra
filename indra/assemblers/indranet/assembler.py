@@ -24,7 +24,7 @@ def get_ag_ns_id(ag):
     return 'TEXT', ag.name
 
 
-class IndraNetAssembler():
+class IndraNetAssembler:
     """Assembler to create an IndraNet object from a list of INDRA statements.
 
     Parameters
@@ -301,97 +301,17 @@ class IndraNetAssembler():
             More columns can be added by providing the extra_columns parameter.
         """
         rows = []
-        if exclude_stmts:
-            exclude_types = tuple(
-                get_statement_by_name(st_type) for st_type in exclude_stmts)
-        else:
-            exclude_types = ()
+        col_names = ['agA_name', 'agB_name', 'agA_ns', 'agA_id',
+                     'agB_ns', 'agB_id', 'residue', 'position',
+                     'stmt_type', 'evidence_count', 'stmt_hash',
+                     'belief', 'source_counts', 'initial_sign'] + \
+            ([col_name for col_name, _ in extra_columns] if extra_columns else [])
         for stmt in self.statements:
-            # Exclude statements from given exclude list
-            if isinstance(stmt, exclude_types):
-                logger.debug('Skipping a statement of a type %s.'
-                             % type(stmt).__name__)
-                continue
-            not_none_agents = stmt.real_agent_list()
-
-            # Exclude statements with less than 2 agents
-            if len(not_none_agents) < 2:
-                continue
-            # Special handling for Influences and Associations
-            if isinstance(stmt, (Influence, Association)):
-                stmt_pol = stmt.overall_polarity()
-                if stmt_pol == 1:
-                    sign = 0
-                elif stmt_pol == -1:
-                    sign = 1
-                else:
-                    sign = None
-                if isinstance(stmt, Influence):
-                    edges = [(stmt.subj.concept, stmt.obj.concept, sign)]
-                else:
-                    edges = [(a, b, sign) for a, b in
-                             permutations(not_none_agents, 2)]
-            # Handle complexes by creating pairs of their
-            # not-none-agents.
-            elif isinstance(stmt, Complex):
-                # Do not add complexes with more members than complex_members
-                if len(not_none_agents) > complex_members:
-                    logger.debug('Skipping a complex with %d members.'
-                                 % len(not_none_agents))
-                    continue
-                else:
-                    # add every permutation with a neutral polarity
-                    edges = [(a, b, None) for a, b in
-                             permutations(not_none_agents, 2)]
-            elif isinstance(stmt, Conversion):
-                edges = []
-                if stmt.subj:
-                    for obj in stmt.obj_from:
-                        edges.append((stmt.subj, obj, 1))
-                    for obj in stmt.obj_to:
-                        edges.append((stmt.subj, obj, 0))
-            # This is for any remaining statement type that may not be
-            # handled above explicitly but somehow has more than two
-            # not-none-agents at this point
-            elif len(not_none_agents) > 2:
-                continue
-            else:
-                edges = [(not_none_agents[0], not_none_agents[1], None)]
-            for (agA, agB, sign) in edges:
-                # Filter out self-loops
-                if not keep_self_loops and agA.name == agB.name:
-                    continue
-                agA_ns, agA_id = get_ag_ns_id(agA)
-                agB_ns, agB_id = get_ag_ns_id(agB)
-                stmt_type = type(stmt).__name__
-                try:
-                    res = stmt.residue
-                except AttributeError:
-                    res = None
-                try:
-                    pos = stmt.position
-                except AttributeError:
-                    pos = None
-                row = OrderedDict([
-                    ('agA_name', agA.name),
-                    ('agB_name', agB.name),
-                    ('agA_ns', agA_ns),
-                    ('agA_id', agA_id),
-                    ('agB_ns', agB_ns),
-                    ('agB_id', agB_id),
-                    ('residue', res),
-                    ('position', pos),
-                    ('stmt_type', stmt_type),
-                    ('evidence_count', len(stmt.evidence)),
-                    ('stmt_hash', stmt.get_hash(refresh=True)),
-                    ('belief', stmt.belief),
-                    ('source_counts', _get_source_counts(stmt)),
-                    ('initial_sign', sign)])
-                if extra_columns:
-                    for col_name, func in extra_columns:
-                        row[col_name] = func(stmt)
-                rows.append(row)
-        df = pd.DataFrame.from_dict(rows)
+            rows += statement_to_rows(stmt, exclude_stmts=exclude_stmts,
+                                      complex_members=complex_members,
+                                      extra_columns=extra_columns,
+                                      keep_self_loops=keep_self_loops)
+        df = pd.DataFrame(rows, columns=col_names, dtype=object)
         df = df.where((pd.notnull(df)), None)
         return df
 
@@ -595,3 +515,101 @@ def _store_edge_data(stmts, extra_columns=None):
         for evid in stmt.evidence:
             evid.annotations['indranet_edge'] = edge_data
     return stmts
+
+
+def statement_to_rows(stmt, exclude_stmts=None, complex_members=3,
+                      extra_columns=None, keep_self_loops=True):
+    rows = []
+    if exclude_stmts:
+        exclude_types = tuple(
+            get_statement_by_name(st_type) for st_type in exclude_stmts)
+    else:
+        exclude_types = ()
+    # Exclude statements from given exclude list
+    if isinstance(stmt, exclude_types):
+        logger.debug('Skipping a statement of a type %s.'
+                     % type(stmt).__name__)
+        return []
+    not_none_agents = stmt.real_agent_list()
+
+    # Exclude statements with less than 2 agents
+    if len(not_none_agents) < 2:
+        return []
+    # Special handling for Influences and Associations
+    if isinstance(stmt, (Influence, Association)):
+        stmt_pol = stmt.overall_polarity()
+        if stmt_pol == 1:
+            sign = 0
+        elif stmt_pol == -1:
+            sign = 1
+        else:
+            sign = None
+        if isinstance(stmt, Influence):
+            edges = [(stmt.subj.concept, stmt.obj.concept, sign)]
+        else:
+            edges = [(a, b, sign) for a, b in
+                     permutations(not_none_agents, 2)]
+    # Handle complexes by creating pairs of their
+    # not-none-agents.
+    elif isinstance(stmt, Complex):
+        # Do not add complexes with more members than complex_members
+        if len(not_none_agents) > complex_members:
+            logger.debug('Skipping a complex with %d members.'
+                         % len(not_none_agents))
+            return []
+        else:
+            # add every permutation with a neutral polarity
+            edges = [(a, b, None) for a, b in
+                     permutations(not_none_agents, 2)]
+    elif isinstance(stmt, Conversion):
+        edges = []
+        if stmt.subj:
+            for obj in stmt.obj_from:
+                edges.append((stmt.subj, obj, 1))
+            for obj in stmt.obj_to:
+                edges.append((stmt.subj, obj, 0))
+    # This is for any remaining statement type that may not be
+    # handled above explicitly but somehow has more than two
+    # not-none-agents at this point
+    elif len(not_none_agents) > 2:
+        return []
+    else:
+        edges = [(not_none_agents[0], not_none_agents[1], None)]
+    for (agA, agB, sign) in edges:
+        # Filter out self-loops
+        if not keep_self_loops and agA.name == agB.name:
+            continue
+        agA_ns, agA_id = get_ag_ns_id(agA)
+        agB_ns, agB_id = get_ag_ns_id(agB)
+        stmt_type = type(stmt).__name__
+        try:
+            res = stmt.residue
+        except AttributeError:
+            res = None
+        try:
+            pos = stmt.position
+        except AttributeError:
+            pos = None
+        # Create a simple flat list of just the values instead
+        # of a dict with keys
+        row = [
+            agA.name,
+            agB.name,
+            agA_ns,
+            agA_id,
+            agB_ns,
+            agB_id,
+            res,
+            pos,
+            stmt_type,
+            len(stmt.evidence),
+            stmt.get_hash(refresh=True),
+            stmt.belief,
+            _get_source_counts(stmt),
+            sign
+        ]
+        if extra_columns:
+            for _, func in extra_columns:
+                row.append(func(stmt))
+        rows.append(row)
+    return rows
