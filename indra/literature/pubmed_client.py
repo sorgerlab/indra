@@ -1168,17 +1168,38 @@ def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
     return True
 
 
-def get_pmid_to_package_url_mapping() -> Dict[str, str]:
-    """Fetch the mapping from PMID to their .tar.gz download URL."""
-    logger.info("Generating the pmid to url mapping")
-    res = requests.get("https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv")
-    res.raise_for_status()
-    reader = csv.DictReader(StringIO(res.text))
-    mapping = {}
-    for row in reader:
-        pmid = row["Accession ID"]
-        path = row["File"]
-        mapping[pmid] = f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/{path}"
+def get_pmid_to_package_url_mapping(fname=None) -> Dict[str, str]:
+    """Return a mapping from PMID to a PMC .tar.gz package URL.
+
+    The assignment of PMIDs to specific PMC downloadable files
+    in which extended article elements are available does not follow
+    a specific pattern and therefore explicit mappings from PMIDs
+    to PMC package URLs are required.
+
+    Parameters
+    ----------
+    fname : Optional[str]
+        Optional path to a CSV file containing the mappings data file
+        serving as a cache. It can be obtained from
+        https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv. If not
+        provided, it is downloaded from this URL.
+
+    Returns
+    -------
+    :
+        A dictionary mapping PMIDs to PMC package URLs.
+    """
+    if fname:
+        reader = csv.DictReader(open(fname, 'r'))
+    else:
+        logger.info("Downloading PMC file list")
+        res = requests.get("https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv")
+        res.raise_for_status()
+        reader = csv.DictReader(StringIO(res.text))
+    mapping = {
+        row["PMID"]: f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/{row['File']}"
+        for row in tqdm.tqdm(reader, desc="Generating PMID to PMC URL mapping")
+    }
     return mapping
 
 
@@ -1206,9 +1227,11 @@ def download_package_for_pmid(pmid: str, out_dir: str,
             f.write(chunk)
 
 
-def download_package_for_pmids(pmid_list: List[str], out_dir: str):
+def download_package_for_pmids(pmid_list: List[str], out_dir: str,
+                               mapping: Optional[Dict[str, str]] = None):
     """Download pdf and image packages for multiple PMIDs."""
-    mapping = get_pmid_to_package_url_mapping()
+    if mapping is None:
+        mapping = get_pmid_to_package_url_mapping()
     for pmid in pmid_list:
         try:
             download_package_for_pmid(pmid, out_dir, mapping)
