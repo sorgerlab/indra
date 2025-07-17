@@ -25,6 +25,9 @@ class SqliteOntology(IndraOntology):
         conn = sqlite3.connect(db_path)
         self.cur = conn.cursor()
 
+    def initialize(self):
+        self._initialized = True
+
     def isa_or_partof(self, ns1, id1, ns2, id2):
         q = """SELECT 1 FROM relationships
                WHERE child_id=? AND child_ns=? AND parent_id=? AND parent_ns=?
