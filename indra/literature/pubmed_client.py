@@ -7,13 +7,15 @@ import gzip
 import os
 import re
 import time
+from io import StringIO
+
 import tqdm
 import logging
 import random
 import subprocess
 import requests
 from time import sleep
-from typing import List
+from typing import List, Dict, Optional
 from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
@@ -1164,6 +1166,117 @@ def _download_xml_gz(xml_url: str, xml_file: Path, md5_check: bool = True,
         fh.write(resp.content)
 
     return True
+
+
+def get_pmid_to_package_url_mapping(fname=None) -> Dict[str, str]:
+    """Return a mapping from PMID to a PMC .tar.gz package URL.
+
+    The assignment of PMIDs to specific PMC downloadable files
+    in which extended article elements are available does not follow
+    a specific pattern and therefore explicit mappings from PMIDs
+    to PMC package URLs are required.
+
+    Parameters
+    ----------
+    fname : Optional[str]
+        Optional path to a CSV file containing the mappings data file
+        serving as a cache. It can be obtained from
+        https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv. If not
+        provided, it is downloaded from this URL.
+
+    Returns
+    -------
+    :
+        A dictionary mapping PMIDs to PMC package URLs.
+    """
+    if fname:
+        reader = csv.DictReader(open(fname, 'r'))
+    else:
+        logger.info("Downloading PMC file list")
+        res = requests.get("https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv")
+        res.raise_for_status()
+        reader = csv.DictReader(StringIO(res.text))
+    mapping = {
+        row["PMID"]: f"https://ftp.ncbi.nlm.nih.gov/pub/pmc/{row['File']}"
+        for row in tqdm.tqdm(reader, desc="Generating PMID to PMC URL mapping")
+    }
+    return mapping
+
+
+def download_package_for_pmid(pmid: str, out_dir: str,
+                              mapping: Optional[Dict[str, str]] = None):
+    """Return path to the PMC package downloaded for a given PMID.
+
+    Parameters
+    ----------
+    pmid : str
+        The PubMed ID for which the package should be downloaded.
+    out_dir : str
+        The directory where the package should be downloaded.
+    mapping : Optional[Dict[str, str]]
+        A mapping from PMIDs to PMC package URLs. If None, the mapping
+        is fetched from the NCBI FTP server (slow). The mapping can be
+        obtained from https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv
+        and loaded using `get_pmid_to_package_url_mapping`.
+
+    Returns
+    -------
+    : str
+        The path to the downloaded package file.
+    """
+    if mapping is None:
+        mapping = get_pmid_to_package_url_mapping()
+
+    if pmid not in mapping:
+        raise ValueError(f"PMID {pmid} not found in the PMC OA mapping.")
+
+    url = mapping[pmid]
+    filename = os.path.basename(url)
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    tar_path = out_path / filename
+
+    logger.info(f"Downloading {url}")
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+    with open(tar_path, 'wb') as f:
+        for chunk in r.iter_content():
+            f.write(chunk)
+    return tar_path.as_posix()
+
+
+def download_package_for_pmids(pmid_list: List[str], out_dir: str,
+                               mapping: Optional[Dict[str, str]] = None):
+    """Return paths of PMC packages downloaded for a given list of PMIDs.
+
+    Parameters
+    ----------
+    pmid_list : List[str]
+        A list of PubMed IDs for which the packages should be downloaded.
+    out_dir : str
+        The directory where the packages should be downloaded.
+    mapping : Optional[Dict[str, str]]
+        A mapping from PMIDs to PMC package URLs. If None, the mapping
+        is fetched from the NCBI FTP server (slow). The mapping can be
+        obtained from https://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_file_list.csv
+        and loaded using `get_pmid_to_package_url_mapping`.
+
+    Returns
+    -------
+    : dict
+        A dictionary mapping PMIDs to the paths of the downloaded package files.
+        If a package could not be downloaded, the PMID key will not be present.
+    """
+    if mapping is None:
+        mapping = get_pmid_to_package_url_mapping()
+    fnames = {}
+    for pmid in pmid_list:
+        try:
+            fname = download_package_for_pmid(pmid, out_dir, mapping)
+            fnames[pmid] = fname
+        except Exception as e:
+            logger.info(f"Error downloading {pmid}: {e}")
+    return fnames
 
 
 class Retractions:
