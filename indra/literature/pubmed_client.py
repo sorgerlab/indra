@@ -328,6 +328,43 @@ def get_full_xml(pubmed_id, fname=None):
     return tree
 
 
+def get_full_xml_by_pmids(pubmed_ids: List[str]) -> ET.Element:
+    """Get the full XML tree for multiple articles from PubMed using edirect CLI.
+
+    Parameters
+    ----------
+    pubmed_ids : list[str]
+        A list of PubMed IDs.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The root element of the XML tree representing the PubMed entries.
+        The root is a PubmedArticleSet containing multiple PubmedArticle elements.
+
+    Raises
+    ------
+    RuntimeError
+        If the edirect CLI utilities are not installed or not found on PATH.
+    """
+    pmid_list = ','.join(pubmed_ids)
+    cmd = f'efetch -db pubmed -id {pmid_list} -format xml'
+    xml_str = subprocess.getoutput(cmd)
+    if (
+        not isinstance(xml_str, str) or
+        isinstance(xml_str, str) and "not found" in xml_str[:100]
+    ):
+        raise RuntimeError("The efetch utility could not be found. "
+                           "This function only works if edirect is "
+                           "installed and is visible on your PATH. "
+                           "See https://www.ncbi.nlm.nih.gov/books/NBK179288/ "
+                           "for instructions.")
+
+    # Each article is in a <PubmedArticle> tag, encapsulated in a <PubmedArticleSet> tag
+    tree = ET.XML(xml_str, parser=UTB())
+    return tree
+
+
 def get_title(pubmed_id):
     """Get the title of an article in the Pubmed database."""
     article = get_article_xml(pubmed_id)
