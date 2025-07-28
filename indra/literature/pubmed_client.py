@@ -1049,7 +1049,7 @@ def get_nct_ids_from_full_xml(tree) -> Dict[str, List[str]]:
     return nct_ids_by_pmid
 
 
-def get_nct_ids_for_pmid(pmid):
+def get_nct_ids_for_pmid(pmid: str) -> List[str]:
     """Get the NCT IDs for a given PubMed ID.
 
     Parameters
@@ -1059,13 +1059,58 @@ def get_nct_ids_for_pmid(pmid):
 
     Returns
     -------
-    list of str
+    list[str]
         A list of NCT IDs associated with the given PubMed ID.
     """
     full_xml_tree = get_full_xml(pmid)
     if full_xml_tree is None:
         return []
-    return get_nct_ids_from_full_xml(full_xml_tree)
+    nct_ids_by_pmid = get_nct_ids_from_full_xml(full_xml_tree)
+    return nct_ids_by_pmid.get(pmid, [])
+
+
+def get_nct_ids_for_pmids(
+    pmid_list: List[str],
+    rest_api_fallback: bool = True
+) -> Dict[str,
+List[str]]:
+    """Get the NCT IDs for a list of PubMed IDs.
+
+    Parameters
+    ----------
+    pmid_list : list[str]
+        A list of PubMed IDs.
+    rest_api_fallback : bool
+        If True, fall back to the REST API if the full XML fetch using the
+        edirect CLI fails.
+
+    Returns
+    -------
+    dict
+        A dictionary mapping each PubMed ID to a list of NCT IDs associated with it.
+    """
+    try:
+        full_xml_tree = get_full_xml_by_pmids(pmid_list)
+        if full_xml_tree is None:
+            return {}
+        return get_nct_ids_from_full_xml(full_xml_tree)
+    except RuntimeError as e:
+        if rest_api_fallback:
+            logger.warning(f"Failed to fetch full XML for PMIDs {pmid_list}, "
+                            "falling back to REST API.")
+            nct_ids_by_pmid = {}
+            for pmid in tqdm.tqdm(
+                pmid_list,
+                desc='Looking up NCT IDs',
+                unit_scale=True,
+                unit='PMID'
+            ):
+                nct_ids = get_nct_ids_for_pmid(pmid)
+                if nct_ids:
+                    nct_ids_by_pmid[pmid] = nct_ids
+        else:
+            logger.error(f"Failed to fetch full XML for PMIDs {pmid_list}")
+            raise e
 
 
 def expand_pagination(pages):
