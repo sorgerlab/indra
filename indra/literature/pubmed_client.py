@@ -19,6 +19,7 @@ from typing import List, Dict, Optional
 from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
+from lxml import etree as lxml_etree
 from indra.resources import RESOURCES_PATH
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import batch_iter, pretty_save_xml
@@ -328,13 +329,18 @@ def get_full_xml(pubmed_id, fname=None):
     return tree
 
 
-def get_full_xml_by_pmids(pubmed_ids: List[str]) -> ET.Element:
+def get_full_xml_by_pmids(
+    pubmed_ids: List[str],
+    fname: Optional[str] = None
+) -> ET.Element:
     """Get the full XML tree for multiple articles from PubMed using edirect CLI.
 
     Parameters
     ----------
     pubmed_ids : list[str]
         A list of PubMed IDs.
+    fname : Optional[str]
+        If given, the XML is saved to the given file name.
 
     Returns
     -------
@@ -347,21 +353,25 @@ def get_full_xml_by_pmids(pubmed_ids: List[str]) -> ET.Element:
     RuntimeError
         If the edirect CLI utilities are not installed or not found on PATH.
     """
+    # Have to use lxml.etree because the XML returned by efetch is not properly
+    # formatted for ET.XML
+    parser = lxml_etree.XMLParser(recover=True, encoding='utf-8')
     pmid_list = ','.join(pubmed_ids)
-    cmd = f'efetch -db pubmed -id {pmid_list} -format xml'
-    xml_str = subprocess.getoutput(cmd)
-    if (
-        not isinstance(xml_str, str) or
-        isinstance(xml_str, str) and "not found" in xml_str[:100]
-    ):
+    cmd = f'efetch -db pubmed -id {pmid_list} -format xml'.split()
+    try:
+        xml_bytes = subprocess.check_output(cmd)
+    except FileNotFoundError:
+        # Subprocess will FileNotFoundError if the command is not found
         raise RuntimeError("The efetch utility could not be found. "
                            "This function only works if edirect is "
                            "installed and is visible on your PATH. "
                            "See https://www.ncbi.nlm.nih.gov/books/NBK179288/ "
                            "for instructions.")
 
+    tree = lxml_etree.fromstring(xml_bytes, parser=parser)
     # Each article is in a <PubmedArticle> tag, encapsulated in a <PubmedArticleSet> tag
-    tree = ET.XML(xml_str, parser=UTB())
+    if fname is not None:
+        pretty_save_xml(tree, fname)
     return tree
 
 
