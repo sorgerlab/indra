@@ -721,6 +721,76 @@ def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
     }
 
 
+def get_metadata_from_pubmed_article(
+    pubmed_article,
+    get_issns_from_nlm: bool = False,
+    get_abstracts: bool = False,
+    prepend_title: bool = False,
+    mesh_annotations: bool = True,
+    detailed_authors: bool = False,
+    references_included: str = None
+):
+    """Get metadata for a single PubmedArticle element.
+
+    Parameters
+    ----------
+    pubmed_article : xml.etree.ElementTree.Element
+        A PubmedArticle element from a Pubmed XML tree.
+    get_issns_from_nlm : Optional[bool]
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to False, since it slows down performance.
+    get_abstracts : Optional[bool]
+        Indicates whether to include the Pubmed abstract in the results.
+        Default: False
+    prepend_title : Optional[bool]
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text. Default: False
+    mesh_annotations : Optional[bool]
+        If True, extract mesh annotations from the pubmed entries and include
+        in the returned data. If false, don't. Default: True
+    detailed_authors : Optional[bool]
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
+
+    Returns
+    -------
+
+    """
+    medline_citation = pubmed_article.find('./MedlineCitation')
+    pubmed_data = pubmed_article.find('PubmedData')
+
+    # Build the result
+    result = {}
+    article_info = _get_article_info(medline_citation, pubmed_data, detailed_authors)
+    result.update(article_info)
+    journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
+    result.update(journal_info)
+    if mesh_annotations:
+        context_info = _get_annotations(medline_citation)
+        result.update(context_info)
+    if references_included:
+        references = _get_references(pubmed_data.find('ReferenceList'),
+                                     only_pmid=(references_included == 'pmid'))
+        result['references'] = references
+
+    publication_date = _get_pubmed_publication_date(pubmed_data)
+    result['publication_date'] = publication_date
+
+    # Get the abstracts if requested
+    if get_abstracts:
+        abstract = _abstract_from_article_element(
+            medline_citation.find('Article'),
+            prepend_title=prepend_title
+        )
+        result['abstract'] = abstract
+    return result
+
+
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
                                get_abstracts=False, prepend_title=False,
                                mesh_annotations=True, detailed_authors=False,
@@ -769,36 +839,17 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
     for pm_article in pm_articles:
-        medline_citation = pm_article.find('./MedlineCitation')
-        pubmed_data = pm_article.find('PubmedData')
-
-        # Build the result
-        result = {}
-        article_info = _get_article_info(medline_citation, pubmed_data, detailed_authors)
-        result.update(article_info)
-        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
-        result.update(journal_info)
-        if mesh_annotations:
-            context_info = _get_annotations(medline_citation)
-            result.update(context_info)
-        if references_included:
-            references = _get_references(pubmed_data.find('ReferenceList'),
-                                         only_pmid=(references_included == 'pmid'))
-            result['references'] = references
-
-        publication_date = _get_pubmed_publication_date(pubmed_data)
-        result['publication_date'] = publication_date
-
-        # Get the abstracts if requested
-        if get_abstracts:
-            abstract = _abstract_from_article_element(
-                medline_citation.find('Article'),
-                prepend_title=prepend_title
-                )
-            result['abstract'] = abstract
-
+        result = get_metadata_from_pubmed_article(
+            pm_article,
+            get_issns_from_nlm=get_issns_from_nlm,
+            get_abstracts=get_abstracts,
+            prepend_title=prepend_title,
+            mesh_annotations=mesh_annotations,
+            detailed_authors=detailed_authors,
+            references_included=references_included,
+        )
         # Add to dict
-        results[article_info['pmid']] = result
+        results[result["pmid"]] = result
 
     return results
 
