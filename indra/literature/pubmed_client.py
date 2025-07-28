@@ -277,10 +277,7 @@ def get_ids_for_mesh_terms(mesh_terms, major_topics=None, **kwargs):
 def _get_article_from_full_xml(full_xml_tree):
     if full_xml_tree is None:
         return None
-    if isinstance(full_xml_tree, ET.ElementTree):
-        article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
-    else:
-        article = full_xml_tree.find('MedlineCitation/Article')
+    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
     return article
 
 
