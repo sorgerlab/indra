@@ -988,29 +988,65 @@ def get_issns_for_journal(nlm_id):
     return issn_list
 
 
-def get_nct_ids_from_full_xml(tree):
+def get_nct_ids_from_article_xml(article) -> List[str]:
+    """Extract NCT IDs from a PubMed article XML
+
+    Parameters
+    ----------
+    article :
+        An XML Element representing a PubMed article.
+
+    Returns
+    -------
+    :
+        The NCT IDs associated with the given PubMed article.
+    """
+    # Find all DataBank elements in the article and check if they are from
+    # ClinicalTrials.gov. If so, extract the AccessionNumberList and append
+    # the AccessionNumbers to the list
+    nct_ids = []
+    for databank in article.findall(".//DataBank"):
+        name = databank.find("DataBankName")
+        if name is not None and name.text == "ClinicalTrials.gov":
+            accession_list = databank.find("AccessionNumberList")
+            if accession_list is not None:
+                for acc in accession_list.findall("AccessionNumber"):
+                    nct_ids.append(acc.text)
+    return nct_ids
+
+
+def get_nct_ids_from_full_xml(tree) -> Dict[str, List[str]]:
     """Get the NCT IDs for a given PubMed ID from the full XML.
 
     Parameters
     ----------
+    tree :
+        An XML Element representing the full PubMed XML tree.
 
     Returns
     -------
-    list of str
+    dict[str, list[str]]
         A list of NCT IDs associated with the given PubMed ID.
     """
     # Find all AccessionNumbers under ClinicalTrials.gov
-    accession_numbers = []
-    for article in tree.findall(".//PubmedArticle"):
-        for databank in article.findall(".//DataBank"):
-            name = databank.find("DataBankName")
-            if name is not None and name.text == "ClinicalTrials.gov":
-                accession_list = databank.find("AccessionNumberList")
-                if accession_list is not None:
-                    for acc in accession_list.findall("AccessionNumber"):
-                        accession_numbers.append(acc.text)
+    nct_ids_by_pmid = {}
+    for article in tqdm.tqdm(
+        tree.findall(".//PubmedArticle"),
+        desc="Extracting NCT IDs",
+        unit_scale=True,
+        unit='article'
+    ):
+        pmid_element = article.find(".//PMID")
+        if pmid_element is None or not pmid_element.text:
+            continue
+        pmid = pmid_element.text
+        nct_ids = get_nct_ids_from_article_xml(article)
+        if nct_ids:
+            if pmid not in nct_ids_by_pmid:
+                nct_ids_by_pmid[pmid] = []
+            nct_ids_by_pmid[pmid] = nct_ids
 
-    return accession_numbers
+    return nct_ids_by_pmid
 
 
 def get_nct_ids_for_pmid(pmid):
