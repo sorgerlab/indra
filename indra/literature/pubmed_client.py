@@ -361,7 +361,8 @@ def get_full_xml_by_pmids(
     try:
         xml_bytes = subprocess.check_output(cmd)
     except FileNotFoundError:
-        # Subprocess will FileNotFoundError if the command is not found
+        # subprocess.check_output will raise FileNotFoundError if the command
+        # is not found
         raise RuntimeError("The efetch utility could not be found. "
                            "This function only works if edirect is "
                            "installed and is visible on your PATH. "
@@ -478,6 +479,7 @@ def get_issn_info(
                 "issn": str,
                 "issn_l": str,
                 "type": "print"|"electronic"|"other",
+                "alternate_issns": List[Tuple[str, str]]  # Optional
             },
             "issue_dict": {
                 "volume": str,
