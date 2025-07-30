@@ -55,13 +55,13 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.23.0',
+          version='1.24.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description=long_description,
           long_description_content_type='text/markdown',
           author='Benjamin Gyori',
-          author_email='benjamin_gyori@hms.harvard.edu',
-          url='http://github.com/sorgerlab/indra',
+          author_email='b.gyori@northeastern.edu',
+          url='http://github.com/gyorilab/indra',
           packages=['indra', 'indra.assemblers',
                     'indra.assemblers.cx', 'indra.assemblers.cyjs',
                     'indra.assemblers.english',

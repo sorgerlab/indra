@@ -167,7 +167,7 @@ JSON serialization of INDRA Statements
 Statements can be serialized into JSON and deserialized from JSON to allow
 their exchange in a platform-independent way. We also provide a JSON
 schema (see http://json-schema.org to learn about schemas) in
-https://raw.githubusercontent.com/sorgerlab/indra/master/indra/resources/statements_schema.json
+https://raw.githubusercontent.com/gyorilab/indra/master/indra/resources/statements_schema.json
 which can be used to validate INDRA Statements JSONs.
 
 Some validation tools include:

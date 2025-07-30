@@ -1,17 +1,17 @@
 # INDRA
 
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
-[![Build](https://github.com/sorgerlab/indra/workflows/Tests/badge.svg)](https://github.com/sorgerlab/indra/actions)
+[![Build](https://github.com/gyorilab/indra/workflows/Tests/badge.svg)](https://github.com/gyorilab/indra/actions)
 [![Documentation](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/indra.svg)](https://badge.fury.io/py/indra)
 [![Python 3](https://img.shields.io/pypi/pyversions/indra.svg)](https://www.python.org/downloads/release/python-357/)
 
-<img align="left" src="https://raw.githubusercontent.com/sorgerlab/indra/master/doc/indra_logo.png" width="300" height="224" />
+<img align="left" src="https://raw.githubusercontent.com/gyorilab/indra/master/doc/indra_logo.png" width="300" height="224" />
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system, originally developed for molecular systems biology and
 then generalized to other domains (see [INDRA
-World](https://github.com/indralab/indra_world)). INDRA draws on natural
+World](https://github.com/gyorilab/indra_world)). INDRA draws on natural
 language processing systems and structured databases to collect mechanistic and
 causal assertions, represents them in a standardized form (INDRA Statements),
 and assembles them into various modeling formalisms including causal graphs and
@@ -265,7 +265,7 @@ full compatibility is currently only tested with 3.8-3.10.
 The preferred way to install INDRA is by pointing pip to the source repository
 as
 
-    $ pip install git+https://github.com/sorgerlab/indra.git
+    $ pip install git+https://github.com/gyorilab/indra.git
 
 Releases of INDRA are also available on
 [PyPI](https://pip.pypa.io/en/latest/installing/), you can install the latest

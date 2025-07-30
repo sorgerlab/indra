@@ -139,7 +139,7 @@ You can also read more about the pre-assembly
 process in the
 `preassembly module documentation <../modules/preassembler/index.html>`_ and
 in the `GitHub documentation
-<https://github.com/sorgerlab/indra#internal-knowledge-assembly>`_
+<https://github.com/gyorilab/indra#internal-knowledge-assembly>`_
 
 Assemble the statements into a network model
 --------------------------------------------
@@ -212,6 +212,6 @@ and look into the `natural language modeling tutorial <nl_modeling.html>`_
 which uses PySB models.
 
 Read more about all assembly output formats in the `README <https://github
-.com/sorgerlab/indra#output-model-assemblers>`_ and in the `module
+.com/gyorilab/indra#output-model-assemblers>`_ and in the `module
 references <https://indra.readthedocs.io/en/latest/modules/assemblers/index
 .html>`_.

@@ -32,14 +32,14 @@ To install directly from Github, do:
 
 .. code-block:: bash
 
-    pip install git+https://github.com/sorgerlab/indra.git
+    pip install git+https://github.com/gyorilab/indra.git
 
 Or first clone the repository to a local folder and use pip to install
 INDRA from there locally:
 
 .. code-block:: bash
 
-    git clone https://github.com/sorgerlab/indra.git
+    git clone https://github.com/gyorilab/indra.git
     cd indra
     pip install .
 
@@ -50,7 +50,7 @@ as a system-wide package.
 
 .. code-block:: bash
 
-    git clone https://github.com/sorgerlab/indra.git
+    git clone https://github.com/gyorilab/indra.git
 
 To be able to use INDRA this way, you need
 to make sure that all its requirements are installed. To be able to

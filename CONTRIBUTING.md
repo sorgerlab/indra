@@ -2,13 +2,13 @@ Git fork/PR workflow
 --------------------
 This repository uses the [forking model](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow)
 for collaboration. In this model,
-each developer forks the main (sorgerlab/indra) repository, pushes code
+each developer forks the main (gyorilab/indra) repository, pushes code
 only to branches in their own fork, and then submits pull requests to
-sorgerlab. After cloning your own fork of `indra`, you should add `sorgerlab`
+gyorilab. After cloning your own fork of `indra`, you should add `gyorilab`
 as a remote to be able to track the latest changes by doing
 
 ```
-git remote add sorgerlab https://github.com/sorgerlab/indra.git
+git remote add gyorilab https://github.com/gyorilab/indra.git
 ```
 
 When a PR is submitted from a branch, any further changes can be pushed
@@ -17,9 +17,9 @@ are automatically appended to the PR. Please always check the box on Github
 allowing the maintainers of the repo to make changes to the PR.
 
 In addition, as a convention, we only merge PRs whose branches are rebased
-on top of the latest sorgerlab/master. This means that instead of merging
-sorgerlab/master into your own branch to resolve conflicts, you should always
-rebase on top of sorgerlab/master and force push your branches if
+on top of the latest gyorilab/master. This means that instead of merging
+gyorilab/master into your own branch to resolve conflicts, you should always
+rebase on top of gyorilab/master and force push your branches if
 needed (you can do this even if a PR from that branch is already open).
 Consistent with this convention, in general, you should not use `git pull`
 to update your local fork. Rather, use `git fetch --all`,
@@ -32,7 +32,7 @@ some commits before merging.
 
 Pull requests
 -------------
-Always submit PRs via the sorgerlab repository.
+Always submit PRs via the gyorilab repository.
 Give your PR a concise and clear title that describes without excessive detail
 what the PR does. You should give more details in the description, pointing
 out the important changes made and any additional remarks that are relevant.

@@ -34,7 +34,7 @@ RUN python3 -m venv $VENV_PATH
 ENV PATH="$VENV_PATH/bin:$PATH"
 
 # Install INDRA and dependencies
-RUN git clone https://github.com/sorgerlab/indra.git && \
+RUN git clone https://github.com/gyorilab/indra.git && \
     cd indra && \
     git checkout $BUILD_BRANCH && \
     git branch && \

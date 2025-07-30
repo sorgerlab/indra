@@ -379,7 +379,7 @@ class BMIModel(object):
         component.append(au)
 
         hu = etree.Element('help_url')
-        hu.text = 'http://github.com/sorgerlab/indra'
+        hu.text = 'http://github.com/gyorilab/indra'
         component.append(hu)
 
         for tag in ('cfg_template', 'time_step_type', 'time_units',
