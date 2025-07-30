@@ -19,6 +19,7 @@ from typing import List, Dict, Optional
 from pathlib import Path
 from functools import lru_cache
 import xml.etree.ElementTree as ET
+from lxml import etree as lxml_etree
 from indra.resources import RESOURCES_PATH
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import batch_iter, pretty_save_xml
@@ -273,6 +274,13 @@ def get_ids_for_mesh_terms(mesh_terms, major_topics=None, **kwargs):
     return ids
 
 
+def _get_article_from_full_xml(full_xml_tree):
+    if full_xml_tree is None:
+        return None
+    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    return article
+
+
 def get_article_xml(pubmed_id):
     """Get the Article subtree a single article from the Pubmed database.
 
@@ -288,9 +296,7 @@ def get_article_xml(pubmed_id):
         PubMed entry.
     """
     full_xml_tree = get_full_xml(pubmed_id)
-    if full_xml_tree is None:
-        return None
-    article = full_xml_tree.find('PubmedArticle/MedlineCitation/Article')
+    article = _get_article_from_full_xml(full_xml_tree)
     return article  # May be none
 
 
@@ -319,6 +325,53 @@ def get_full_xml(pubmed_id, fname=None):
               'id': pubmed_id}
     tree = send_request(pubmed_fetch, params)
     if fname:
+        pretty_save_xml(tree, fname)
+    return tree
+
+
+def get_full_xml_by_pmids(
+    pubmed_ids: List[str],
+    fname: Optional[str] = None
+) -> ET.Element:
+    """Get the full XML tree for multiple articles from PubMed using edirect CLI.
+
+    Parameters
+    ----------
+    pubmed_ids : list[str]
+        A list of PubMed IDs.
+    fname : Optional[str]
+        If given, the XML is saved to the given file name.
+
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The root element of the XML tree representing the PubMed entries.
+        The root is a PubmedArticleSet containing multiple PubmedArticle elements.
+
+    Raises
+    ------
+    RuntimeError
+        If the edirect CLI utilities are not installed or not found on PATH.
+    """
+    # Have to use lxml.etree because the XML returned by efetch is not properly
+    # formatted for ET.XML
+    parser = lxml_etree.XMLParser(recover=True, encoding='utf-8')
+    pmid_list = ','.join(pubmed_ids)
+    cmd = f'efetch -db pubmed -id {pmid_list} -format xml'.split()
+    try:
+        xml_bytes = subprocess.check_output(cmd)
+    except FileNotFoundError:
+        # subprocess.check_output will raise FileNotFoundError if the command
+        # is not found
+        raise RuntimeError("The efetch utility could not be found. "
+                           "This function only works if edirect is "
+                           "installed and is visible on your PATH. "
+                           "See https://www.ncbi.nlm.nih.gov/books/NBK179288/ "
+                           "for instructions.")
+
+    tree = lxml_etree.fromstring(xml_bytes, parser=parser)
+    # Each article is in a <PubmedArticle> tag, encapsulated in a <PubmedArticleSet> tag
+    if fname is not None:
         pretty_save_xml(tree, fname)
     return tree
 
@@ -426,6 +479,7 @@ def get_issn_info(
                 "issn": str,
                 "issn_l": str,
                 "type": "print"|"electronic"|"other",
+                "alternate_issns": List[Tuple[str, str]]  # Optional
             },
             "issue_dict": {
                 "volume": str,
@@ -642,8 +696,98 @@ def _get_article_info(medline_citation, pubmed_data, detailed_authors=False):
     # Get the page number entry
     page = _find_elem_text(article, 'Pagination/MedlinePgn')
 
-    return {'pmid': pmid, 'pii': pii, 'doi': doi, 'pmcid': pmcid,
-            'title': title, 'authors': author_names, 'page': page}
+    # Get publication types ('Clinical Trial', 'Review', etc.)
+    # They are under the PublicationTypeList element inside the Article
+    # Each PublicationType element has a mesh_id set a 'UI' attribute
+    # and a type set as the text of the element
+    pub_type_list = article.findall('PublicationTypeList/PublicationType')
+    pub_types = None if pub_type_list is None else \
+        [
+            # Get the mesh_id and type for each publication type
+            {'mesh_id': pt.attrib.get('UI', None), 'type': pt.text}
+            for pt in pub_type_list
+        ]
+
+    return {
+        'pmid': pmid,
+        'pii': pii,
+        'doi': doi,
+        'pmcid': pmcid,
+        'title': title,
+        'authors': author_names,
+        'page': page,
+        'publication_types': pub_types,
+    }
+
+
+def get_metadata_from_pubmed_article(
+    pubmed_article,
+    get_issns_from_nlm: bool = False,
+    get_abstracts: bool = False,
+    prepend_title: bool = False,
+    mesh_annotations: bool = True,
+    detailed_authors: bool = False,
+    references_included: str = None
+):
+    """Get metadata for a single PubmedArticle element.
+
+    Parameters
+    ----------
+    pubmed_article : xml.etree.ElementTree.Element
+        A PubmedArticle element from a Pubmed XML tree.
+    get_issns_from_nlm : Optional[bool]
+        Look up the full list of ISSN number for the journal associated with
+        the article, which helps to match articles to CrossRef search results.
+        Defaults to False, since it slows down performance.
+    get_abstracts : Optional[bool]
+        Indicates whether to include the Pubmed abstract in the results.
+        Default: False
+    prepend_title : Optional[bool]
+        If get_abstracts is True, specifies whether the article title should
+        be prepended to the abstract text. Default: False
+    mesh_annotations : Optional[bool]
+        If True, extract mesh annotations from the pubmed entries and include
+        in the returned data. If false, don't. Default: True
+    detailed_authors : Optional[bool]
+        If True, extract as many of the author details as possible, such as
+        first name, identifiers, and institutions. If false, only last names
+        are returned. Default: False
+    references_included : Optional[str]
+        If 'detailed', include detailed references in the results. If 'pmid', only include
+        the PMID of the reference. If None, don't include references. Default: None
+
+    Returns
+    -------
+
+    """
+    medline_citation = pubmed_article.find('./MedlineCitation')
+    pubmed_data = pubmed_article.find('PubmedData')
+
+    # Build the result
+    result = {}
+    article_info = _get_article_info(medline_citation, pubmed_data, detailed_authors)
+    result.update(article_info)
+    journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
+    result.update(journal_info)
+    if mesh_annotations:
+        context_info = _get_annotations(medline_citation)
+        result.update(context_info)
+    if references_included:
+        references = _get_references(pubmed_data.find('ReferenceList'),
+                                     only_pmid=(references_included == 'pmid'))
+        result['references'] = references
+
+    publication_date = _get_pubmed_publication_date(pubmed_data)
+    result['publication_date'] = publication_date
+
+    # Get the abstracts if requested
+    if get_abstracts:
+        abstract = _abstract_from_article_element(
+            medline_citation.find('Article'),
+            prepend_title=prepend_title
+        )
+        result['abstract'] = abstract
+    return result
 
 
 def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
@@ -687,42 +831,24 @@ def get_metadata_from_xml_tree(tree, get_issns_from_nlm=False,
         Dictionary indexed by PMID. Each value is a dict containing the
         following fields: 'doi', 'title', 'authors', 'journal_title',
         'journal_abbrev', 'journal_nlm_id', 'issn_list', 'page',
-        'volume', 'issue', 'issue_pub_date'.
+        'volume', 'issue', 'issue_pub_date', 'mesh_annotations',
+        'publication_date', 'abstract', 'publication_types' and 'references'.
     """
     # Iterate over the articles and build the results dict
     results = {}
     pm_articles = tree.findall('./PubmedArticle')
     for pm_article in pm_articles:
-        medline_citation = pm_article.find('./MedlineCitation')
-        pubmed_data = pm_article.find('PubmedData')
-
-        # Build the result
-        result = {}
-        article_info = _get_article_info(medline_citation, pubmed_data, detailed_authors)
-        result.update(article_info)
-        journal_info = _get_journal_info(medline_citation, get_issns_from_nlm)
-        result.update(journal_info)
-        if mesh_annotations:
-            context_info = _get_annotations(medline_citation)
-            result.update(context_info)
-        if references_included:
-            references = _get_references(pubmed_data.find('ReferenceList'),
-                                         only_pmid=(references_included == 'pmid'))
-            result['references'] = references
-
-        publication_date = _get_pubmed_publication_date(pubmed_data)
-        result['publication_date'] = publication_date
-
-        # Get the abstracts if requested
-        if get_abstracts:
-            abstract = _abstract_from_article_element(
-                medline_citation.find('Article'),
-                prepend_title=prepend_title
-                )
-            result['abstract'] = abstract
-
+        result = get_metadata_from_pubmed_article(
+            pm_article,
+            get_issns_from_nlm=get_issns_from_nlm,
+            get_abstracts=get_abstracts,
+            prepend_title=prepend_title,
+            mesh_annotations=mesh_annotations,
+            detailed_authors=detailed_authors,
+            references_included=references_included,
+        )
         # Add to dict
-        results[article_info['pmid']] = result
+        results[result["pmid"]] = result
 
     return results
 
@@ -913,6 +1039,131 @@ def get_issns_for_journal(nlm_id):
     if not any(v for k, v in issn_list):
         return None
     return issn_list
+
+
+def get_nct_ids_from_article_xml(article) -> List[str]:
+    """Extract NCT IDs from a PubMed article XML
+
+    Parameters
+    ----------
+    article :
+        An XML Element representing a PubMed article.
+
+    Returns
+    -------
+    :
+        The NCT IDs associated with the given PubMed article.
+    """
+    # Find all DataBank elements in the article and check if they are from
+    # ClinicalTrials.gov. If so, extract the AccessionNumberList and append
+    # the AccessionNumbers to the list
+    nct_ids = []
+    for databank in article.findall(".//DataBank"):
+        name = databank.find("DataBankName")
+        if name is not None and name.text == "ClinicalTrials.gov":
+            accession_list = databank.find("AccessionNumberList")
+            if accession_list is not None:
+                for acc in accession_list.findall("AccessionNumber"):
+                    nct_ids.append(acc.text)
+    return nct_ids
+
+
+def get_nct_ids_from_full_xml(tree) -> Dict[str, List[str]]:
+    """Get the NCT IDs for a given PubMed ID from the full XML.
+
+    Parameters
+    ----------
+    tree :
+        An XML Element representing the full PubMed XML tree.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        A list of NCT IDs associated with the given PubMed ID.
+    """
+    # Find all AccessionNumbers under ClinicalTrials.gov
+    nct_ids_by_pmid = {}
+    for article in tqdm.tqdm(
+        tree.findall(".//PubmedArticle"),
+        desc="Extracting NCT IDs",
+        unit_scale=True,
+        unit='article'
+    ):
+        pmid_element = article.find(".//PMID")
+        if pmid_element is None or not pmid_element.text:
+            continue
+        pmid = pmid_element.text
+        nct_ids = get_nct_ids_from_article_xml(article)
+        if nct_ids:
+            if pmid not in nct_ids_by_pmid:
+                nct_ids_by_pmid[pmid] = []
+            nct_ids_by_pmid[pmid] = nct_ids
+
+    return nct_ids_by_pmid
+
+
+def get_nct_ids_for_pmid(pmid: str) -> List[str]:
+    """Get the NCT IDs for a given PubMed ID.
+
+    Parameters
+    ----------
+    pmid : str
+        A PubMed ID.
+
+    Returns
+    -------
+    list[str]
+        A list of NCT IDs associated with the given PubMed ID.
+    """
+    full_xml_tree = get_full_xml(pmid)
+    if full_xml_tree is None:
+        return []
+    nct_ids_by_pmid = get_nct_ids_from_full_xml(full_xml_tree)
+    return nct_ids_by_pmid.get(pmid, [])
+
+
+def get_nct_ids_for_pmids(
+    pmid_list: List[str],
+    rest_api_fallback: bool = True
+) -> Dict[str,
+List[str]]:
+    """Get the NCT IDs for a list of PubMed IDs.
+
+    Parameters
+    ----------
+    pmid_list : list[str]
+        A list of PubMed IDs.
+    rest_api_fallback : bool
+        If True, fall back to the REST API if the full XML fetch using the
+        edirect CLI fails.
+
+    Returns
+    -------
+    dict
+        A dictionary mapping each PubMed ID to a list of NCT IDs associated with it.
+    """
+    try:
+        full_xml_tree = get_full_xml_by_pmids(pmid_list)
+        if full_xml_tree is None:
+            return {}
+        return get_nct_ids_from_full_xml(full_xml_tree)
+    except RuntimeError as e:
+        if rest_api_fallback:
+            logger.warning(f"Failed to fetch full XML for PMIDs {pmid_list}, "
+                            "falling back to REST API.")
+            nct_ids_by_pmid = {}
+            for pmid in tqdm.tqdm(
+                pmid_list,
+                desc='Looking up NCT IDs',
+                unit_scale=True,
+                unit='PMID'
+            ):
+                nct_ids = get_nct_ids_for_pmid(pmid)
+                if nct_ids:
+                    nct_ids_by_pmid[pmid] = nct_ids
+        else:
+            logger.error(f"Failed to fetch full XML for PMIDs {pmid_list}")
+            raise e
 
 
 def expand_pagination(pages):

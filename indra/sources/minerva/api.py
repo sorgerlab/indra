@@ -7,7 +7,7 @@ from .minerva_client import get_sif_filenames_to_ids, default_map_name
 
 
 logger = logging.getLogger(__name__)
-base_url = ('https://git-r3lab.uni.lu/covid/models/-/raw/master/'
+base_url = ('http://git-r3lab.uni.lu/covid/models/-/raw/master/'
             'Executable%20Modules/SBML_qual_build/sif/')
 
 
@@ -64,7 +64,7 @@ def process_from_web(filenames='all', map_name=default_map_name):
     filenames : list or str('all')
         Filenames for models that need to be processed (for full list of
         available models see
-        https://git-r3lab.uni.lu/covid/models/-/tree/master/
+        http://git-r3lab.uni.lu/covid/models/-/tree/master/
         Executable%20Modules/SBML_qual_build/sif). If set to 'all'
         (default), then all available models will be processed.
     map_name : str

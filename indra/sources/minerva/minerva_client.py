@@ -6,7 +6,7 @@ from collections import defaultdict
 
 default_map_name = 'covid19map'
 base_url = 'https://%s.elixir-luxembourg.org/minerva/api/'
-resource_url = ('https://git-r3lab.uni.lu/covid/models/-/raw/master/'
+resource_url = ('http://git-r3lab.uni.lu/covid/models/-/raw/master/'
                 'Integration/MINERVA_build/resources.csv')
 
 

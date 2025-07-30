@@ -245,3 +245,160 @@ def test_get_substance_annotations():
 def test_is_retracted():
     assert pubmed_client.is_retracted('35463694')
     assert not pubmed_client.is_retracted('36938926')
+
+
+@pytest.mark.webservice
+def test_get_ids_for_mesh_terms():
+    mesh_terms = ["D009101", "D009102"]
+    res = pubmed_client.get_ids_for_mesh_terms(mesh_terms=mesh_terms)
+    assert isinstance(res, list)
+    assert len(res) > 0
+    assert all(isinstance(x, str) for x in res)
+    assert all(x.isdigit() for x in res)
+
+
+@pytest.mark.webservice
+def test_get_article_from_full_xml1():
+    pmid = "35814366"
+    full_xml = pubmed_client.get_full_xml(pmid)
+    pubmed_article = pubmed_client._get_article_from_full_xml(full_xml)
+    pubdate = pubmed_article.find(".//PubDate")
+    assert pubdate is not None
+    assert pubdate.find("Year") is not None
+    assert pubdate.find("Year").text == "2022"
+
+
+@pytest.mark.nogha
+def test_get_article_from_full_xml2():
+    # Uses edirect CLI
+    pmid = "35814366"
+    full_xml = pubmed_client.get_full_xml_by_pmids([pmid])
+    pubmed_article = pubmed_client._get_article_from_full_xml(full_xml)
+    pubdate = pubmed_article.find(".//PubDate")
+    assert pubdate is not None
+    assert pubdate.find("Year") is not None
+    assert pubdate.find("Year").text == "2022"
+
+
+@pytest.mark.nogha
+def test_get_full_xml_by_pmids():
+    # Uses edirect CLI
+    pmids = ["35814366", "35814367"]
+    full_xml = pubmed_client.get_full_xml_by_pmids(pmids)
+    pubmed_articles = full_xml.findall(".//PubmedArticle")
+    assert len(pubmed_articles) == 2, len(pubmed_articles)
+    for pmid, pubmed_article in zip(pmids, pubmed_articles):
+        xml_pmid = pubmed_article.find(".//PMID")
+        assert xml_pmid is not None
+        assert xml_pmid.text == pmid, xml_pmid.text
+
+
+@pytest.mark.webservice
+def test_get_issn_info():
+    # Also tests get_issns_for_journal
+    pmid = "35814366"
+    full_xml = pubmed_client.get_full_xml(pmid)
+    medline_citation = full_xml.find(".//MedlineCitation")
+    assert medline_citation is not None
+
+    issn_info = pubmed_client.get_issn_info(medline_citation,
+                                            get_issns_from_nlm="always")
+    assert isinstance(issn_info, dict)
+    assert {"journal_title", "journal_abbrev", "journal_nlm_id", "issn_dict",
+            "issue_dict"} == set(issn_info.keys())
+    assert issn_info["journal_title"] == "Frontiers in oncology"
+    assert issn_info["journal_abbrev"] == "Front Oncol"
+    assert issn_info["journal_nlm_id"] == "101568867"
+
+    issn_dict = issn_info["issn_dict"]
+    assert isinstance(issn_dict, dict)
+    assert "issn" in issn_dict
+    assert issn_dict["issn"] == "2234-943X"
+    assert "type" in issn_dict
+    assert issn_dict["type"] == "print"
+    assert "issn_l" in issn_dict
+    assert issn_dict["issn_l"] == "2234-943X"
+    assert "alternate_issns" in issn_dict
+    assert isinstance(issn_dict["alternate_issns"], list)
+    assert len(issn_dict["alternate_issns"]) == 1
+    assert issn_dict["alternate_issns"][0] == ("electronic", "2234-943X")
+
+    issue_dict = issn_info["issue_dict"]
+    assert isinstance(issue_dict, dict)
+    assert "volume" in issue_dict
+    assert issue_dict["volume"] == "12"
+    assert "issue" in issue_dict
+    assert issue_dict["issue"] is None
+    assert "year" in issue_dict
+    assert issue_dict["year"] == 2022
+
+
+@pytest.mark.webservice
+def test_get_nct_ids_from_article_xml():
+    pmid = "35814366"
+    full_xml = pubmed_client.get_full_xml(pmid)
+    nct_ids = pubmed_client.get_nct_ids_from_article_xml(full_xml)
+    assert isinstance(nct_ids, list)
+    assert len(nct_ids) > 0
+    assert all(isinstance(x, str) for x in nct_ids)
+    assert all(x.startswith("NCT") for x in nct_ids)
+
+
+@pytest.mark.webservice
+def test_get_nct_ids_from_full_xml():
+    pmid = "35814366"
+    full_xml = pubmed_client.get_full_xml(pmid)
+    nct_ids = pubmed_client.get_nct_ids_from_full_xml(full_xml)
+    assert isinstance(nct_ids, dict)
+    assert len(nct_ids) == 1, len(nct_ids)
+    nct_id_list = nct_ids[pmid]
+    assert all(isinstance(x, str) for x in nct_id_list)
+    assert all(x.startswith("NCT") for x in nct_id_list)
+
+
+@pytest.mark.webservice
+def test_get_nct_ids_for_pmid():
+    pmid = "35814366"
+    nct_ids = pubmed_client.get_nct_ids_for_pmid(pmid)
+    assert isinstance(nct_ids, list)
+    assert len(nct_ids) > 0
+    assert all(isinstance(x, str) for x in nct_ids)
+    assert all(x.startswith("NCT") for x in nct_ids)
+
+
+@pytest.mark.nogha
+def test_get_nct_ids_for_pmids():
+    # Uses edirect CLI
+    pmids = ["35814366", "39228845"]
+    nct_ids = pubmed_client.get_nct_ids_for_pmids(pmids)
+    assert isinstance(nct_ids, dict)
+    assert len(nct_ids) == 2, len(nct_ids)
+    assert set(pmids) == set(nct_ids.keys())
+    for pmid, nct_id_list in nct_ids.items():
+        assert isinstance(nct_id_list, list)
+        assert len(nct_id_list) > 0, nct_id_list
+        assert all(isinstance(x, str) for x in nct_id_list)
+        assert all(x.startswith("NCT") for x in nct_id_list)
+
+
+@pytest.mark.nogha
+def test_get_all_ids():
+    # Uses edirect CLI
+    ids = pubmed_client.get_all_ids("nanosponge")
+    assert isinstance(ids, list)
+    assert len(ids) > 0
+    assert all(isinstance(x, str) for x in ids)
+    assert all(x.isdigit() for x in ids)
+
+
+@pytest.mark.webservice
+def test_get_publication_types():
+    retracted_pmid = "1339389"
+    full_xml = pubmed_client.get_full_xml(retracted_pmid)
+    pubmed_article = full_xml.find(".//PubmedArticle")
+    assert pubmed_article is not None
+    pub_types = pubmed_client.get_publication_types(pubmed_article)
+    assert isinstance(pub_types, set)
+    assert len(pub_types) > 0
+    assert all(isinstance(pt, str) for pt in pub_types)
+    assert "Retracted Publication" in pub_types
